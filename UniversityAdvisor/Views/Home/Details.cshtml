@@ -1,0 +1,182 @@
+@model University
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<div class="university-details">
+    <div class="university-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="university-logo-large">
+                    @if (!string.IsNullOrEmpty(Model.LogoUrl))
+                    {
+                        <img src="@Model.LogoUrl" alt="@Model.Name" />
+                    }
+                    else
+                    {
+                        <div class="logo-placeholder-large">🎓</div>
+                    }
+                </div>
+                <div class="header-info">
+                    <h1>@Model.Name</h1>
+                    <p class="location">📍 @Model.City, @Model.Country</p>
+                    @if (Model.FoundedYear.HasValue)
+                    {
+                        <p class="founded">Founded: @Model.FoundedYear</p>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.WebsiteUrl))
+                    {
+                        <a href="@Model.WebsiteUrl" target="_blank" class="website-link">Visit Website →</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="details-layout">
+            <div class="details-main">
+                <section class="info-section">
+                    <h2>About</h2>
+                    <p>@Model.Description</p>
+                </section>
+
+                <section class="info-section">
+                    <h2>Quick Facts</h2>
+                    <div class="facts-grid">
+                        <div class="fact-card">
+                            <div class="fact-icon">💵</div>
+                            <div class="fact-content">
+                                <h4>Annual Tuition</h4>
+                                <p>$@Model.TuitionFeeMin.ToString("N0") - $@Model.TuitionFeeMax.ToString("N0")</p>
+                            </div>
+                        </div>
+                        <div class="fact-card">
+                            <div class="fact-icon">🏠</div>
+                            <div class="fact-content">
+                                <h4>Monthly Living Cost</h4>
+                                <p>$@Model.LivingCostMonthly.ToString("N0")</p>
+                            </div>
+                        </div>
+                        @if (Model.AcceptanceRate.HasValue)
+                        {
+                            <div class="fact-card">
+                                <div class="fact-icon">✓</div>
+                                <div class="fact-content">
+                                    <h4>Acceptance Rate</h4>
+                                    <p>@Model.AcceptanceRate%</p>
+                                </div>
+                            </div>
+                        }
+                        @if (Model.StudentCount.HasValue)
+                        {
+                            <div class="fact-card">
+                                <div class="fact-icon">👥</div>
+                                <div class="fact-content">
+                                    <h4>Student Population</h4>
+                                    <p>@Model.StudentCount.Value.ToString("N0")</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                <section class="info-section">
+                    <h2>Programs Offered (@Model.Programs.Count)</h2>
+                    <div class="programs-grid">
+                        @foreach (var program in Model.Programs)
+                        {
+                            <div class="program-card">
+                                <h4>@program.Name</h4>
+                                <p class="program-type">@program.DegreeType</p>
+                                <p class="program-details">
+                                    Duration: @program.DurationYears years | Language: @program.Language
+                                </p>
+                                @if (!string.IsNullOrEmpty(program.Description))
+                                {
+                                    <p class="program-description">@program.Description</p>
+                                }
+                            </div>
+                        }
+                    </div>
+                </section>
+            </div>
+
+            <aside class="details-sidebar">
+                <div class="chat-widget">
+                    <h3>🤖 AI Assistant</h3>
+                    <p class="chat-intro">Ask me anything about @Model.Name!</p>
+
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="chat-message bot-message">
+                            <p>Hello! I can help you with information about tuition, programs, location, and more. What would you like to know?</p>
+                        </div>
+                    </div>
+
+                    <form id="chatForm" class="chat-form">
+                        <input type="text" id="chatInput" placeholder="Ask about costs, programs, etc..." class="chat-input" />
+                        <button type="submit" class="chat-send">Send</button>
+                    </form>
+                </div>
+
+                <div class="action-card">
+                    <h4>Interested in this university?</h4>
+                    <p>Save it to your favorites or learn more about the application process.</p>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <button class="btn-favorite">Add to Favorites</button>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Register" class="btn-favorite">Sign Up to Save</a>
+                    }
+                </div>
+            </aside>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const universityId = '@Model.Id';
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.className = 'chat-message user-message';
+            userMessageDiv.innerHTML = `<p>${message}</p>`;
+            chatMessages.appendChild(userMessageDiv);
+
+            chatInput.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                const response = await fetch('/Chat/SendMessage', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `message=${encodeURIComponent(message)}&universityId=${universityId}`
+                });
+
+                const data = await response.json();
+
+                const botMessageDiv = document.createElement('div');
+                botMessageDiv.className = 'chat-message bot-message';
+                botMessageDiv.innerHTML = `<p>${data.response}</p>`;
+                chatMessages.appendChild(botMessageDiv);
+
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            } catch (error) {
+                console.error('Chat error:', error);
+            }
+        });
+    </script>
+}

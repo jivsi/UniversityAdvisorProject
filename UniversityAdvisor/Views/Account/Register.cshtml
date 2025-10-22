@@ -1,0 +1,53 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="auth-page">
+    <div class="container">
+        <div class="auth-card">
+            <h2>Create Your Account</h2>
+            <p class="auth-subtitle">Join thousands of students finding their perfect university</p>
+
+            <form asp-controller="Account" asp-action="Register" method="post">
+                <div asp-validation-summary="All" class="validation-summary"></div>
+
+                <div class="form-group">
+                    <label asp-for="Email"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="FullName"></label>
+                    <input asp-for="FullName" class="form-control" />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Country"></label>
+                    <input asp-for="Country" class="form-control" />
+                    <span asp-validation-for="Country" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Password"></label>
+                    <input asp-for="Password" class="form-control" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="ConfirmPassword"></label>
+                    <input asp-for="ConfirmPassword" class="form-control" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn-submit">Create Account</button>
+            </form>
+
+            <p class="auth-footer">
+                Already have an account? <a asp-controller="Account" asp-action="Login">Sign in</a>
+            </p>
+        </div>
+    </div>
+</div>

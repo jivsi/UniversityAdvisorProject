@@ -1,0 +1,62 @@
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <h1 class="hero-title">Studying abroad <strong>begins here.</strong></h1>
+        <p class="hero-subtitle">If you want to explore studying abroad – you've come to the right place. We connect you directly with universities for free.</p>
+
+        <form asp-controller="Home" asp-action="Search" method="get" class="hero-search">
+            <input type="text" name="searchQuery" placeholder="Where do you want to study?" class="search-input" />
+            <button type="submit" class="btn-primary">LET'S GO</button>
+        </form>
+    </div>
+</div>
+
+<section class="features-section">
+    <div class="container">
+        <h2 class="section-title">Why Choose University Advisor?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>Comprehensive Search</h3>
+                <p>Search through thousands of universities worldwide and find the perfect match for your career goals.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💰</div>
+                <h3>Cost Transparency</h3>
+                <p>Get detailed information about tuition fees, living costs, and financial aid opportunities.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>AI Assistant</h3>
+                <p>Chat with our AI bot to get personalized answers about expenses, programs, and admission requirements.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌍</div>
+                <h3>Global Options</h3>
+                <p>Explore universities from different countries and cultures to broaden your horizons.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Are you a qualified match?</h2>
+            <p>Create your free account to find out.</p>
+            <p class="cta-description">It's easy to create your very own profile, giving you access to connected with universities and discover which are your very best match.</p>
+            @if (User.Identity?.IsAuthenticated != true)
+            {
+                <a asp-controller="Account" asp-action="Register" class="btn-secondary">GET STARTED NOW</a>
+            }
+            else
+            {
+                <a asp-controller="Home" asp-action="Search" class="btn-secondary">START SEARCHING</a>
+            }
+        </div>
+    </div>
+</section>

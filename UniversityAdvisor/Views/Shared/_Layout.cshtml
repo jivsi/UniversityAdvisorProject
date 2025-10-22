@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - University Advisor</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a asp-controller="Home" asp-action="Index" class="logo">
+                        <span class="logo-icon">🎓</span>
+                        <span class="logo-text">UNIVERSITY ADVISOR</span>
+                    </a>
+                </div>
+                <div class="navbar-menu">
+                    <a asp-controller="Home" asp-action="Index">Home</a>
+                    <a asp-controller="Home" asp-action="Search">Search</a>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <span class="user-info">👤 @User.Identity.Name</span>
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="logout-form">
+                            <button type="submit" class="btn-logout">Logout</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="btn-login">LOGIN</a>
+                    }
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        @RenderBody()
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 University Advisor. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,169 @@
+@model SearchViewModel
+@{
+    ViewData["Title"] = "Search Universities";
+}
+
+<div class="search-page">
+    <div class="search-header">
+        <div class="container">
+            <h1>Find Your Perfect University</h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="search-layout">
+            <aside class="search-filters">
+                <h3>Refine Matches</h3>
+                <form asp-controller="Home" asp-action="Search" method="get">
+                    <div class="filter-group">
+                        <label>Search Program or University</label>
+                        <input type="text" name="searchQuery" value="@Model.SearchQuery" placeholder="e.g., Computer Science" class="filter-input" />
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Country</label>
+                        <select name="country" class="filter-select" id="countrySelect">
+                            <option value="">All Countries</option>
+                            @foreach (var country in Model.Countries)
+                            {
+                                <option value="@country" selected="@(country == Model.Country)">@country</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>City</label>
+                        <select name="city" class="filter-select" id="citySelect">
+                            <option value="">All Cities</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Degree Type</label>
+                        <select name="degreeType" class="filter-select">
+                            <option value="">All Degrees</option>
+                            <option value="Bachelor" selected="@(Model.DegreeType == "Bachelor")">Bachelor</option>
+                            <option value="Master" selected="@(Model.DegreeType == "Master")">Master</option>
+                            <option value="PhD" selected="@(Model.DegreeType == "PhD")">PhD</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Tuition Range (USD/year)</label>
+                        <div class="filter-range">
+                            <input type="number" name="minTuition" value="@Model.MinTuition" placeholder="Min" class="filter-input-small" />
+                            <span>-</span>
+                            <input type="number" name="maxTuition" value="@Model.MaxTuition" placeholder="Max" class="filter-input-small" />
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Sort By</label>
+                        <select name="sortBy" class="filter-select">
+                            <option value="name" selected="@(Model.SortBy == "name")">Name</option>
+                            <option value="tuition_asc" selected="@(Model.SortBy == "tuition_asc")">Tuition (Low to High)</option>
+                            <option value="tuition_desc" selected="@(Model.SortBy == "tuition_desc")">Tuition (High to Low)</option>
+                            <option value="acceptance" selected="@(Model.SortBy == "acceptance")">Acceptance Rate</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-filter">Apply Filters</button>
+                </form>
+            </aside>
+
+            <div class="search-results">
+                <div class="results-header">
+                    <h2>SHOWING RESULTS FOR 1-@Model.TotalResults of @Model.TotalResults Schools</h2>
+                    <p class="results-info">Refine by:
+                        @if (!string.IsNullOrEmpty(Model.Country))
+                        {
+                            <span class="filter-tag">@Model.Country</span>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.SearchQuery))
+                        {
+                            <span class="filter-tag">@Model.SearchQuery</span>
+                        }
+                    </p>
+                </div>
+
+                @if (Model.Results.Any())
+                {
+                    <div class="university-list">
+                        @foreach (var university in Model.Results)
+                        {
+                            <div class="university-card">
+                                <div class="university-logo">
+                                    @if (!string.IsNullOrEmpty(university.LogoUrl))
+                                    {
+                                        <img src="@university.LogoUrl" alt="@university.Name" />
+                                    }
+                                    else
+                                    {
+                                        <div class="logo-placeholder">🎓</div>
+                                    }
+                                </div>
+                                <div class="university-info">
+                                    <h3>
+                                        <a asp-controller="Home" asp-action="Details" asp-route-id="@university.Id">
+                                            @university.Name
+                                        </a>
+                                        @if (university.AcceptanceRate.HasValue)
+                                        {
+                                            <span class="qualified-badge">✓ Get Qualified</span>
+                                        }
+                                    </h3>
+                                    <p class="university-location">📍 @university.City, @university.Country</p>
+                                    <p class="university-programs">
+                                        <strong>@university.Programs.Count Programs Offered</strong>
+                                    </p>
+                                    <p class="university-description">@university.Description</p>
+                                    <div class="university-meta">
+                                        <span>💵 Tuition: $@university.TuitionFeeMin.ToString("N0") - $@university.TuitionFeeMax.ToString("N0")</span>
+                                        <span>📚 @university.Programs.Count Programs</span>
+                                        @if (university.AcceptanceRate.HasValue)
+                                        {
+                                            <span>✓ @university.AcceptanceRate% Acceptance Rate</span>
+                                        }
+                                    </div>
+                                    <div class="university-actions">
+                                        <a asp-controller="Home" asp-action="Details" asp-route-id="@university.Id" class="btn-view">View Information</a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="no-results">
+                        <h3>No universities found</h3>
+                        <p>Try adjusting your filters or search terms.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('countrySelect').addEventListener('change', async function() {
+            const country = this.value;
+            const citySelect = document.getElementById('citySelect');
+
+            citySelect.innerHTML = '<option value="">All Cities</option>';
+
+            if (country) {
+                const response = await fetch(`/Home/GetCities?country=${encodeURIComponent(country)}`);
+                const cities = await response.json();
+
+                cities.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city;
+                    option.textContent = city;
+                    citySelect.appendChild(option);
+                });
+            }
+        });
+    </script>
+}
