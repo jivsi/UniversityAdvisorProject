@@ -1,0 +1,37 @@
+@{
+    ViewData["Title"] = "Sync Universities";
+}
+
+<div class="container">
+    <h2>Sync Universities from HEI API</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <p>This will sync universities from the HEI API. This may take several minutes.</p>
+            
+            <form asp-action="SyncUniversities" method="post">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label class="form-label">Country (optional - leave empty to sync all countries)</label>
+                    <input type="number" name="countryId" class="form-control" placeholder="Country ID (optional)" />
+                </div>
+                <button type="submit" class="btn btn-primary">Start Sync</button>
+            </form>
+        </div>
+    </div>
+</div>
+

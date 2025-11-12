@@ -1,0 +1,60 @@
+﻿@{
+    ViewData["Title"] = "Find Your Perfect University";
+}
+
+<div class="hero-section-wrapper">
+    <div class="hero-background">
+        <div class="hero-overlay"></div>
+    </div>
+    <div class="hero-content text-center">
+        <div class="container">
+            <h1 class="display-3 mb-4 hero-title">Choose Your Future With Us</h1>
+            <p class="lead mb-5 hero-subtitle">Discover universities across Europe that match your passion and career goals</p>
+            
+            <form asp-controller="University" asp-action="Search" method="get" class="row g-3 justify-content-center hero-search-form">
+                <div class="col-md-6">
+                    <input type="text" name="Query" class="form-control form-control-lg hero-search-input" placeholder="Search by subject (e.g., Psychology, Engineering, Medicine)" required />
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-light btn-lg w-100 hero-search-btn">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3><i class="bi bi-search"></i></h3>
+                    <h5 class="card-title">Search by Subject</h5>
+                    <p class="card-text">Find universities offering your desired field of study across Europe.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3><i class="bi bi-geo-alt"></i></h3>
+                    <h5 class="card-title">Filter by Location</h5>
+                    <p class="card-text">Narrow down your search by country or city.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3><i class="bi bi-chat-dots"></i></h3>
+                    <h5 class="card-title">AI Assistant</h5>
+                    <p class="card-text">Get information about living costs and expenses in different cities.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<partial name="_ChatBot" />

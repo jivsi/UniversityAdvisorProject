@@ -1,0 +1,141 @@
+@model UniversityFinder.Models.University
+@{
+    ViewData["Title"] = Model.Name;
+    var isFavorited = ViewBag.IsFavorited as bool? ?? false;
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1>@Model.Name</h1>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <button id="favoriteBtn" class="btn @(isFavorited ? "btn-warning" : "btn-outline-warning")" data-university-id="@Model.Id">
+                        <i class="bi @(isFavorited ? "bi-star-fill" : "bi-star")"></i>
+                        <span id="favoriteText">@(isFavorited ? "Favorited" : "Add to Favorites")</span>
+                    </button>
+                }
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Acronym))
+            {
+                <p class="text-muted"><strong>Acronym:</strong> @Model.Acronym</p>
+            }
+
+            <p class="lead">
+                <i class="bi bi-geo-alt"></i> @Model.City.Name, @Model.Country.Name
+            </p>
+
+            @if (Model.EstablishedYear.HasValue)
+            {
+                <p><strong>Established:</strong> @Model.EstablishedYear</p>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.Website))
+            {
+                <p>
+                    <strong>Website:</strong> 
+                    <a href="@Model.Website" target="_blank" rel="noopener noreferrer">@Model.Website</a>
+                </p>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="mt-4">
+                    <h3>About</h3>
+                    <p>@Model.Description</p>
+                </div>
+            }
+
+            @if (Model.Programs.Any())
+            {
+                <div class="mt-4">
+                    <h3>Programs Offered</h3>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Program Name</th>
+                                    <th>Subject</th>
+                                    <th>Degree Type</th>
+                                    <th>Duration</th>
+                                    <th>Language</th>
+                                    @if (Model.Programs.Any(p => p.TuitionFee.HasValue))
+                                    {
+                                        <th>Tuition Fee</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var program in Model.Programs.OrderBy(p => p.Subject.Name))
+                                {
+                                    <tr>
+                                        <td>@program.Name</td>
+                                        <td>@program.Subject.Name</td>
+                                        <td>@program.DegreeType</td>
+                                        <td>@(program.Duration.HasValue ? $"{program.Duration} months" : "N/A")</td>
+                                        <td>@(program.Language ?? "N/A")</td>
+                                        @if (Model.Programs.Any(p => p.TuitionFee.HasValue))
+                                        {
+                                            <td>@(program.TuitionFee.HasValue ? $"€{program.TuitionFee:F2}" : "N/A")</td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Info</h5>
+                    <ul class="list-unstyled">
+                        <li><strong>Country:</strong> @Model.Country.Name</li>
+                        <li><strong>City:</strong> @Model.City.Name</li>
+                        <li><strong>Programs:</strong> @Model.Programs.Count</li>
+                    </ul>
+                    <a asp-action="Search" asp-route-Query="@Model.Country.Name" class="btn btn-primary w-100 mt-3">
+                        Find More in @Model.Country.Name
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#favoriteBtn').click(function() {
+                var universityId = $(this).data('university-id');
+                var btn = $(this);
+                var text = $('#favoriteText');
+                
+                $.ajax({
+                    url: '@Url.Action("ToggleFavorite", "University")',
+                    type: 'POST',
+                    data: { universityId: universityId },
+                    success: function(response) {
+                        if (response.favorited) {
+                            btn.removeClass('btn-outline-warning').addClass('btn-warning');
+                            text.text('Favorited');
+                            btn.find('i').removeClass('bi-star').addClass('bi-star-fill');
+                        } else {
+                            btn.removeClass('btn-warning').addClass('btn-outline-warning');
+                            text.text('Add to Favorites');
+                            btn.find('i').removeClass('bi-star-fill').addClass('bi-star');
+                        }
+                    },
+                    error: function() {
+                        alert('An error occurred. Please try again.');
+                    }
+                });
+            });
+        });
+    </script>
+}
+

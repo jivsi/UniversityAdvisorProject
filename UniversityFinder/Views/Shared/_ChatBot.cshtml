@@ -1,0 +1,219 @@
+<div class="chatbot-container">
+    <button id="chatbotToggle" class="btn btn-primary chatbot-toggle" title="Open AI Assistant">
+        <i class="bi bi-chat-dots"></i>
+    </button>
+
+    <div id="chatbotPanel" class="chatbot-panel" style="display: none;">
+        <div class="chatbot-header">
+            <h5>AI Assistant - Cost of Living</h5>
+            <button id="chatbotClose" class="btn btn-sm btn-close"></button>
+        </div>
+        <div id="chatbotMessages" class="chatbot-messages">
+            <div class="message bot-message">
+                <p>Hello! I can help you with information about living costs and expenses in European cities. What would you like to know?</p>
+            </div>
+        </div>
+        <div class="chatbot-input">
+            <input type="text" id="chatbotInput" class="form-control" placeholder="Ask about living costs..." />
+            <button id="chatbotSend" class="btn btn-primary">Send</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .chatbot-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+
+    .chatbot-toggle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        font-size: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .chatbot-toggle:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .chatbot-panel {
+        position: absolute;
+        bottom: 70px;
+        right: 0;
+        width: 400px;
+        height: 500px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chatbot-header {
+        padding: 15px;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #667eea;
+        color: white;
+        border-radius: 10px 10px 0 0;
+    }
+
+    .chatbot-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+    }
+
+    .message {
+        margin-bottom: 15px;
+        padding: 10px;
+        border-radius: 8px;
+    }
+
+    .bot-message {
+        background: #f8f9fa;
+    }
+
+    .user-message {
+        background: #667eea;
+        color: white;
+        margin-left: 20%;
+    }
+
+    .chatbot-input {
+        padding: 15px;
+        border-top: 1px solid #dee2e6;
+        display: flex;
+        gap: 10px;
+    }
+
+    .chatbot-input input {
+        flex: 1;
+    }
+
+    @@media (max-width: 576px) {
+        .chatbot-panel {
+            width: calc(100vw - 40px);
+            right: -20px;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Wait for jQuery to be available
+        if (typeof jQuery === 'undefined') {
+            console.error('jQuery is not loaded');
+            return;
+        }
+
+        var $toggle = $('#chatbotToggle');
+        var $panel = $('#chatbotPanel');
+        var $close = $('#chatbotClose');
+        var $messages = $('#chatbotMessages');
+        var $input = $('#chatbotInput');
+        var $send = $('#chatbotSend');
+
+        if ($toggle.length === 0 || $panel.length === 0) {
+            console.error('Chatbot elements not found');
+            return;
+        }
+
+        $toggle.on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $panel.toggle();
+            if ($panel.is(':visible')) {
+                $input.focus();
+            }
+        });
+
+        $close.on('click', function(e) {
+            e.preventDefault();
+            $panel.hide();
+        });
+
+        function addMessage(text, isUser) {
+            if (!text) return;
+            
+            var messageClass = isUser ? 'user-message' : 'bot-message';
+            var escapedText = $('<div>').text(text).html(); // Escape HTML
+            var $message = $('<div class="message ' + messageClass + '"><p>' + escapedText + '</p></div>');
+            $messages.append($message);
+            $messages.scrollTop($messages[0].scrollHeight);
+        }
+
+        function sendMessage() {
+            var message = $input.val().trim();
+            if (!message) return;
+
+            addMessage(message, true);
+            $input.val('');
+            $send.prop('disabled', true).text('Sending...');
+
+            $.ajax({
+                url: '/api/chat/message',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ message: message }),
+                success: function(response) {
+                    if (response && response.response) {
+                        addMessage(response.response, false);
+                    } else {
+                        addMessage('I received your message, but got an unexpected response format.', false);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Chatbot error:', status, error);
+                    var errorMsg = 'Sorry, I encountered an error. ';
+                    if (xhr.status === 401) {
+                        errorMsg += 'Please make sure you are logged in.';
+                    } else if (xhr.status === 500) {
+                        errorMsg += 'The server encountered an error. Please check if the AI API key is configured.';
+                    } else {
+                        errorMsg += 'Please try again later.';
+                    }
+                    addMessage(errorMsg, false);
+                },
+                complete: function() {
+                    $send.prop('disabled', false).text('Send');
+                    $input.focus();
+                }
+            });
+        }
+
+        $send.on('click', function(e) {
+            e.preventDefault();
+            sendMessage();
+        });
+
+        $input.on('keypress', function(e) {
+            if (e.which === 13 && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Close panel when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.chatbot-container').length && $panel.is(':visible')) {
+                // Don't close if clicking on the toggle button
+                if (!$(e.target).closest('#chatbotToggle').length) {
+                    $panel.hide();
+                }
+            }
+        });
+    });
+</script>
+
