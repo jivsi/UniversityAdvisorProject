@@ -10,4 +10,8 @@ public interface IUniversityService
     Task<List<string>> GetCountriesAsync();
     Task<List<string>> GetCitiesByCountryAsync(string country);
     Task<List<Models.Program>> GetProgramsByUniversityIdAsync(Guid universityId);
+    Task<int> ImportIfEmptyAsync(IEnumerable<string> countries);
+    Task<double?> GetAverageRatingAsync(Guid universityId);
+    Task<List<Rating>> GetRatingsAsync(Guid universityId, int take = 10);
+    Task AddOrUpdateRatingAsync(Guid universityId, string userId, int score, string? comment);
 }

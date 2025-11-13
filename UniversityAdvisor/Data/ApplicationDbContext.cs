@@ -16,6 +16,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<UserProfile> UserProfiles { get; set; }
     public DbSet<Favorite> Favorites { get; set; }
     public DbSet<SearchHistory> SearchHistories { get; set; }
+    public DbSet<Rating> Ratings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -38,8 +39,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.AcceptanceRate).HasColumnName("acceptance_rate");
             entity.Property(e => e.StudentCount).HasColumnName("student_count");
             entity.Property(e => e.FoundedYear).HasColumnName("founded_year");
+            entity.Property(e => e.ProfessionsOffered).HasColumnName("professions_offered");
+            entity.Property(e => e.ApiIdReference).HasColumnName("api_id_reference");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            
+            entity.HasIndex(e => e.ApiIdReference).IsUnique().HasFilter("\"api_id_reference\" IS NOT NULL");
         });
 
         builder.Entity<Models.Program>(entity =>
@@ -104,6 +109,22 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasOne(e => e.User)
                 .WithMany(u => u.SearchHistories)
                 .HasForeignKey(e => e.UserId);
+        });
+
+        builder.Entity<Rating>(entity =>
+        {
+            entity.ToTable("ratings");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UniversityId).HasColumnName("university_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.Score).HasColumnName("score");
+            entity.Property(e => e.Comment).HasColumnName("comment");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+
+            entity.HasOne(e => e.University)
+                .WithMany(u => u.Ratings)
+                .HasForeignKey(e => e.UniversityId);
         });
     }
 }

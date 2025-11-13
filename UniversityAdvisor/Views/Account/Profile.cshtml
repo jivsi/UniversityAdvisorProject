@@ -1,0 +1,51 @@
+@model UniversityAdvisor.ViewModels.UserRatingProfileViewModel
+@{
+    ViewData["Title"] = "Profile for " + Model.User.FullName ?? Model.User.Email;
+}
+
+<div class="container profile-page">
+    <h1>User Profile</h1>
+    <div class="profile-info">
+        <p><strong>Name:</strong> @Model.User.FullName</p>
+        <p><strong>Email:</strong> @Model.User.Email</p>
+        @if (!string.IsNullOrWhiteSpace(Model.User.Country))
+        {
+            <p><strong>Country:</strong> @Model.User.Country</p>
+        }
+    </div>
+    <div class="ratings-history">
+        <h2>Your Submitted Ratings</h2>
+        @if (Model.Ratings.Any())
+        {
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>University</th>
+                    <th>Rating</th>
+                    <th>Comment</th>
+                    <th>Date</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model.Ratings)
+                {
+                    var stars = new string('★', r.Score) + new string('☆', 5 - r.Score);
+                    <tr>
+                        <td>
+                            <a asp-controller="Home" asp-action="Details" asp-route-id="@r.UniversityId">@r.UniversityName</a>
+                        </td>
+                        <td><span title="@r.Score out of 5">@stars</span></td>
+                        <td>@r.Comment</td>
+                        <td>@r.CreatedAt.ToLocalTime().ToShortDateString()</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>You haven't rated any universities yet.</p>
+        }
+    </div>
+</div>
+

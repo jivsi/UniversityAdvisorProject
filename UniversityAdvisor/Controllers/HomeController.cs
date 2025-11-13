@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using UniversityAdvisor.Models;
 using UniversityAdvisor.Services;
 using UniversityAdvisor.ViewModels;
 
@@ -21,23 +22,53 @@ public class HomeController : Controller
     public async Task<IActionResult> Search(string? searchQuery, string? country, string? city,
         string? degreeType, decimal? minTuition, decimal? maxTuition, string? sortBy)
     {
-        var viewModel = new SearchViewModel
+        try
         {
-            SearchQuery = searchQuery,
-            Country = country,
-            City = city,
-            DegreeType = degreeType,
-            MinTuition = minTuition,
-            MaxTuition = maxTuition,
-            SortBy = sortBy,
-            Results = await _universityService.SearchUniversitiesAsync(searchQuery, country, city,
-                degreeType, minTuition, maxTuition, sortBy),
-            Countries = await _universityService.GetCountriesAsync()
-        };
+            var results = await _universityService.SearchUniversitiesAsync(searchQuery, country, city,
+                degreeType, minTuition, maxTuition, sortBy);
+            var ratingDict = new Dictionary<Guid, double?>();
+            foreach (var u in results)
+            {
+                ratingDict[u.Id] = await _universityService.GetAverageRatingAsync(u.Id);
+            }
+            var viewModel = new SearchViewModel
+            {
+                SearchQuery = searchQuery,
+                Country = country,
+                City = city,
+                DegreeType = degreeType,
+                MinTuition = minTuition,
+                MaxTuition = maxTuition,
+                SortBy = sortBy,
+                Results = results,
+                Countries = await _universityService.GetCountriesAsync(),
+                UniversityAverageRatings = ratingDict,
+            };
 
-        viewModel.TotalResults = viewModel.Results.Count;
+            viewModel.TotalResults = viewModel.Results.Count;
 
-        return View(viewModel);
+            return View(viewModel);
+        }
+        catch (Exception ex)
+        {
+            // Log the error and show a user-friendly message
+            ViewBag.ErrorMessage = "Unable to connect to the database. Please ensure PostgreSQL is running and the connection string is correct.";
+            var viewModel = new SearchViewModel
+            {
+                SearchQuery = searchQuery,
+                Country = country,
+                City = city,
+                DegreeType = degreeType,
+                MinTuition = minTuition,
+                MaxTuition = maxTuition,
+                SortBy = sortBy,
+                Results = new List<University>(),
+                Countries = new List<string>(),
+                UniversityAverageRatings = new Dictionary<Guid, double?>(),
+                TotalResults = 0
+            };
+            return View(viewModel);
+        }
     }
 
     public async Task<IActionResult> Details(Guid id)
@@ -54,8 +85,15 @@ public class HomeController : Controller
     [HttpGet]
     public async Task<JsonResult> GetCities(string country)
     {
-        var cities = await _universityService.GetCitiesByCountryAsync(country);
-        return Json(cities);
+        try
+        {
+            var cities = await _universityService.GetCitiesByCountryAsync(country);
+            return Json(cities);
+        }
+        catch
+        {
+            return Json(new List<string>());
+        }
     }
 
     public IActionResult Privacy()

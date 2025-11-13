@@ -361,3 +361,16 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Entity Framework Migrations (optional - uncomment if you don't want to track migrations)
+# UniversityAdvisor/Migrations/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# App settings with secrets
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json

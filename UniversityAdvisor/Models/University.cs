@@ -15,9 +15,12 @@ public class University
     public decimal? AcceptanceRate { get; set; }
     public int? StudentCount { get; set; }
     public int? FoundedYear { get; set; }
+    public string? ProfessionsOffered { get; set; } // JSON array or comma-separated list
+    public string? ApiIdReference { get; set; } // External API identifier to avoid duplicates
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
     public ICollection<Program> Programs { get; set; } = new List<Program>();
     public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
+    public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
 }

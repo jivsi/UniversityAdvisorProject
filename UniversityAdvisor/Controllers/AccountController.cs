@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using UniversityAdvisor.Models;
 using UniversityAdvisor.ViewModels;
 
@@ -91,6 +92,37 @@ public class AccountController : Controller
     {
         await _signInManager.SignOutAsync();
         return RedirectToAction("Index", "Home");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Profile(string? userId = null)
+    {
+        var id = userId ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(id)) return Challenge();
+        // fetch user
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null) return NotFound();
+        // fetch their ratings
+        using var scope = HttpContext.RequestServices.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<UniversityAdvisor.Data.ApplicationDbContext>();
+        var ratings = db.Ratings
+            .Where(r => r.UserId == id)
+            .OrderByDescending(r => r.CreatedAt)
+            .Select(r => new UniversityAdvisor.ViewModels.UserRatingProfileEntry
+            {
+                UniversityName = r.University != null ? r.University.Name : db.Universities.Where(u => u.Id == r.UniversityId).Select(u => u.Name).FirstOrDefault(),
+                UniversityId = r.UniversityId,
+                Score = r.Score,
+                Comment = r.Comment,
+                CreatedAt = r.CreatedAt
+            })
+            .ToList();
+        var model = new UniversityAdvisor.ViewModels.UserRatingProfileViewModel
+        {
+            User = user,
+            Ratings = ratings
+        };
+        return View("Profile", model);
     }
 
     private IActionResult RedirectToLocal(string? returnUrl)

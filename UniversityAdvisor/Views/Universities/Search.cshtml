@@ -1,0 +1,119 @@
+@model SearchViewModel
+@{
+    ViewData["Title"] = "Search Universities";
+}
+
+<div class="search-page">
+    <div class="search-header">
+        <div class="container">
+            <h1>Find Your Perfect University</h1>
+            <p style="margin-top: 12px; opacity: 0.9;">Search by profession, country, city, or tuition cost</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="search-layout">
+            <aside class="search-filters">
+                <h3>Refine Matches</h3>
+                <form asp-controller="Universities" asp-action="Results" method="get">
+                    
+                    <div class="filter-group">
+                        <label>Profession / Field of Study</label>
+                        <input type="text" asp-for="Profession" placeholder="e.g., Computer Science, Medicine" class="filter-input" />
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Search Program or University</label>
+                        <input type="text" asp-for="SearchQuery" placeholder="e.g., University name" class="filter-input" />
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Country</label>
+                        <select asp-for="Country" class="filter-select" id="countrySelect">
+                            <option value="">All Countries</option>
+                            @if (Model?.Countries != null)
+                            {
+                                @foreach (var country in Model.Countries)
+                                {
+                                    <option value="@country" selected="@(country == Model.Country)">@country</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>City</label>
+                        <select asp-for="City" class="filter-select" id="citySelect">
+                            <option value="">All Cities</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Degree Type</label>
+                        <select asp-for="DegreeType" class="filter-select">
+                            <option value="">All Degrees</option>
+                            <option value="Bachelor">Bachelor</option>
+                            <option value="Master">Master</option>
+                            <option value="PhD">PhD</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Tuition Range (USD/year)</label>
+                        <div class="filter-range">
+                            <input type="number" asp-for="MinTuition" placeholder="Min" class="filter-input-small" />
+                            <span>-</span>
+                            <input type="number" asp-for="MaxTuition" placeholder="Max" class="filter-input-small" />
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Sort By</label>
+                        <select asp-for="SortBy" class="filter-select">
+                            <option value="name">Name</option>
+                            <option value="tuition_asc">Tuition (Low to High)</option>
+                            <option value="tuition_desc">Tuition (High to Low)</option>
+                            <option value="acceptance">Acceptance Rate</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-filter">Apply Filters</button>
+                </form>
+            </aside>
+
+            <div class="search-results">
+                <div class="results-header">
+                    <h2>Start Your Search</h2>
+                    <p class="results-info">Use the filters on the left to find universities that match your criteria.</p>
+                    <p class="results-info" style="margin-top: 12px; color: #666; font-size: 14px;">
+                        💡 <strong>Tip:</strong> If you don't see any results, the database may be empty. Try searching with a country filter, or the system will automatically import universities on your first search.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('countrySelect').addEventListener('change', async function() {
+            const country = this.value;
+            const citySelect = document.getElementById('citySelect');
+
+            citySelect.innerHTML = '<option value="">All Cities</option>';
+
+            if (country) {
+                const response = await fetch(`/Universities/GetCities?country=${encodeURIComponent(country)}`);
+                const cities = await response.json();
+
+                cities.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city;
+                    option.textContent = city;
+                    citySelect.appendChild(option);
+                });
+            }
+        });
+    </script>
+}
+

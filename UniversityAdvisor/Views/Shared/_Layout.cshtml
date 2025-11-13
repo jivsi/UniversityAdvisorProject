@@ -18,7 +18,8 @@
                 </div>
                 <div class="navbar-menu">
                     <a asp-controller="Home" asp-action="Index">Home</a>
-                    <a asp-controller="Home" asp-action="Search">Search</a>
+                    <a asp-controller="Universities" asp-action="Search">Search</a>
+                    <a asp-controller="AIAdvisor" asp-action="Index">AI Advisor</a>
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         <span class="user-info">👤 @User.Identity.Name</span>

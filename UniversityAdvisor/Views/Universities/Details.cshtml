@@ -38,7 +38,11 @@
             <div class="details-main">
                 <section class="info-section">
                     <h2>About</h2>
-                    <p>@Model.Description</p>
+                    <p>@(string.IsNullOrEmpty(Model.Description) ? "No description available." : Model.Description)</p>
+                    @if (!string.IsNullOrEmpty(Model.ProfessionsOffered))
+                    {
+                        <p><strong>Fields of Study:</strong> @Model.ProfessionsOffered</p>
+                    }
                 </section>
 
                 <section class="info-section">
@@ -83,22 +87,29 @@
 
                 <section class="info-section">
                     <h2>Programs Offered (@Model.Programs.Count)</h2>
-                    <div class="programs-grid">
-                        @foreach (var program in Model.Programs)
-                        {
-                            <div class="program-card">
-                                <h4>@program.Name</h4>
-                                <p class="program-type">@program.DegreeType</p>
-                                <p class="program-details">
-                                    Duration: @program.DurationYears years | Language: @program.Language
-                                </p>
-                                @if (!string.IsNullOrEmpty(program.Description))
-                                {
-                                    <p class="program-description">@program.Description</p>
-                                }
-                            </div>
-                        }
-                    </div>
+                    @if (Model.Programs.Any())
+                    {
+                        <div class="programs-grid">
+                            @foreach (var program in Model.Programs)
+                            {
+                                <div class="program-card">
+                                    <h4>@program.Name</h4>
+                                    <p class="program-type">@program.DegreeType</p>
+                                    <p class="program-details">
+                                        Duration: @program.DurationYears years | Language: @program.Language
+                                    </p>
+                                    @if (!string.IsNullOrEmpty(program.Description))
+                                    {
+                                        <p class="program-description">@program.Description</p>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p>No programs listed yet.</p>
+                    }
                 </section>
             </div>
 
@@ -122,11 +133,12 @@
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         <form asp-controller="Ratings" asp-action="Submit" method="post">
+                            @Html.AntiForgeryToken()
                             <input type="hidden" name="universityId" value="@Model.Id" />
                             <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
-                            <div class="rating-input">
-                                <label for="score">Your rating</label>
-                                <select id="score" name="score">
+                            <div class="rating-input" style="margin-bottom: 12px;">
+                                <label for="score" style="display: block; margin-bottom: 4px; font-weight: 500;">Your rating</label>
+                                <select id="score" name="score" class="form-control" style="width: 100%;">
                                     <option value="5">5 - Excellent</option>
                                     <option value="4">4 - Good</option>
                                     <option value="3">3 - Average</option>
@@ -134,11 +146,11 @@
                                     <option value="1">1 - Bad</option>
                                 </select>
                             </div>
-                            <div class="rating-comment">
-                                <label for="comment">Comment (optional)</label>
-                                <textarea id="comment" name="comment" rows="3" placeholder="Share your experience..."></textarea>
+                            <div class="rating-comment" style="margin-bottom: 12px;">
+                                <label for="comment" style="display: block; margin-bottom: 4px; font-weight: 500;">Comment (optional)</label>
+                                <textarea id="comment" name="comment" rows="3" placeholder="Share your experience..." class="form-control" style="width: 100%;"></textarea>
                             </div>
-                            <button type="submit" class="btn-favorite">Submit Rating</button>
+                            <button type="submit" class="btn-favorite" style="width: 100%;">Submit Rating</button>
                         </form>
                     }
                     else
@@ -148,15 +160,15 @@
 
                     @if (Model.Ratings != null && Model.Ratings.Any())
                     {
-                        <div class="ratings-list">
+                        <div class="ratings-list" style="margin-top: 20px;">
                             <h4>Recent ratings</h4>
                             @foreach (var r in Model.Ratings.OrderByDescending(r => r.CreatedAt).Take(5))
                             {
-                                <div class="rating-item">
+                                <div class="rating-item" style="padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px;">
                                     <div><strong>@r.Score/5</strong> <span style="color:#666">@r.CreatedAt.ToLocalTime().ToShortDateString()</span></div>
                                     @if (!string.IsNullOrWhiteSpace(r.Comment))
                                     {
-                                        <div>@r.Comment</div>
+                                        <div style="margin-top: 4px;">@r.Comment</div>
                                     }
                                 </div>
                             }
@@ -240,3 +252,4 @@
         });
     </script>
 }
+

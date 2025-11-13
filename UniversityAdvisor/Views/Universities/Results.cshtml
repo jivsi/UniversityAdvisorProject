@@ -1,12 +1,13 @@
 @model SearchViewModel
 @{
-    ViewData["Title"] = "Search Universities";
+    ViewData["Title"] = "Search Results";
 }
 
 <div class="search-page">
     <div class="search-header">
         <div class="container">
-            <h1>Find Your Perfect University</h1>
+            <h1>Search Results</h1>
+            <p style="margin-top: 12px; opacity: 0.9;">Found @Model.TotalResults universities matching your criteria</p>
         </div>
     </div>
 
@@ -14,10 +15,15 @@
         <div class="search-layout">
             <aside class="search-filters">
                 <h3>Refine Matches</h3>
-                <form asp-controller="Home" asp-action="Search" method="get">
+                <form asp-controller="Universities" asp-action="Results" method="get">
+                    <div class="filter-group">
+                        <label>Profession / Field of Study</label>
+                        <input type="text" name="profession" value="@Model.Profession" placeholder="e.g., Computer Science" class="filter-input" />
+                    </div>
+
                     <div class="filter-group">
                         <label>Search Program or University</label>
-                        <input type="text" name="searchQuery" value="@Model.SearchQuery" placeholder="e.g., Computer Science" class="filter-input" />
+                        <input type="text" name="searchQuery" value="@Model.SearchQuery" placeholder="e.g., University name" class="filter-input" />
                     </div>
 
                     <div class="filter-group">
@@ -88,12 +94,28 @@
                         </ol>
                     </div>
                 }
+                @if (ViewBag.InfoMessage != null)
+                {
+                    <div class="alert alert-info" style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                        <strong>ℹ️ Info:</strong> @ViewBag.InfoMessage
+                    </div>
+                }
+                @if (ViewBag.WarningMessage != null)
+                {
+                    <div class="alert alert-warning" style="background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                        <strong>⚠️ Warning:</strong> @ViewBag.WarningMessage
+                    </div>
+                }
                 <div class="results-header">
                     <h2>SHOWING RESULTS FOR 1-@Model.TotalResults of @Model.TotalResults Schools</h2>
                     <p class="results-info">Refine by:
                         @if (!string.IsNullOrEmpty(Model.Country))
                         {
                             <span class="filter-tag">@Model.Country</span>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Profession))
+                        {
+                            <span class="filter-tag">@Model.Profession</span>
                         }
                         @if (!string.IsNullOrEmpty(Model.SearchQuery))
                         {
@@ -120,7 +142,7 @@
                                 </div>
                                 <div class="university-info">
                                     <h3>
-                                        <a asp-controller="Home" asp-action="Details" asp-route-id="@university.Id">
+                                        <a asp-controller="Universities" asp-action="Details" asp-route-id="@university.Id">
                                             @university.Name
                                         </a>
                                         <span class="uni-rating">
@@ -141,6 +163,12 @@
                                         }
                                     </h3>
                                     <p class="university-location">📍 @university.City, @university.Country</p>
+                                    @if (!string.IsNullOrEmpty(university.ProfessionsOffered))
+                                    {
+                                        <p class="university-programs">
+                                            <strong>Fields: @university.ProfessionsOffered</strong>
+                                        </p>
+                                    }
                                     <p class="university-programs">
                                         <strong>@university.Programs.Count Programs Offered</strong>
                                     </p>
@@ -154,7 +182,7 @@
                                         }
                                     </div>
                                     <div class="university-actions">
-                                        <a asp-controller="Home" asp-action="Details" asp-route-id="@university.Id" class="btn-view">View Information</a>
+                                        <a asp-controller="Universities" asp-action="Details" asp-route-id="@university.Id" class="btn-view">View Information</a>
                                     </div>
                                 </div>
                             </div>
@@ -182,7 +210,7 @@
             citySelect.innerHTML = '<option value="">All Cities</option>';
 
             if (country) {
-                const response = await fetch(`/Home/GetCities?country=${encodeURIComponent(country)}`);
+                const response = await fetch(`/Universities/GetCities?country=${encodeURIComponent(country)}`);
                 const cities = await response.json();
 
                 cities.forEach(city => {
@@ -195,3 +223,4 @@
         });
     </script>
 }
+
