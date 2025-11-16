@@ -43,8 +43,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.ApiIdReference).HasColumnName("api_id_reference");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
             
-            entity.HasIndex(e => e.ApiIdReference).IsUnique().HasFilter("\"api_id_reference\" IS NOT NULL");
+            // Indexes for performance
+            entity.HasIndex(e => e.ApiIdReference).IsUnique();
+            entity.HasIndex(e => e.Country);
+            entity.HasIndex(e => e.City);
+            entity.HasIndex(e => e.Name);
+            entity.HasIndex(e => new { e.Country, e.City });
+            
+            // Filter for soft delete queries
+            entity.HasQueryFilter(e => !e.IsDeleted);
         });
 
         builder.Entity<Models.Program>(entity =>
@@ -83,17 +92,24 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.ToTable("favorites");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id").HasMaxLength(450); // Identity user ID max length
             entity.Property(e => e.UniversityId).HasColumnName("university_id");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
 
+            // Relationship to ApplicationUser (Identity)
             entity.HasOne(e => e.User)
-                .WithMany(u => u.Favorites)
-                .HasForeignKey(e => e.UserId);
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(e => e.University)
                 .WithMany(u => u.Favorites)
-                .HasForeignKey(e => e.UniversityId);
+                .HasForeignKey(e => e.UniversityId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Composite unique index to prevent duplicate favorites
+            entity.HasIndex(e => new { e.UserId, e.UniversityId }).IsUnique();
         });
 
         builder.Entity<SearchHistory>(entity =>
@@ -101,14 +117,20 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.ToTable("search_history");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-            entity.Property(e => e.SearchQuery).HasColumnName("search_query");
+            entity.Property(e => e.UserId).HasColumnName("user_id").HasMaxLength(450); // Identity user ID max length
+            entity.Property(e => e.SearchQuery).HasColumnName("search_query").HasMaxLength(500);
             entity.Property(e => e.FiltersApplied).HasColumnName("filters_applied");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
 
             entity.HasOne(e => e.User)
-                .WithMany(u => u.SearchHistories)
-                .HasForeignKey(e => e.UserId);
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Index for faster user search history queries
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.CreatedAt);
         });
 
         builder.Entity<Rating>(entity =>
@@ -117,14 +139,30 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.UniversityId).HasColumnName("university_id");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id").HasMaxLength(450); // Identity user ID max length
             entity.Property(e => e.Score).HasColumnName("score");
-            entity.Property(e => e.Comment).HasColumnName("comment");
+            entity.Property(e => e.Comment).HasColumnName("comment").HasMaxLength(2000);
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
 
             entity.HasOne(e => e.University)
                 .WithMany(u => u.Ratings)
-                .HasForeignKey(e => e.UniversityId);
+                .HasForeignKey(e => e.UniversityId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict); // Prevent user deletion if they have ratings
+
+            // Composite unique index to prevent duplicate ratings per user/university
+            entity.HasIndex(e => new { e.UniversityId, e.UserId }).IsUnique();
+            entity.HasIndex(e => e.UniversityId);
+            entity.HasIndex(e => e.CreatedAt);
+            
+            // Filter for soft delete queries
+            entity.HasQueryFilter(e => !e.IsDeleted);
         });
     }
 }

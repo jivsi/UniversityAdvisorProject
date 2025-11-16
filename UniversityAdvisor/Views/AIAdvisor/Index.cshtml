@@ -1,61 +1,432 @@
 @{
-    ViewData["Title"] = "AI Advisor";
+    ViewData["Title"] = "AI Advisor - Your Personal University Guide";
 }
 
-<div class="ai-advisor-page">
-    <div class="ai-advisor-header">
+<div class="ai-advisor-page-premium">
+    <div class="ai-advisor-header-premium">
         <div class="container">
-            <h1>🤖 AI University Advisor</h1>
-            <p style="margin-top: 12px; opacity: 0.9;">Ask me anything about living costs, tuition fees, city rent prices, food expenses, and student life!</p>
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <div class="ai-icon-premium mb-3">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h1 class="ai-title-premium">AI University Advisor</h1>
+                    <p class="ai-subtitle-premium">
+                        Ask me anything about living costs, tuition fees, city rent prices, food expenses, and student life!
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="container">
-        <div class="ai-advisor-container">
-            <div class="ai-chat-widget">
-                <div class="chat-messages" id="chatMessages">
-                    <div class="chat-message bot-message">
-                        <p><strong>AI Advisor:</strong> Hello! I'm here to help you with questions about:</p>
-                        <ul style="margin: 8px 0; padding-left: 20px;">
-                            <li>Living costs in different cities</li>
-                            <li>Tuition fees and financial planning</li>
-                            <li>City rent prices</li>
-                            <li>Food expenses</li>
-                            <li>General student life advice</li>
-                        </ul>
-                        <p>What would you like to know?</p>
+    <div class="container py-5">
+        <div class="row">
+            <!-- Chat Widget -->
+            <div class="col-lg-8 mb-4">
+                <div class="ai-chat-widget-premium">
+                    <div class="chat-header-premium">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="chat-status-indicator"></div>
+                            <h3 class="mb-0">AI Assistant</h3>
+                        </div>
+                        <button class="btn-clear-chat" onclick="clearChat()" title="Clear chat">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
-                </div>
+                    
+                    <div class="chat-messages-premium" id="chatMessages">
+                        <div class="chat-message-premium bot-message-premium">
+                            <div class="message-avatar-premium">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="message-content-premium">
+                                <p class="message-text-premium">
+                                    <strong>Hello! 👋</strong> I'm your AI University Advisor. I can help you with:
+                                </p>
+                                <ul class="message-list-premium">
+                                    <li>💰 Living costs in different cities</li>
+                                    <li>📚 Tuition fees and financial planning</li>
+                                    <li>🏠 City rent prices and housing</li>
+                                    <li>🍔 Food expenses and budgeting</li>
+                                    <li>🎓 General student life advice</li>
+                                </ul>
+                                <p class="message-text-premium">What would you like to know?</p>
+                            </div>
+                        </div>
+                    </div>
 
-                <form id="chatForm" class="chat-form">
-                    <input type="text" id="chatInput" placeholder="Ask about costs, expenses, student life..." class="chat-input" />
-                    <button type="submit" class="chat-send">Send</button>
-                </form>
+                    <form id="chatForm" class="chat-form-premium">
+                        <div class="chat-input-wrapper-premium">
+                            <input type="text" id="chatInput" placeholder="Ask about costs, expenses, student life..." class="chat-input-premium" />
+                            <button type="submit" class="chat-send-premium">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
-            <div class="ai-suggestions">
-                <h3>Suggested Questions</h3>
-                <div class="suggestion-buttons">
-                    <button class="suggestion-btn" onclick="askQuestion('What is the average monthly living cost for a student in Berlin?')">
-                        💰 Living costs in Berlin
-                    </button>
-                    <button class="suggestion-btn" onclick="askQuestion('How much should I budget for food expenses as a student?')">
-                        🍔 Food expenses budget
-                    </button>
-                    <button class="suggestion-btn" onclick="askQuestion('What are typical rent prices for student housing in Paris?')">
-                        🏠 Rent prices in Paris
-                    </button>
-                    <button class="suggestion-btn" onclick="askQuestion('What is the average tuition fee for European universities?')">
-                        📚 Tuition fees in Europe
-                    </button>
-                    <button class="suggestion-btn" onclick="askQuestion('What should I know about student life in European universities?')">
-                        🎓 Student life tips
-                    </button>
+            <!-- Suggestions Sidebar -->
+            <div class="col-lg-4">
+                <div class="ai-suggestions-premium">
+                    <h3 class="suggestions-title-premium">
+                        <i class="fas fa-lightbulb me-2"></i>Suggested Questions
+                    </h3>
+                    <div class="suggestion-buttons-premium">
+                        <button class="suggestion-btn-premium" onclick="askQuestion('What is the average monthly living cost for a student in Berlin?')">
+                            <i class="fas fa-euro-sign me-2"></i>
+                            Living costs in Berlin
+                        </button>
+                        <button class="suggestion-btn-premium" onclick="askQuestion('How much should I budget for food expenses as a student?')">
+                            <i class="fas fa-utensils me-2"></i>
+                            Food expenses budget
+                        </button>
+                        <button class="suggestion-btn-premium" onclick="askQuestion('What are typical rent prices for student housing in Paris?')">
+                            <i class="fas fa-home me-2"></i>
+                            Rent prices in Paris
+                        </button>
+                        <button class="suggestion-btn-premium" onclick="askQuestion('What is the average tuition fee for European universities?')">
+                            <i class="fas fa-graduation-cap me-2"></i>
+                            Tuition fees in Europe
+                        </button>
+                        <button class="suggestion-btn-premium" onclick="askQuestion('What should I know about student life in European universities?')">
+                            <i class="fas fa-book-reader me-2"></i>
+                            Student life tips
+                        </button>
+                        <button class="suggestion-btn-premium" onclick="askQuestion('How do I apply for scholarships in European universities?')">
+                            <i class="fas fa-award me-2"></i>
+                            Scholarship information
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.ai-advisor-page-premium {
+    background: var(--light);
+    min-height: calc(100vh - 200px);
+}
+
+.ai-advisor-header-premium {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 4rem 0;
+    margin-bottom: 0;
+}
+
+.ai-icon-premium {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.ai-title-premium {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.ai-subtitle-premium {
+    font-size: 1.25rem;
+    opacity: 0.95;
+    line-height: 1.6;
+}
+
+.ai-chat-widget-premium {
+    background: white;
+    border-radius: 1.5rem;
+    box-shadow: var(--shadow-xl);
+    display: flex;
+    flex-direction: column;
+    height: 700px;
+    overflow: hidden;
+}
+
+[data-theme="dark"] .ai-chat-widget-premium {
+    background: #1f2937;
+}
+
+.chat-header-premium {
+    padding: 1.5rem;
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--light);
+}
+
+.chat-status-indicator {
+    width: 12px;
+    height: 12px;
+    background: var(--secondary);
+    border-radius: 50%;
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@@keyframes pulse-dot {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+    }
+}
+
+.chat-header-premium h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin: 0;
+}
+
+.btn-clear-chat {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--gray);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-clear-chat:hover {
+    background: var(--danger);
+    color: white;
+    border-color: var(--danger);
+}
+
+.chat-messages-premium {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background: var(--light);
+}
+
+.chat-message-premium {
+    display: flex;
+    gap: 0.75rem;
+    max-width: 85%;
+    animation: fadeInMessage 0.3s ease;
+}
+
+@@keyframes fadeInMessage {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.bot-message-premium {
+    align-self: flex-start;
+}
+
+.user-message-premium {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.message-avatar-premium {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.25rem;
+}
+
+.bot-message-premium .message-avatar-premium {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+}
+
+.user-message-premium .message-avatar-premium {
+    background: var(--secondary);
+    color: white;
+}
+
+.message-content-premium {
+    background: white;
+    padding: 1rem 1.25rem;
+    border-radius: 1rem;
+    box-shadow: var(--shadow);
+}
+
+[data-theme="dark"] .message-content-premium {
+    background: #374151;
+}
+
+.user-message-premium .message-content-premium {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+}
+
+.message-text-premium {
+    margin: 0;
+    line-height: 1.6;
+    color: var(--dark);
+}
+
+.user-message-premium .message-text-premium {
+    color: white;
+}
+
+.message-list-premium {
+    margin: 0.75rem 0;
+    padding-left: 1.5rem;
+    color: var(--gray);
+}
+
+.user-message-premium .message-list-premium {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.chat-form-premium {
+    padding: 1.5rem;
+    border-top: 2px solid var(--border);
+    background: white;
+}
+
+[data-theme="dark"] .chat-form-premium {
+    background: #1f2937;
+}
+
+.chat-input-wrapper-premium {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.chat-input-premium {
+    flex: 1;
+    padding: 0.875rem 1.25rem;
+    border: 2px solid var(--border);
+    border-radius: 2rem;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: var(--light);
+    color: var(--dark);
+}
+
+.chat-input-premium:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.chat-send-premium {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.chat-send-premium:hover {
+    transform: scale(1.1) rotate(15deg);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+}
+
+.chat-send-premium:active {
+    transform: scale(0.95);
+}
+
+.ai-suggestions-premium {
+    background: white;
+    padding: 2rem;
+    border-radius: 1.5rem;
+    box-shadow: var(--shadow-xl);
+    position: sticky;
+    top: 100px;
+}
+
+[data-theme="dark"] .ai-suggestions-premium {
+    background: #1f2937;
+}
+
+.suggestions-title-premium {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+}
+
+.suggestion-buttons-premium {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.suggestion-btn-premium {
+    background: var(--light);
+    border: 2px solid var(--border);
+    padding: 1rem 1.25rem;
+    border-radius: 0.75rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+}
+
+.suggestion-btn-premium:hover {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-color: var(--primary);
+    transform: translateX(8px);
+    box-shadow: var(--shadow);
+}
+
+.suggestion-btn-premium i {
+    font-size: 1.125rem;
+}
+
+@@media (max-width: 992px) {
+    .ai-suggestions-premium {
+        position: relative;
+        top: 0;
+        margin-top: 2rem;
+    }
+    
+    .ai-chat-widget-premium {
+        height: 600px;
+    }
+}
+</style>
 
 @section Scripts {
     <script>
@@ -68,18 +439,57 @@
             chatForm.dispatchEvent(new Event('submit'));
         }
 
+        function clearChat() {
+            chatMessages.innerHTML = `
+                <div class="chat-message-premium bot-message-premium">
+                    <div class="message-avatar-premium">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content-premium">
+                        <p class="message-text-premium">
+                            <strong>Chat cleared!</strong> How can I help you today?
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const message = chatInput.value.trim();
             if (!message) return;
 
+            // Add user message
             const userMessageDiv = document.createElement('div');
-            userMessageDiv.className = 'chat-message user-message';
-            userMessageDiv.innerHTML = `<p><strong>You:</strong> ${message}</p>`;
+            userMessageDiv.className = 'chat-message-premium user-message-premium';
+            userMessageDiv.innerHTML = `
+                <div class="message-avatar-premium">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="message-content-premium">
+                    <p class="message-text-premium">${message}</p>
+                </div>
+            `;
             chatMessages.appendChild(userMessageDiv);
 
             chatInput.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Show loading
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'chat-message-premium bot-message-premium';
+            loadingDiv.innerHTML = `
+                <div class="message-avatar-premium">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content-premium">
+                    <p class="message-text-premium">
+                        <i class="fas fa-spinner fa-spin me-2"></i>Thinking...
+                    </p>
+                </div>
+            `;
+            chatMessages.appendChild(loadingDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
             try {
@@ -92,101 +502,42 @@
                 });
 
                 const data = await response.json();
+                loadingDiv.remove();
 
                 const botMessageDiv = document.createElement('div');
-                botMessageDiv.className = 'chat-message bot-message';
-                botMessageDiv.innerHTML = `<p><strong>AI Advisor:</strong> ${data.response}</p>`;
+                botMessageDiv.className = 'chat-message-premium bot-message-premium';
+                botMessageDiv.innerHTML = `
+                    <div class="message-avatar-premium">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content-premium">
+                        <p class="message-text-premium">${data.response || 'Sorry, I encountered an error. Please try again.'}</p>
+                    </div>
+                `;
                 chatMessages.appendChild(botMessageDiv);
 
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             } catch (error) {
-                console.error('Chat error:', error);
+                loadingDiv.remove();
                 const errorDiv = document.createElement('div');
-                errorDiv.className = 'chat-message bot-message';
-                errorDiv.innerHTML = '<p><strong>AI Advisor:</strong> Sorry, I encountered an error. Please try again.</p>';
+                errorDiv.className = 'chat-message-premium bot-message-premium';
+                errorDiv.innerHTML = `
+                    <div class="message-avatar-premium">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content-premium">
+                        <p class="message-text-premium">Sorry, I encountered an error. Please try again.</p>
+                    </div>
+                `;
                 chatMessages.appendChild(errorDiv);
+                console.error('Chat error:', error);
             }
         });
+
+        // Auto-scroll to bottom on new messages
+        const observer = new MutationObserver(() => {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+        observer.observe(chatMessages, { childList: true });
     </script>
 }
-
-<style>
-    .ai-advisor-page {
-        background: #f8f9fa;
-        min-height: calc(100vh - 200px);
-    }
-
-    .ai-advisor-header {
-        background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
-        color: white;
-        padding: 60px 0;
-        text-align: center;
-    }
-
-    .ai-advisor-header h1 {
-        font-size: 36px;
-        font-weight: 600;
-    }
-
-    .ai-advisor-container {
-        max-width: 900px;
-        margin: 40px auto;
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 32px;
-    }
-
-    .ai-chat-widget {
-        background: white;
-        padding: 24px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        display: flex;
-        flex-direction: column;
-        height: 600px;
-    }
-
-    .ai-suggestions {
-        background: white;
-        padding: 24px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        height: fit-content;
-    }
-
-    .ai-suggestions h3 {
-        font-size: 20px;
-        margin-bottom: 16px;
-        color: #1a1a1a;
-    }
-
-    .suggestion-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .suggestion-btn {
-        background: #f8f9fa;
-        border: 1px solid #e0e0e0;
-        padding: 12px 16px;
-        border-radius: 8px;
-        text-align: left;
-        cursor: pointer;
-        transition: all 0.2s;
-        font-size: 14px;
-    }
-
-    .suggestion-btn:hover {
-        background: #e0e7ff;
-        border-color: #2563eb;
-        color: #2563eb;
-    }
-
-    @@media (max-width: 968px) {
-        .ai-advisor-container {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-

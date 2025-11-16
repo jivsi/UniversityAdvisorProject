@@ -1,62 +1,176 @@
 @{
-    ViewData["Title"] = "Home";
+    ViewData["Title"] = "Home - Find Your Perfect University";
 }
 
-<div class="hero-section">
-    <div class="hero-overlay"></div>
-    <div class="hero-content">
-        <h1 class="hero-title">Studying abroad <strong>begins here.</strong></h1>
-        <p class="hero-subtitle">If you want to explore studying abroad – you've come to the right place. We connect you directly with universities for free.</p>
-
-        <form asp-controller="Universities" asp-action="Search" method="get" class="hero-search">
-            <input type="text" name="searchQuery" placeholder="Where do you want to study?" class="search-input" />
-            <button type="submit" class="btn-primary">LET'S GO</button>
+<!-- Hero Section -->
+<section class="hero-section-premium">
+    <div class="hero-content-premium">
+        <h1 class="hero-title-premium">
+            Studying Abroad <span class="highlight">Begins Here</span>
+        </h1>
+        <p class="hero-subtitle-premium">
+            Discover thousands of universities worldwide. Get personalized recommendations, compare programs, and make informed decisions about your future.
+        </p>
+        
+        <form asp-controller="Universities" asp-action="Search" method="get" class="hero-search-premium">
+            <input type="text" name="searchQuery" placeholder="Search universities, programs, or locations..." class="search-input-premium" />
+            <button type="submit" class="btn-primary-premium">
+                <i class="fas fa-search me-2"></i> Explore Now
+            </button>
         </form>
+        
+        <div class="mt-4" style="animation: fadeInUp 0.8s ease 0.6s both;">
+            <p class="text-white-50 mb-0" style="font-size: 0.9rem;">
+                <i class="fas fa-shield-alt me-2"></i> Free • Trusted • Comprehensive
+            </p>
+        </div>
     </div>
-</div>
+</section>
 
-<section class="features-section">
+<!-- Features Section -->
+<section class="features-section-premium">
     <div class="container">
-        <h2 class="section-title">Why Choose University Advisor?</h2>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🔍</div>
+        <h2 class="section-title-premium">Why Choose University Advisor?</h2>
+        <p class="section-subtitle-premium">
+            Everything you need to find and compare universities worldwide, all in one place.
+        </p>
+        
+        <div class="features-grid-premium">
+            <div class="feature-card-premium">
+                <span class="feature-icon-premium">🔍</span>
                 <h3>Comprehensive Search</h3>
-                <p>Search through thousands of universities worldwide and find the perfect match for your career goals.</p>
+                <p>Search through thousands of universities worldwide with advanced filters. Find the perfect match for your career goals, budget, and preferences.</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">💰</div>
+            
+            <div class="feature-card-premium">
+                <span class="feature-icon-premium">💰</span>
                 <h3>Cost Transparency</h3>
-                <p>Get detailed information about tuition fees, living costs, and financial aid opportunities.</p>
+                <p>Get detailed information about tuition fees, living costs, and financial aid opportunities. Make informed financial decisions with complete cost breakdowns.</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">🤖</div>
-                <h3>AI Assistant</h3>
-                <p>Chat with our AI bot to get personalized answers about expenses, programs, and admission requirements.</p>
+            
+            <div class="feature-card-premium">
+                <span class="feature-icon-premium">🤖</span>
+                <h3>AI-Powered Assistant</h3>
+                <p>Chat with our intelligent AI advisor to get personalized recommendations, answers about expenses, programs, and admission requirements.</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">🌍</div>
+            
+            <div class="feature-card-premium">
+                <span class="feature-icon-premium">⭐</span>
+                <h3>Student Reviews</h3>
+                <p>Read authentic reviews and ratings from students who have studied at these universities. Get real insights into campus life and academics.</p>
+            </div>
+            
+            <div class="feature-card-premium">
+                <span class="feature-icon-premium">🌍</span>
                 <h3>Global Options</h3>
-                <p>Explore universities from different countries and cultures to broaden your horizons.</p>
+                <p>Explore universities from different countries and cultures. Compare programs across continents to broaden your horizons.</p>
+            </div>
+            
+            <div class="feature-card-premium">
+                <span class="feature-icon-premium">📊</span>
+                <h3>Compare & Analyze</h3>
+                <p>Side-by-side comparison tool to evaluate multiple universities. Analyze programs, costs, and rankings to make the best choice.</p>
             </div>
         </div>
     </div>
 </section>
 
-<section class="cta-section">
+<!-- Stats Section -->
+<section class="py-5" style="background: var(--light);">
     <div class="container">
-        <div class="cta-content">
-            <h2>Are you a qualified match?</h2>
-            <p>Create your free account to find out.</p>
-            <p class="cta-description">It's easy to create your very own profile, giving you access to connected with universities and discover which are your very best match.</p>
+        <div class="row text-center">
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-card">
+                    <h3 class="gradient-text" style="font-size: 3rem; font-weight: 800; margin-bottom: 0.5rem;">10K+</h3>
+                    <p class="text-muted mb-0">Universities</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-card">
+                    <h3 class="gradient-text" style="font-size: 3rem; font-weight: 800; margin-bottom: 0.5rem;">150+</h3>
+                    <p class="text-muted mb-0">Countries</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-card">
+                    <h3 class="gradient-text" style="font-size: 3rem; font-weight: 800; margin-bottom: 0.5rem;">50K+</h3>
+                    <p class="text-muted mb-0">Programs</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-card">
+                    <h3 class="gradient-text" style="font-size: 3rem; font-weight: 800; margin-bottom: 0.5rem;">100K+</h3>
+                    <p class="text-muted mb-0">Students Helped</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section-premium">
+    <div class="container">
+        <div class="cta-content-premium">
+            <h2>Ready to Find Your Perfect University?</h2>
+            <p>Join thousands of students making informed decisions about their future.</p>
+            <p class="cta-description-premium">
+                Create your free account to save favorites, get personalized recommendations, and track your university search journey.
+            </p>
             @if (User.Identity?.IsAuthenticated != true)
             {
-                <a asp-controller="Account" asp-action="Register" class="btn-secondary">GET STARTED NOW</a>
+                <a asp-controller="Account" asp-action="Register" class="btn-secondary-premium">
+                    <i class="fas fa-rocket me-2"></i> Get Started Free
+                </a>
             }
             else
             {
-                <a asp-controller="Universities" asp-action="Search" class="btn-secondary">START SEARCHING</a>
+                <a asp-controller="Universities" asp-action="Search" class="btn-secondary-premium">
+                    <i class="fas fa-search me-2"></i> Start Searching
+                </a>
             }
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <script>
+        // GSAP Animations
+        if (typeof gsap !== 'undefined') {
+            // Animate feature cards on scroll
+            gsap.utils.toArray('.feature-card-premium').forEach((card, i) => {
+                gsap.from(card, {
+                    scrollTrigger: {
+                        trigger: card,
+                        start: 'top 80%',
+                        toggleActions: 'play none none none'
+                    },
+                    opacity: 0,
+                    y: 50,
+                    duration: 0.6,
+                    delay: i * 0.1,
+                    ease: 'power2.out'
+                });
+            });
+            
+            // Animate stats
+            gsap.utils.toArray('.stat-card h3').forEach(stat => {
+                const target = parseInt(stat.textContent.replace(/\D/g, ''));
+                const obj = { value: 0 };
+                
+                gsap.to(obj, {
+                    value: target,
+                    duration: 2,
+                    scrollTrigger: {
+                        trigger: stat,
+                        start: 'top 80%',
+                        once: true
+                    },
+                    onUpdate: () => {
+                        const suffix = stat.textContent.replace(/\d/g, '');
+                        stat.textContent = Math.round(obj.value).toLocaleString() + suffix;
+                    }
+                });
+            });
+        }
+    </script>
+}

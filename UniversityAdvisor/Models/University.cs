@@ -19,6 +19,7 @@ public class University
     public string? ApiIdReference { get; set; } // External API identifier to avoid duplicates
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public bool IsDeleted { get; set; } = false; // Soft delete support
 
     public ICollection<Program> Programs { get; set; } = new List<Program>();
     public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();

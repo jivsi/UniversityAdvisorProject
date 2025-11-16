@@ -1,40 +1,232 @@
 @model LoginViewModel
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Login - University Advisor";
 }
 
-<div class="auth-page">
+<div class="auth-page-premium">
     <div class="container">
-        <div class="auth-card">
-            <h2>Welcome Back</h2>
-            <p class="auth-subtitle">Sign in to continue your university search</p>
+        <div class="row justify-content-center">
+            <div class="col-lg-5 col-md-7">
+                <div class="auth-card-premium">
+                    <div class="auth-header-premium text-center mb-4">
+                        <div class="auth-icon-premium mb-3">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <h2 class="auth-title-premium">Welcome Back</h2>
+                        <p class="auth-subtitle-premium">Sign in to continue your university search journey</p>
+                    </div>
 
-            <form asp-controller="Account" asp-action="Login" method="post">
-                <div asp-validation-summary="All" class="validation-summary"></div>
+                    <form asp-controller="Account" asp-action="Login" method="post">
+                        <div asp-validation-summary="All" class="alert alert-danger-premium mb-3"></div>
 
-                <div class="form-group">
-                    <label asp-for="Email"></label>
-                    <input asp-for="Email" class="form-control" />
-                    <span asp-validation-for="Email" class="text-danger"></span>
+                        <div class="form-group-premium mb-3">
+                            <label asp-for="Email" class="form-label-premium">
+                                <i class="fas fa-envelope me-2"></i>Email Address
+                            </label>
+                            <input asp-for="Email" class="form-control-premium" placeholder="your.email@example.com" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group-premium mb-3">
+                            <label asp-for="Password" class="form-label-premium">
+                                <i class="fas fa-lock me-2"></i>Password
+                            </label>
+                            <input asp-for="Password" class="form-control-premium" placeholder="Enter your password" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group-checkbox-premium mb-4">
+                            <input asp-for="RememberMe" type="checkbox" class="form-check-input" id="rememberMe" />
+                            <label class="form-check-label" for="rememberMe">
+                                Remember me
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn-submit-premium w-100 mb-3">
+                            <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                        </button>
+                    </form>
+
+                    <div class="auth-footer-premium text-center">
+                        <p class="mb-0">
+                            Don't have an account? 
+                            <a asp-controller="Account" asp-action="Register" class="auth-link-premium">Create one now</a>
+                        </p>
+                    </div>
                 </div>
-
-                <div class="form-group">
-                    <label asp-for="Password"></label>
-                    <input asp-for="Password" class="form-control" />
-                    <span asp-validation-for="Password" class="text-danger"></span>
-                </div>
-
-                <div class="form-group-checkbox">
-                    <input asp-for="RememberMe" type="checkbox" />
-                    <label asp-for="RememberMe"></label>
-                </div>
-
-                <button type="submit" class="btn-submit">Sign In</button>
-            </form>
-
-            <p class="auth-footer">
-                Don't have an account? <a asp-controller="Account" asp-action="Register">Create one</a>
-            </p>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+.auth-page-premium {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+[data-theme="dark"] .auth-page-premium {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
+}
+
+.auth-card-premium {
+    background: white;
+    padding: 3rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .auth-card-premium {
+    background: #1f2937;
+}
+
+.auth-card-premium:hover {
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.2);
+}
+
+.auth-icon-premium {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+}
+
+.auth-title-premium {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--dark);
+}
+
+.auth-subtitle-premium {
+    color: var(--gray);
+    font-size: 1rem;
+}
+
+.form-group-premium {
+    margin-bottom: 1.5rem;
+}
+
+.form-label-premium {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 0.95rem;
+}
+
+.form-control-premium {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: var(--light);
+    color: var(--dark);
+}
+
+.form-control-premium:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    background: white;
+}
+
+[data-theme="dark"] .form-control-premium:focus {
+    background: #374151;
+}
+
+.form-group-checkbox-premium {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+}
+
+.form-check-label {
+    color: var(--gray);
+    cursor: pointer;
+    user-select: none;
+}
+
+.btn-submit-premium {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-submit-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+}
+
+.btn-submit-premium:active {
+    transform: translateY(0);
+}
+
+.auth-footer-premium {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+}
+
+.auth-link-premium {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.auth-link-premium:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+.alert-danger-premium {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.9rem;
+}
+
+@@media (max-width: 768px) {
+    .auth-card-premium {
+        padding: 2rem 1.5rem;
+    }
+}
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

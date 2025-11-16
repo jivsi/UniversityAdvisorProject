@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -95,10 +96,21 @@ public class AccountController : Controller
     }
 
     [HttpGet]
+    [Authorize] // Require authentication to view profile
     public async Task<IActionResult> Profile(string? userId = null)
     {
-        var id = userId ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(id)) return Challenge();
+        var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(currentUserId)) return Challenge();
+        
+        // Users can only view their own profile unless they're Admin
+        var id = userId ?? currentUserId;
+        var isAdmin = User.IsInRole("Admin");
+        
+        // Non-admin users cannot view other users' profiles
+        if (!isAdmin && id != currentUserId)
+        {
+            return Forbid();
+        }
         // fetch user
         var user = await _userManager.FindByIdAsync(id);
         if (user == null) return NotFound();

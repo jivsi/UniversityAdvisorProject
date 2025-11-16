@@ -145,17 +145,16 @@ public class UniversitiesController : Controller
                     .ToList();
             }
 
+            // Batch load ratings to avoid N+1 queries
             var ratingDict = new Dictionary<Guid, double?>();
-            foreach (var u in results)
+            try
             {
-                try
-                {
-                    ratingDict[u.Id] = await _universityService.GetAverageRatingAsync(u.Id);
-                }
-                catch
-                {
-                    // Skip rating if it fails
-                }
+                var universityIds = results.Select(u => u.Id).ToList();
+                ratingDict = await _universityService.GetAverageRatingsAsync(universityIds);
+            }
+            catch
+            {
+                // Log but don't fail the entire request - ratings just won't show
             }
 
             try
@@ -249,17 +248,16 @@ public class UniversitiesController : Controller
                     .ToList();
             }
 
+            // Batch load ratings to avoid N+1 queries
             var ratingDict = new Dictionary<Guid, double?>();
-            foreach (var u in results)
+            try
             {
-                try
-                {
-                    ratingDict[u.Id] = await _universityService.GetAverageRatingAsync(u.Id);
-                }
-                catch
-                {
-                    // Skip rating if it fails
-                }
+                var universityIds = results.Select(u => u.Id).ToList();
+                ratingDict = await _universityService.GetAverageRatingsAsync(universityIds);
+            }
+            catch
+            {
+                // Log but don't fail the entire request - ratings just won't show
             }
 
             try

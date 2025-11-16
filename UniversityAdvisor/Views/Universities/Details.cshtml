@@ -1,144 +1,202 @@
 @model University
 @{
     ViewData["Title"] = Model.Name;
+    var avgRating = Model.Ratings?.Any() == true ? Model.Ratings.Average(r => r.Score) : (double?)null;
+    var ratingCount = Model.Ratings?.Count ?? 0;
 }
 
-<div class="university-details">
-    <div class="university-header">
+<div class="university-details-premium">
+    <!-- Hero Header -->
+    <div class="university-header-premium">
         <div class="container">
-            <div class="header-content">
-                <div class="university-logo-large">
+            <div class="header-content-premium">
+                <div class="university-logo-large-premium">
                     @if (!string.IsNullOrEmpty(Model.LogoUrl))
                     {
                         <img src="@Model.LogoUrl" alt="@Model.Name" />
                     }
                     else
                     {
-                        <div class="logo-placeholder-large">🎓</div>
+                        <div class="logo-placeholder-large-premium">🎓</div>
                     }
                 </div>
-                <div class="header-info">
-                    <h1>@Model.Name</h1>
-                    <p class="location">📍 @Model.City, @Model.Country</p>
+                <div class="header-info-premium">
+                    <h1 class="university-name-premium">@Model.Name</h1>
+                    <p class="location-premium">
+                        <i class="fas fa-map-marker-alt me-2"></i>@Model.City, @Model.Country
+                    </p>
                     @if (Model.FoundedYear.HasValue)
                     {
-                        <p class="founded">Founded: @Model.FoundedYear</p>
+                        <p class="founded-premium">
+                            <i class="fas fa-calendar me-2"></i>Founded in @Model.FoundedYear
+                        </p>
                     }
-                    @if (!string.IsNullOrEmpty(Model.WebsiteUrl))
-                    {
-                        <a href="@Model.WebsiteUrl" target="_blank" class="website-link">Visit Website →</a>
-                    }
+                    <div class="header-actions-premium mt-3">
+                        @if (!string.IsNullOrEmpty(Model.WebsiteUrl))
+                        {
+                            <a href="@Model.WebsiteUrl" target="_blank" class="btn-website-premium">
+                                <i class="fas fa-external-link-alt me-2"></i>Visit Website
+                            </a>
+                        }
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <button class="btn-favorite-details-premium" data-university-id="@Model.Id">
+                                <i class="far fa-heart me-2"></i>Save to Favorites
+                            </button>
+                        }
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="container">
-        <div class="details-layout">
-            <div class="details-main">
-                <section class="info-section">
-                    <h2>About</h2>
-                    <p>@(string.IsNullOrEmpty(Model.Description) ? "No description available." : Model.Description)</p>
+    <div class="container py-5">
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                <!-- About Section -->
+                <section class="info-section-premium mb-4">
+                    <h2 class="section-title-premium-details">
+                        <i class="fas fa-info-circle me-2"></i>About
+                    </h2>
+                    <p class="description-text-premium">
+                        @(string.IsNullOrEmpty(Model.Description) ? "No description available for this university." : Model.Description)
+                    </p>
                     @if (!string.IsNullOrEmpty(Model.ProfessionsOffered))
                     {
-                        <p><strong>Fields of Study:</strong> @Model.ProfessionsOffered</p>
+                        <div class="professions-tags-premium mt-3">
+                            <strong class="me-2">Fields of Study:</strong>
+                            @foreach (var profession in Model.ProfessionsOffered.Split(',').Take(5))
+                            {
+                                <span class="profession-tag-premium">@profession.Trim()</span>
+                            }
+                        </div>
                     }
                 </section>
 
-                <section class="info-section">
-                    <h2>Quick Facts</h2>
-                    <div class="facts-grid">
-                        <div class="fact-card">
-                            <div class="fact-icon">💵</div>
-                            <div class="fact-content">
+                <!-- Quick Facts -->
+                <section class="info-section-premium mb-4">
+                    <h2 class="section-title-premium-details">
+                        <i class="fas fa-chart-bar me-2"></i>Quick Facts
+                    </h2>
+                    <div class="facts-grid-premium">
+                        <div class="fact-card-premium">
+                            <div class="fact-icon-premium">💵</div>
+                            <div class="fact-content-premium">
                                 <h4>Annual Tuition</h4>
-                                <p>$@Model.TuitionFeeMin.ToString("N0") - $@Model.TuitionFeeMax.ToString("N0")</p>
+                                <p class="fact-value-premium">$@Model.TuitionFeeMin.ToString("N0") - $@Model.TuitionFeeMax.ToString("N0")</p>
                             </div>
                         </div>
-                        <div class="fact-card">
-                            <div class="fact-icon">🏠</div>
-                            <div class="fact-content">
+                        <div class="fact-card-premium">
+                            <div class="fact-icon-premium">🏠</div>
+                            <div class="fact-content-premium">
                                 <h4>Monthly Living Cost</h4>
-                                <p>$@Model.LivingCostMonthly.ToString("N0")</p>
+                                <p class="fact-value-premium">$@Model.LivingCostMonthly.ToString("N0")</p>
                             </div>
                         </div>
                         @if (Model.AcceptanceRate.HasValue)
                         {
-                            <div class="fact-card">
-                                <div class="fact-icon">✓</div>
-                                <div class="fact-content">
+                            <div class="fact-card-premium">
+                                <div class="fact-icon-premium">✓</div>
+                                <div class="fact-content-premium">
                                     <h4>Acceptance Rate</h4>
-                                    <p>@Model.AcceptanceRate%</p>
+                                    <p class="fact-value-premium">@Model.AcceptanceRate%</p>
                                 </div>
                             </div>
                         }
                         @if (Model.StudentCount.HasValue)
                         {
-                            <div class="fact-card">
-                                <div class="fact-icon">👥</div>
-                                <div class="fact-content">
+                            <div class="fact-card-premium">
+                                <div class="fact-icon-premium">👥</div>
+                                <div class="fact-content-premium">
                                     <h4>Student Population</h4>
-                                    <p>@Model.StudentCount.Value.ToString("N0")</p>
+                                    <p class="fact-value-premium">@Model.StudentCount.Value.ToString("N0")</p>
                                 </div>
                             </div>
                         }
                     </div>
                 </section>
 
-                <section class="info-section">
-                    <h2>Programs Offered (@Model.Programs.Count)</h2>
+                <!-- Programs Section -->
+                <section class="info-section-premium">
+                    <h2 class="section-title-premium-details">
+                        <i class="fas fa-graduation-cap me-2"></i>Programs Offered (@Model.Programs.Count)
+                    </h2>
                     @if (Model.Programs.Any())
                     {
-                        <div class="programs-grid">
-                            @foreach (var program in Model.Programs)
+                        <div class="programs-grid-premium">
+                            @foreach (var program in Model.Programs.Take(10))
                             {
-                                <div class="program-card">
-                                    <h4>@program.Name</h4>
-                                    <p class="program-type">@program.DegreeType</p>
-                                    <p class="program-details">
-                                        Duration: @program.DurationYears years | Language: @program.Language
-                                    </p>
+                                <div class="program-card-premium">
+                                    <div class="program-header-premium">
+                                        <h4>@program.Name</h4>
+                                        <span class="program-type-badge-premium">@program.DegreeType</span>
+                                    </div>
+                                    <div class="program-meta-premium">
+                                        @if (program.DurationYears.HasValue)
+                                        {
+                                            <span><i class="fas fa-clock me-1"></i>@program.DurationYears years</span>
+                                        }
+                                        <span><i class="fas fa-language me-1"></i>@program.Language</span>
+                                    </div>
                                     @if (!string.IsNullOrEmpty(program.Description))
                                     {
-                                        <p class="program-description">@program.Description</p>
+                                        <p class="program-description-premium">@program.Description</p>
                                     }
                                 </div>
                             }
                         </div>
+                        @if (Model.Programs.Count > 10)
+                        {
+                            <p class="text-muted mt-3">
+                                <i class="fas fa-info-circle me-2"></i>Showing 10 of @Model.Programs.Count programs
+                            </p>
+                        }
                     }
                     else
                     {
-                        <p>No programs listed yet.</p>
+                        <p class="text-muted">No programs listed yet.</p>
                     }
                 </section>
             </div>
 
-            <aside class="details-sidebar">
-                <div class="rating-card">
-                    <h3>⭐ Student Ratings</h3>
-                    @{
-                        var avg = Model.Ratings != null && Model.Ratings.Any() ? Model.Ratings.Average(r => r.Score) : (double?)null;
-                    }
-                    @if (avg.HasValue)
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Rating Card -->
+                <div class="sidebar-card-premium mb-4">
+                    <h3 class="sidebar-title-premium">
+                        <i class="fas fa-star me-2"></i>Student Ratings
+                    </h3>
+                    @if (avgRating.HasValue)
                     {
-                        var rounded = (int)Math.Round(avg.Value);
-                        var stars = new string('★', rounded) + new string('☆', 5 - rounded);
-                        <p><strong>Average:</strong> <span title="@avg.Value.ToString("0.0") out of 5">@stars (@avg.Value.ToString("0.0"))</span> (@Model.Ratings.Count ratings)</p>
+                        var rounded = (int)Math.Round(avgRating.Value);
+                        <div class="rating-display-premium">
+                            <div class="rating-stars-premium">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="fas fa-star @(i <= rounded ? "text-warning" : "text-muted")"></i>
+                                }
+                            </div>
+                            <p class="rating-value-premium">
+                                <strong>@avgRating.Value.ToString("F1")</strong> out of 5
+                                <span class="text-muted">(@ratingCount @(ratingCount == 1 ? "rating" : "ratings"))</span>
+                            </p>
+                        </div>
                     }
                     else
                     {
-                        <p>No ratings yet. Be the first to rate!</p>
+                        <p class="text-muted">No ratings yet. Be the first to rate!</p>
                     }
 
                     @if (User.Identity?.IsAuthenticated == true)
                     {
-                        <form asp-controller="Ratings" asp-action="Submit" method="post">
-                            @Html.AntiForgeryToken()
+                        <form asp-controller="Ratings" asp-action="Submit" method="post" class="rating-form-premium mt-4">
                             <input type="hidden" name="universityId" value="@Model.Id" />
                             <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
-                            <div class="rating-input" style="margin-bottom: 12px;">
-                                <label for="score" style="display: block; margin-bottom: 4px; font-weight: 500;">Your rating</label>
-                                <select id="score" name="score" class="form-control" style="width: 100%;">
+                            <div class="mb-3">
+                                <label class="form-label">Your Rating</label>
+                                <select name="score" class="form-select" required>
+                                    <option value="">Select rating...</option>
                                     <option value="5">5 - Excellent</option>
                                     <option value="4">4 - Good</option>
                                     <option value="3">3 - Average</option>
@@ -146,67 +204,563 @@
                                     <option value="1">1 - Bad</option>
                                 </select>
                             </div>
-                            <div class="rating-comment" style="margin-bottom: 12px;">
-                                <label for="comment" style="display: block; margin-bottom: 4px; font-weight: 500;">Comment (optional)</label>
-                                <textarea id="comment" name="comment" rows="3" placeholder="Share your experience..." class="form-control" style="width: 100%;"></textarea>
+                            <div class="mb-3">
+                                <label class="form-label">Comment (optional)</label>
+                                <textarea name="comment" rows="3" class="form-control" placeholder="Share your experience..."></textarea>
                             </div>
-                            <button type="submit" class="btn-favorite" style="width: 100%;">Submit Rating</button>
+                            <button type="submit" class="btn-submit-rating-premium w-100">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Rating
+                            </button>
                         </form>
                     }
                     else
                     {
-                        <a asp-controller="Account" asp-action="Login">Log in to leave a rating</a>
+                        <a asp-controller="Account" asp-action="Login" class="btn-login-link-premium">
+                            <i class="fas fa-sign-in-alt me-2"></i>Log in to leave a rating
+                        </a>
                     }
 
                     @if (Model.Ratings != null && Model.Ratings.Any())
                     {
-                        <div class="ratings-list" style="margin-top: 20px;">
-                            <h4>Recent ratings</h4>
-                            @foreach (var r in Model.Ratings.OrderByDescending(r => r.CreatedAt).Take(5))
+                        <div class="ratings-list-premium mt-4">
+                            <h5 class="mb-3">Recent Reviews</h5>
+                            @foreach (var rating in Model.Ratings.OrderByDescending(r => r.CreatedAt).Take(5))
                             {
-                                <div class="rating-item" style="padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px;">
-                                    <div><strong>@r.Score/5</strong> <span style="color:#666">@r.CreatedAt.ToLocalTime().ToShortDateString()</span></div>
-                                    @if (!string.IsNullOrWhiteSpace(r.Comment))
+                                <div class="rating-item-premium">
+                                    <div class="rating-item-header-premium">
+                                        <div class="rating-stars-small-premium">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="fas fa-star @(i <= rating.Score ? "text-warning" : "text-muted")" style="font-size: 0.75rem;"></i>
+                                            }
+                                        </div>
+                                        <span class="rating-date-premium">@rating.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy")</span>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(rating.Comment))
                                     {
-                                        <div style="margin-top: 4px;">@r.Comment</div>
+                                        <p class="rating-comment-premium">@rating.Comment</p>
                                     }
                                 </div>
                             }
                         </div>
                     }
                 </div>
-                <div class="chat-widget">
-                    <h3>🤖 AI Assistant</h3>
-                    <p class="chat-intro">Ask me anything about @Model.Name!</p>
 
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="chat-message bot-message">
+                <!-- AI Chat Widget -->
+                <div class="sidebar-card-premium mb-4">
+                    <h3 class="sidebar-title-premium">
+                        <i class="fas fa-robot me-2"></i>AI Assistant
+                    </h3>
+                    <p class="chat-intro-premium">Ask me anything about @Model.Name!</p>
+
+                    <div class="chat-messages-premium" id="chatMessages">
+                        <div class="chat-message-premium bot-message-premium">
                             <p>Hello! I can help you with information about tuition, programs, location, and more. What would you like to know?</p>
                         </div>
                     </div>
 
-                    <form id="chatForm" class="chat-form">
-                        <input type="text" id="chatInput" placeholder="Ask about costs, programs, etc..." class="chat-input" />
-                        <button type="submit" class="chat-send">Send</button>
+                    <form id="chatForm" class="chat-form-premium">
+                        <input type="text" id="chatInput" placeholder="Ask about costs, programs, etc..." class="chat-input-premium" />
+                        <button type="submit" class="chat-send-premium">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
                     </form>
                 </div>
 
-                <div class="action-card">
-                    <h4>Interested in this university?</h4>
-                    <p>Save it to your favorites or learn more about the application process.</p>
-                    @if (User.Identity?.IsAuthenticated == true)
-                    {
-                        <button class="btn-favorite">Add to Favorites</button>
-                    }
-                    else
-                    {
-                        <a asp-controller="Account" asp-action="Register" class="btn-favorite">Sign Up to Save</a>
-                    }
+                <!-- Quick Actions -->
+                <div class="sidebar-card-premium">
+                    <h3 class="sidebar-title-premium">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h3>
+                    <div class="quick-actions-premium">
+                        <a asp-controller="Universities" asp-action="Search" class="quick-action-link-premium">
+                            <i class="fas fa-search me-2"></i>Search More Universities
+                        </a>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <a asp-controller="Account" asp-action="Profile" class="quick-action-link-premium">
+                                <i class="fas fa-user me-2"></i>View My Dashboard
+                            </a>
+                        }
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="Register" class="quick-action-link-premium">
+                                <i class="fas fa-user-plus me-2"></i>Create Account
+                            </a>
+                        }
+                    </div>
                 </div>
-            </aside>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+.university-details-premium {
+    background: var(--light);
+    min-height: calc(100vh - 200px);
+}
+
+.university-header-premium {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 4rem 0;
+    margin-bottom: 0;
+}
+
+.header-content-premium {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.university-logo-large-premium {
+    width: 150px;
+    height: 150px;
+    background: white;
+    border-radius: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.university-logo-large-premium img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.logo-placeholder-large-premium {
+    font-size: 5rem;
+    opacity: 0.7;
+}
+
+.header-info-premium {
+    flex: 1;
+}
+
+.university-name-premium {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.location-premium {
+    font-size: 1.25rem;
+    opacity: 0.95;
+    margin-bottom: 0.5rem;
+}
+
+.founded-premium {
+    opacity: 0.9;
+    margin-bottom: 1rem;
+}
+
+.header-actions-premium {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn-website-premium {
+    background: white;
+    color: var(--primary);
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-website-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    color: var(--primary);
+}
+
+.btn-favorite-details-premium {
+    background: transparent;
+    border: 2px solid white;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-favorite-details-premium:hover {
+    background: white;
+    color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.info-section-premium {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 1.5rem;
+}
+
+[data-theme="dark"] .info-section-premium {
+    background: #1f2937;
+}
+
+.section-title-premium-details {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+}
+
+.description-text-premium {
+    color: var(--gray);
+    line-height: 1.8;
+    font-size: 1.05rem;
+}
+
+.professions-tags-premium {
+    margin-top: 1rem;
+}
+
+.profession-tag-premium {
+    display: inline-block;
+    background: var(--primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin: 0.25rem 0.25rem 0.25rem 0;
+}
+
+.facts-grid-premium {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.fact-card-premium {
+    background: var(--light);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+}
+
+.fact-card-premium:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+    border-color: var(--primary);
+}
+
+.fact-icon-premium {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+}
+
+.fact-content-premium h4 {
+    font-size: 0.875rem;
+    color: var(--gray);
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.fact-value-premium {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin: 0;
+}
+
+.programs-grid-premium {
+    display: grid;
+    gap: 1rem;
+}
+
+.program-card-premium {
+    background: var(--light);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border-left: 4px solid var(--primary);
+    transition: all 0.3s ease;
+}
+
+.program-card-premium:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow);
+}
+
+.program-header-premium {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.program-header-premium h4 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--dark);
+}
+
+.program-type-badge-premium {
+    background: var(--primary);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.program-meta-premium {
+    display: flex;
+    gap: 1.5rem;
+    color: var(--gray);
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+.program-description-premium {
+    color: var(--gray);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.sidebar-card-premium {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 1.5rem;
+}
+
+[data-theme="dark"] .sidebar-card-premium {
+    background: #1f2937;
+}
+
+.sidebar-title-premium {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+}
+
+.rating-display-premium {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.rating-stars-premium {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.rating-value-premium {
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.rating-form-premium {
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+}
+
+.btn-submit-rating-premium {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-submit-rating-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.ratings-list-premium {
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+}
+
+.rating-item-premium {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.rating-item-premium:last-child {
+    border-bottom: none;
+}
+
+.rating-item-header-premium {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.rating-stars-small-premium {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.rating-date-premium {
+    font-size: 0.875rem;
+    color: var(--gray);
+}
+
+.rating-comment-premium {
+    color: var(--gray);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.chat-intro-premium {
+    color: var(--gray);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.chat-messages-premium {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--light);
+    border-radius: 0.5rem;
+}
+
+.chat-message-premium {
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    max-width: 85%;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.bot-message-premium {
+    background: var(--gray-light);
+    align-self: flex-start;
+    color: var(--dark);
+}
+
+.user-message-premium {
+    background: var(--primary);
+    color: white;
+    align-self: flex-end;
+}
+
+.chat-form-premium {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.chat-input-premium {
+    flex: 1;
+    padding: 0.75rem;
+    border: 2px solid var(--border);
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.chat-input-premium:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.chat-send-premium {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.chat-send-premium:hover {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+}
+
+.quick-actions-premium {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.quick-action-link-premium {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--light);
+    border-radius: 0.5rem;
+    text-decoration: none;
+    color: var(--dark);
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.quick-action-link-premium:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateX(4px);
+}
+
+.btn-login-link-premium {
+    display: block;
+    text-align: center;
+    padding: 0.75rem;
+    background: var(--primary);
+    color: white;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-login-link-premium:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    color: white;
+}
+
+@@media (max-width: 992px) {
+    .header-content-premium {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .facts-grid-premium {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 
 @section Scripts {
     <script>
@@ -215,18 +769,26 @@
         const chatInput = document.getElementById('chatInput');
         const chatMessages = document.getElementById('chatMessages');
 
-        chatForm.addEventListener('submit', async (e) => {
+        chatForm?.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const message = chatInput.value.trim();
             if (!message) return;
 
+            // Add user message
             const userMessageDiv = document.createElement('div');
-            userMessageDiv.className = 'chat-message user-message';
+            userMessageDiv.className = 'chat-message-premium user-message-premium';
             userMessageDiv.innerHTML = `<p>${message}</p>`;
             chatMessages.appendChild(userMessageDiv);
 
             chatInput.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Show loading
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'chat-message-premium bot-message-premium';
+            loadingDiv.innerHTML = '<p><i class="fas fa-spinner fa-spin me-2"></i>Thinking...</p>';
+            chatMessages.appendChild(loadingDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
             try {
@@ -239,17 +801,38 @@
                 });
 
                 const data = await response.json();
+                loadingDiv.remove();
 
                 const botMessageDiv = document.createElement('div');
-                botMessageDiv.className = 'chat-message bot-message';
+                botMessageDiv.className = 'chat-message-premium bot-message-premium';
                 botMessageDiv.innerHTML = `<p>${data.response}</p>`;
                 chatMessages.appendChild(botMessageDiv);
 
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             } catch (error) {
+                loadingDiv.remove();
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'chat-message-premium bot-message-premium';
+                errorDiv.innerHTML = '<p>Sorry, I encountered an error. Please try again.</p>';
+                chatMessages.appendChild(errorDiv);
                 console.error('Chat error:', error);
+            }
+        });
+
+        // Favorite button
+        document.querySelector('.btn-favorite-details-premium')?.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            if (icon.classList.contains('far')) {
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                this.style.background = 'white';
+                this.style.color = 'var(--primary)';
+            } else {
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+                this.style.background = 'transparent';
+                this.style.color = 'white';
             }
         });
     </script>
 }
-

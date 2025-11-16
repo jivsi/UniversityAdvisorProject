@@ -26,11 +26,19 @@ public class HomeController : Controller
         {
             var results = await _universityService.SearchUniversitiesAsync(searchQuery, country, city,
                 degreeType, minTuition, maxTuition, sortBy);
+            
+            // Batch load ratings to avoid N+1 queries
             var ratingDict = new Dictionary<Guid, double?>();
-            foreach (var u in results)
+            try
             {
-                ratingDict[u.Id] = await _universityService.GetAverageRatingAsync(u.Id);
+                var universityIds = results.Select(u => u.Id).ToList();
+                ratingDict = await _universityService.GetAverageRatingsAsync(universityIds);
             }
+            catch
+            {
+                // Ratings won't show if lookup fails, but search results will still display
+            }
+            
             var viewModel = new SearchViewModel
             {
                 SearchQuery = searchQuery,

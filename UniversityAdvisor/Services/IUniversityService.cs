@@ -12,6 +12,7 @@ public interface IUniversityService
     Task<List<Models.Program>> GetProgramsByUniversityIdAsync(Guid universityId);
     Task<int> ImportIfEmptyAsync(IEnumerable<string> countries);
     Task<double?> GetAverageRatingAsync(Guid universityId);
+    Task<Dictionary<Guid, double?>> GetAverageRatingsAsync(IEnumerable<Guid> universityIds); // Batch lookup to fix N+1
     Task<List<Rating>> GetRatingsAsync(Guid universityId, int take = 10);
     Task AddOrUpdateRatingAsync(Guid universityId, string userId, int score, string? comment);
 }
