@@ -1,4 +1,5 @@
-using UniversityAdvisor.Models;
+using UniversityAdvisor.Domain.Entities;
+
 
 namespace UniversityAdvisor.ViewModels;
 

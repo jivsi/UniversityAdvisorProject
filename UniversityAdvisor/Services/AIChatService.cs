@@ -1,4 +1,4 @@
-using UniversityAdvisor.Data;
+using UniversityAdvisor.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 

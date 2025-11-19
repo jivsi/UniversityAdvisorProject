@@ -1,308 +1,143 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using UniversityAdvisor.Models;
-using UniversityAdvisor.Services;
+using UniversityAdvisor.Application.Interfaces;
+using UniversityAdvisor.Application.UseCases.Universities;
 using UniversityAdvisor.ViewModels;
 
 namespace UniversityAdvisor.Controllers;
 
 public class UniversitiesController : Controller
 {
-    private readonly IUniversityService _universityService;
-    private readonly IUniversityApiService _universityApiService;
+    private readonly ICountryRepository _countryRepository;
+    private readonly IUniversityRepository _universityRepository;
+    private readonly SearchUniversitiesUseCase _searchUseCase;
+    private readonly IRatingRepository _ratingRepository;
 
     public UniversitiesController(
-        IUniversityService universityService,
-        IUniversityApiService universityApiService)
+        ICountryRepository countryRepository,
+        IUniversityRepository universityRepository,
+        SearchUniversitiesUseCase searchUseCase,
+        IRatingRepository ratingRepository)
     {
-        _universityService = universityService;
-        _universityApiService = universityApiService;
+        _countryRepository = countryRepository;
+        _universityRepository = universityRepository;
+        _searchUseCase = searchUseCase;
+        _ratingRepository = ratingRepository;
     }
 
+    // ----------------------------
+    //  SEARCH PAGE (GET)
+    // ----------------------------
     [HttpGet]
     public async Task<IActionResult> Search()
     {
-        var model = new SearchViewModel();
-        try
-        {
-            model.Countries = await _universityService.GetCountriesAsync();
-        }
-        catch
-        {
-            model.Countries = new List<string>();
-        }
-        return View(model);
+        var vm = new SearchViewModel();
+        vm.Countries = (await _countryRepository.GetCountriesAsync()).ToList();
+        return View(vm);
     }
 
+    // ----------------------------
+    //  SEARCH RESULTS (POST)
+    // ----------------------------
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Search(SearchViewModel model)
     {
-        try
+        if (!ModelState.IsValid)
         {
-            if (!ModelState.IsValid)
-            {
-                try
-                {
-                    model.Countries = await _universityService.GetCountriesAsync();
-                }
-                catch
-                {
-                    model.Countries = new List<string>();
-                }
-                return View(model);
-            }
-
-            // If searching by profession, use the API service
-            if (!string.IsNullOrWhiteSpace(model.Profession))
-            {
-                try
-                {
-                    var apiResults = await _universityApiService.SearchUniversitiesByProfessionAsync(
-                        model.Profession,
-                        model.Country);
-
-                    // Save to database if not already saved
-                    foreach (var university in apiResults)
-                    {
-                        try
-                        {
-                            var existing = await _universityApiService.GetUniversityByApiIdAsync(university.ApiIdReference ?? string.Empty);
-                            if (existing == null && !string.IsNullOrWhiteSpace(university.ApiIdReference))
-                            {
-                                await _universityApiService.SaveUniversityToDatabaseAsync(university);
-                            }
-                        }
-                        catch
-                        {
-                            // Skip if database save fails
-                        }
-                    }
-                }
-                catch
-                {
-                    // Continue even if API call fails
-                }
-            }
-
-            // Search in database
-            List<University> results;
-            try
-            {
-                results = await _universityService.SearchUniversitiesAsync(
-                    model.SearchQuery,
-                    model.Country,
-                    model.City,
-                    model.DegreeType,
-                    model.MinTuition,
-                    model.MaxTuition,
-                    model.SortBy);
-                
-                // If no results, try to import universities (will only import if database is empty)
-                if (results.Count == 0)
-                {
-                    try
-                    {
-                        var countriesToImport = string.IsNullOrWhiteSpace(model.Country) 
-                            ? new[] { "Bulgaria", "Germany", "France", "Italy", "Spain", "Greece", "Romania" }
-                            : new[] { model.Country };
-                        
-                        var imported = await _universityService.ImportIfEmptyAsync(countriesToImport);
-                        
-                        if (imported > 0)
-                        {
-                            ViewBag.InfoMessage = $"Imported {imported} universities from external API. Please search again to see results.";
-                        }
-                        
-                        // Search again after import
-                        results = await _universityService.SearchUniversitiesAsync(
-                            model.SearchQuery,
-                            model.Country,
-                            model.City,
-                            model.DegreeType,
-                            model.MinTuition,
-                            model.MaxTuition,
-                            model.SortBy);
-                    }
-                    catch (Exception importEx)
-                    {
-                        ViewBag.WarningMessage = "Could not import universities automatically. Please ensure your database connection is working.";
-                    }
-                }
-            }
-            catch
-            {
-                ViewBag.ErrorMessage = "Unable to connect to the database. Please ensure PostgreSQL is running and the connection string is correct.";
-                results = new List<University>();
-            }
-
-            // If profession filter was used, filter results
-            if (!string.IsNullOrWhiteSpace(model.Profession))
-            {
-                results = results.Where(u => 
-                    u.ProfessionsOffered != null && 
-                    u.ProfessionsOffered.Contains(model.Profession, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-            }
-
-            // Batch load ratings to avoid N+1 queries
-            var ratingDict = new Dictionary<Guid, double?>();
-            try
-            {
-                var universityIds = results.Select(u => u.Id).ToList();
-                ratingDict = await _universityService.GetAverageRatingsAsync(universityIds);
-            }
-            catch
-            {
-                // Log but don't fail the entire request - ratings just won't show
-            }
-
-            try
-            {
-                model.Countries = await _universityService.GetCountriesAsync();
-            }
-            catch
-            {
-                model.Countries = new List<string>();
-            }
-
-            model.Results = results;
-            model.UniversityAverageRatings = ratingDict;
-            model.TotalResults = results.Count;
-
-            return View("Results", model);
+            model.Countries = (await _countryRepository.GetCountriesAsync()).ToList();
+            return View(model);
         }
-        catch (Exception ex)
+
+        // Execute use-case (actual business logic)
+        var results = await _searchUseCase.ExecuteAsync(new SearchUniversitiesRequest
         {
-            ViewBag.ErrorMessage = "An error occurred while searching. Please check your database connection.";
-            model.Results = new List<University>();
-            model.Countries = new List<string>();
-            model.UniversityAverageRatings = new Dictionary<Guid, double?>();
-            model.TotalResults = 0;
-            return View("Results", model);
-        }
+            Query = model.SearchQuery,
+            Country = model.Country,
+            City = model.City,
+            DegreeType = model.DegreeType,
+            MinTuition = model.MinTuition,
+            MaxTuition = model.MaxTuition,
+            SortBy = model.SortBy,
+            Profession = model.Profession
+        });
+
+        // Load average ratings
+        model.UniversityAverageRatings = await _ratingRepository.GetAverageRatingsAsync(
+            results.Select(u => u.Id).ToList());
+
+        model.Results = results.ToList();
+        model.Countries = (await _countryRepository.GetCountriesAsync()).ToList();
+        model.TotalResults = model.Results.Count;
+
+        return View("Results", model);
     }
 
+    // ----------------------------
+    //  DIRECT LINK RESULTS (GET)
+    // ----------------------------
     [HttpGet]
-    public async Task<IActionResult> Results(string? searchQuery, string? country, string? city,
-        string? profession, string? degreeType, decimal? minTuition, decimal? maxTuition, string? sortBy)
+    public async Task<IActionResult> Results(string? searchQuery, string? country,
+        string? city, string? profession, string? degreeType,
+        decimal? minTuition, decimal? maxTuition, string? sortBy)
     {
-        var model = new SearchViewModel
+        var request = new SearchUniversitiesRequest
+        {
+            Query = searchQuery,
+            Country = country,
+            City = city,
+            DegreeType = degreeType,
+            MinTuition = minTuition,
+            MaxTuition = maxTuition,
+            SortBy = sortBy,
+            Profession = profession
+        };
+
+        var results = await _searchUseCase.ExecuteAsync(request);
+
+        var vm = new SearchViewModel
         {
             SearchQuery = searchQuery,
             Country = country,
             City = city,
-            Profession = profession,
             DegreeType = degreeType,
+            Profession = profession,
             MinTuition = minTuition,
             MaxTuition = maxTuition,
-            SortBy = sortBy
+            SortBy = sortBy,
+            Results = results.ToList(),
+            Countries = (await _countryRepository.GetCountriesAsync()).ToList(),
+            TotalResults = results.Count()
         };
 
-        try
-        {
-            List<University> results;
-            try
-            {
-                results = await _universityService.SearchUniversitiesAsync(
-                    searchQuery, country, city, degreeType, minTuition, maxTuition, sortBy);
-                
-                // If no results, try to import universities (will only import if database is empty)
-                if (results.Count == 0)
-                {
-                    try
-                    {
-                        var countriesToImport = string.IsNullOrWhiteSpace(country) 
-                            ? new[] { "Bulgaria", "Germany", "France", "Italy", "Spain", "Greece", "Romania" }
-                            : new[] { country };
-                        
-                        var imported = await _universityService.ImportIfEmptyAsync(countriesToImport);
-                        
-                        if (imported > 0)
-                        {
-                            ViewBag.InfoMessage = $"Imported {imported} universities from external API. Please search again to see results.";
-                        }
-                        
-                        // Search again after import
-                        results = await _universityService.SearchUniversitiesAsync(
-                            searchQuery, country, city, degreeType, minTuition, maxTuition, sortBy);
-                    }
-                    catch (Exception importEx)
-                    {
-                        ViewBag.WarningMessage = "Could not import universities automatically. Please ensure your database connection is working.";
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ViewBag.ErrorMessage = "Unable to connect to the database. Please ensure PostgreSQL is running and the connection string is correct.";
-                results = new List<University>();
-            }
+        vm.UniversityAverageRatings =
+            await _ratingRepository.GetAverageRatingsAsync(results.Select(u => u.Id).ToList());
 
-            // If profession filter was used, filter results
-            if (!string.IsNullOrWhiteSpace(profession))
-            {
-                results = results.Where(u =>
-                    u.ProfessionsOffered != null &&
-                    u.ProfessionsOffered.Contains(profession, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-            }
-
-            // Batch load ratings to avoid N+1 queries
-            var ratingDict = new Dictionary<Guid, double?>();
-            try
-            {
-                var universityIds = results.Select(u => u.Id).ToList();
-                ratingDict = await _universityService.GetAverageRatingsAsync(universityIds);
-            }
-            catch
-            {
-                // Log but don't fail the entire request - ratings just won't show
-            }
-
-            try
-            {
-                model.Countries = await _universityService.GetCountriesAsync();
-            }
-            catch
-            {
-                model.Countries = new List<string>();
-            }
-
-            model.Results = results;
-            model.UniversityAverageRatings = ratingDict;
-            model.TotalResults = results.Count;
-        }
-        catch (Exception ex)
-        {
-            ViewBag.ErrorMessage = "An error occurred while searching. Please check your database connection.";
-            model.Results = new List<University>();
-            model.Countries = new List<string>();
-            model.UniversityAverageRatings = new Dictionary<Guid, double?>();
-            model.TotalResults = 0;
-        }
-
-        return View(model);
+        return View(vm);
     }
 
+    // ----------------------------
+    //  DETAILS VIEW
+    // ----------------------------
     [HttpGet]
     public async Task<IActionResult> Details(Guid id)
     {
-        var university = await _universityService.GetUniversityByIdAsync(id);
+        var university = await _universityRepository.GetByIdAsync(id);
+
         if (university == null)
-        {
             return NotFound();
-        }
 
         return View(university);
     }
 
+    // ----------------------------
+    //  GET CITIES (AJAX)
+    // ----------------------------
     [HttpGet]
     public async Task<JsonResult> GetCities(string country)
     {
         try
         {
-            var cities = await _universityService.GetCitiesByCountryAsync(country);
+            var cities = await _countryRepository.GetCitiesByCountryAsync(country);
             return Json(cities);
         }
         catch
@@ -311,4 +146,3 @@ public class UniversitiesController : Controller
         }
     }
 }
-

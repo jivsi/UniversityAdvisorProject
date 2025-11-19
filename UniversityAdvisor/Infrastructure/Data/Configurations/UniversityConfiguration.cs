@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using UniversityAdvisor.Domain.Entities;
-using AcademicProgram = UniversityAdvisor.Domain.Entities.AcademicProgram;
+
 
 namespace UniversityAdvisor.Infrastructure.Data.Configurations;
 

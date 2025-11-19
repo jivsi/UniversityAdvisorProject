@@ -1,88 +1,30 @@
-using UniversityAdvisor.Application.DTOs;
 using UniversityAdvisor.Application.Interfaces;
+using UniversityAdvisor.Domain.Entities;
 
 namespace UniversityAdvisor.Application.UseCases.Universities;
 
-/// <summary>
-/// Use case for searching universities with pagination
-/// </summary>
 public class SearchUniversitiesUseCase
 {
-    private readonly IUniversityRepository _universityRepository;
-    private readonly IRatingRepository _ratingRepository;
-    private readonly IFavoriteRepository _favoriteRepository;
+    private readonly IUniversityRepository _repo;
 
-    public SearchUniversitiesUseCase(
-        IUniversityRepository universityRepository,
-        IRatingRepository ratingRepository,
-        IFavoriteRepository favoriteRepository)
+    public SearchUniversitiesUseCase(IUniversityRepository repo)
     {
-        _universityRepository = universityRepository;
-        _ratingRepository = ratingRepository;
-        _favoriteRepository = favoriteRepository;
+        _repo = repo;
     }
 
-    public async Task<SearchResultDto> ExecuteAsync(
-        string? searchQuery,
-        string? country,
-        string? city,
-        string? degreeType,
-        decimal? minTuition,
-        decimal? maxTuition,
-        string? sortBy,
-        int page = 1,
-        int pageSize = 20,
-        string? userId = null,
-        CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<University>> ExecuteAsync(SearchUniversitiesRequest request)
     {
-        var skip = (page - 1) * pageSize;
-        
-        var universities = await _universityRepository.SearchAsync(
-            searchQuery, country, city, degreeType, minTuition, maxTuition, sortBy,
-            skip, pageSize, cancellationToken);
+        var universities = await _repo.SearchAsync(
+            request.Query,
+            request.Country,
+            request.City,
+            request.DegreeType,
+            request.MinTuition,
+            request.MaxTuition,
+            request.SortBy,
+            request.Profession
+        );
 
-        var totalCount = await _universityRepository.CountAsync(
-            searchQuery, country, city, degreeType, minTuition, maxTuition, cancellationToken);
-
-        var universityIds = universities.Select(u => u.Id).ToList();
-        var averageRatings = await _ratingRepository.GetAverageRatingsAsync(universityIds, cancellationToken);
-
-        var favoriteIds = new HashSet<Guid>();
-        if (!string.IsNullOrEmpty(userId))
-        {
-            var favorites = await _favoriteRepository.GetByUserIdAsync(userId, cancellationToken);
-            favoriteIds = favorites.Select(f => f.UniversityId).ToHashSet();
-        }
-
-        var universityDtos = universities.Select(u => new UniversityDto
-        {
-            Id = u.Id,
-            Name = u.Name,
-            Country = u.Country,
-            City = u.City,
-            Description = u.Description,
-            WebsiteUrl = u.WebsiteUrl,
-            LogoUrl = u.LogoUrl,
-            TuitionFeeMin = u.TuitionFeeMin,
-            TuitionFeeMax = u.TuitionFeeMax,
-            LivingCostMonthly = u.LivingCostMonthly,
-            AcceptanceRate = u.AcceptanceRate,
-            StudentCount = u.StudentCount,
-            FoundedYear = u.FoundedYear,
-            ProfessionsOffered = u.ProfessionsOffered,
-            AverageRating = averageRatings.GetValueOrDefault(u.Id),
-            RatingCount = u.Ratings.Count,
-            ProgramCount = u.Programs.Count,
-            IsFavorite = favoriteIds.Contains(u.Id)
-        }).ToList();
-
-        return new SearchResultDto
-        {
-            Universities = universityDtos,
-            TotalCount = totalCount,
-            Page = page,
-            PageSize = pageSize
-        };
+        return universities;
     }
 }
-

@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using UniversityAdvisor.Models;
+using UniversityAdvisor.Domain.Entities;
 using UniversityAdvisor.Services;
 using UniversityAdvisor.ViewModels;
 

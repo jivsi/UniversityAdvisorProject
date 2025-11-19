@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using UniversityAdvisor.Data;
-using UniversityAdvisor.Models;
 using System.Text.Json;
+using UniversityAdvisor.Infrastructure.Data;
+using UniversityAdvisor.Domain.Entities;
 
 namespace UniversityAdvisor.Services;
 
@@ -28,20 +28,20 @@ public class UniversityApiService : IUniversityApiService
 
         try
         {
-            // Using the HipoLabs API (free, no key required) for European universities
-            // This API provides basic university information
-            var countriesToSearch = country != null 
-                ? new[] { country } 
-                : new[] { "Bulgaria", "Germany", "France", "Italy", "Spain", "Greece", "Romania", "Poland", "Czech Republic", "Austria" };
+            var countriesToSearch = country != null
+                ? new List<string> { country }
+                : new List<string> { "United States", "United Kingdom", "Canada", "Australia", "Germany", "Netherlands" };
 
             foreach (var searchCountry in countriesToSearch)
             {
                 var url = $"https://universities.hipolabs.com/search?country={Uri.EscapeDataString(searchCountry)}&name={Uri.EscapeDataString(profession)}";
                 var response = await client.GetAsync(url);
-                
-                if (!response.IsSuccessStatusCode) continue;
+
+                if (!response.IsSuccessStatusCode)
+                    continue;
 
                 var json = await response.Content.ReadAsStringAsync();
+
                 var items = JsonSerializer.Deserialize<List<HipoLabsUniversityDto>>(json, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
@@ -49,11 +49,11 @@ public class UniversityApiService : IUniversityApiService
 
                 foreach (var item in items)
                 {
-                    if (string.IsNullOrWhiteSpace(item.Name)) continue;
+                    if (string.IsNullOrWhiteSpace(item.Name))
+                        continue;
 
                     var apiId = $"{item.Name}_{item.Country}_{item.StateProvince}";
-                    
-                    // Check if already exists in database
+
                     var existing = await _context.Universities
                         .FirstOrDefaultAsync(u => u.ApiIdReference == apiId);
 
@@ -63,21 +63,21 @@ public class UniversityApiService : IUniversityApiService
                         continue;
                     }
 
-                    // Create new university entity
                     var university = new University
                     {
                         Id = Guid.NewGuid(),
                         Name = item.Name,
                         Country = item.Country ?? searchCountry,
-                        City = item.StateProvince ?? string.Empty,
+                        City = item.StateProvince ?? "",
                         WebsiteUrl = item.WebPages?.FirstOrDefault(),
-                        ProfessionsOffered = profession, // Store the profession that matched
+                        ProfessionsOffered = profession,
                         ApiIdReference = apiId,
-                        TuitionFeeMin = 0, // API doesn't provide this, will need to be updated manually or via another API
+                        TuitionFeeMin = 0,
                         TuitionFeeMax = 0,
                         LivingCostMonthly = 0,
                         CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
+                        UpdatedAt = DateTime.UtcNow,
+                        IsDeleted = false
                     };
 
                     universities.Add(university);
@@ -101,29 +101,36 @@ public class UniversityApiService : IUniversityApiService
     public async Task SaveUniversityToDatabaseAsync(University university)
     {
         if (string.IsNullOrWhiteSpace(university.ApiIdReference))
-        {
-            throw new ArgumentException("ApiIdReference is required to save university", nameof(university));
-        }
+            throw new ArgumentException("ApiIdReference is required.", nameof(university));
 
         var existing = await _context.Universities
             .FirstOrDefaultAsync(u => u.ApiIdReference == university.ApiIdReference);
 
         if (existing != null)
         {
-            // Update existing
             existing.Name = university.Name;
             existing.Country = university.Country;
             existing.City = university.City;
             existing.WebsiteUrl = university.WebsiteUrl;
+            existing.Description = university.Description;
+            existing.LogoUrl = university.LogoUrl;
             existing.ProfessionsOffered = university.ProfessionsOffered;
+            existing.TuitionFeeMin = university.TuitionFeeMin;
+            existing.TuitionFeeMax = university.TuitionFeeMax;
+            existing.LivingCostMonthly = university.LivingCostMonthly;
+            existing.AcceptanceRate = university.AcceptanceRate;
+            existing.StudentCount = university.StudentCount;
+            existing.FoundedYear = university.FoundedYear;
+            existing.IsDeleted = university.IsDeleted;
             existing.UpdatedAt = DateTime.UtcNow;
         }
         else
         {
-            // Add new
+            university.Id = Guid.NewGuid();
             university.CreatedAt = DateTime.UtcNow;
             university.UpdatedAt = DateTime.UtcNow;
-            _context.Universities.Add(university);
+
+            await _context.Universities.AddAsync(university);
         }
 
         await _context.SaveChangesAsync();
@@ -138,4 +145,3 @@ public class UniversityApiService : IUniversityApiService
         public List<string>? Domains { get; set; }
     }
 }
-

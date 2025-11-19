@@ -1,4 +1,4 @@
-@model University
+@model UniversityAdvisor.Domain.Entities.University
 @{
     ViewData["Title"] = Model.Name;
     var avgRating = Model.Ratings?.Any() == true ? Model.Ratings.Average(r => r.Score) : (double?)null;

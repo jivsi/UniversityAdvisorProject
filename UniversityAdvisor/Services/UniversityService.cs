@@ -1,22 +1,29 @@
 using Microsoft.EntityFrameworkCore;
-using UniversityAdvisor.Infrastructure.Data;
-using UniversityAdvisor.Models;
+using System.Text.Json;
 using UniversityAdvisor.Domain.Entities;
-using DomainUniversity = UniversityAdvisor.Domain.Entities.University;
-using DomainRating = UniversityAdvisor.Domain.Entities.Rating;
-using DomainProgram = UniversityAdvisor.Domain.Entities.AcademicProgram;
+using UniversityAdvisor.Infrastructure.Data;
 
 namespace UniversityAdvisor.Services;
 
 public class UniversityService : IUniversityService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<UniversityService> _logger;
 
-    public UniversityService(ApplicationDbContext context)
+    public UniversityService(
+        ApplicationDbContext context,
+        IHttpClientFactory httpClientFactory,
+        ILogger<UniversityService> logger)
     {
         _context = context;
+        _httpClientFactory = httpClientFactory;
+        _logger = logger;
     }
 
+    // -------------------------------------------------------------------
+    // IMPORT UNIVERSITIES IF DATABASE IS EMPTY (USED IN Program.cs SEEDING)
+    // -------------------------------------------------------------------
     public async Task<int> ImportIfEmptyAsync(IEnumerable<string> countries)
     {
         try
@@ -26,21 +33,36 @@ public class UniversityService : IUniversityService
                 return 0;
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // If we can't check, try to import anyway
+            _logger.LogWarning(ex, "Could not check if universities table is empty. Attempting import anyway.");
         }
 
-        var client = new HttpClient();
-        client.Timeout = TimeSpan.FromSeconds(30); // Add timeout
+        var client = _httpClientFactory.CreateClient();
+        client.Timeout = TimeSpan.FromSeconds(30);
+
         var added = 0;
+
         foreach (var country in countries)
         {
             var url = $"https://universities.hipolabs.com/search?country={Uri.EscapeDataString(country)}";
-            var response = await client.GetAsync(url);
+
+            HttpResponseMessage response;
+            try
+            {
+                response = await client.GetAsync(url);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error calling external universities API for country {Country}", country);
+                continue;
+            }
+
             if (!response.IsSuccessStatusCode) continue;
+
             var json = await response.Content.ReadAsStringAsync();
-            var items = System.Text.Json.JsonSerializer.Deserialize<List<HipolabsUniversityDto>>(json, new System.Text.Json.JsonSerializerOptions
+
+            var items = JsonSerializer.Deserialize<List<HipolabsUniversityDto>>(json, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             }) ?? new List<HipolabsUniversityDto>();
@@ -48,11 +70,13 @@ public class UniversityService : IUniversityService
             foreach (var item in items)
             {
                 if (string.IsNullOrWhiteSpace(item.Name)) continue;
-                
-                var apiId = $"{item.Name}_{item.Country ?? country}_{item.StateProvince ?? ""}";
-                if (await _context.Universities.AnyAsync(u => u.ApiIdReference == apiId)) continue;
 
-                var uni = new DomainUniversity
+                var apiId = $"{item.Name}_{item.Country ?? country}_{item.StateProvince ?? ""}";
+
+                if (await _context.Universities.AnyAsync(u => u.ApiIdReference == apiId))
+                    continue;
+
+                var uni = new University
                 {
                     Id = Guid.NewGuid(),
                     Name = item.Name,
@@ -69,8 +93,10 @@ public class UniversityService : IUniversityService
                     StudentCount = null,
                     FoundedYear = null,
                     CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    UpdatedAt = DateTime.UtcNow,
+                    IsDeleted = false
                 };
+
                 _context.Universities.Add(uni);
                 added++;
             }
@@ -82,10 +108,9 @@ public class UniversityService : IUniversityService
         }
         catch (Exception ex)
         {
-            // Log error but don't throw - return count of what was added to context
-            System.Diagnostics.Debug.WriteLine($"Error saving universities: {ex.Message}");
+            _logger.LogError(ex, "Error saving imported universities to database.");
         }
-        
+
         return added;
     }
 
@@ -98,16 +123,28 @@ public class UniversityService : IUniversityService
         public List<string>? Domains { get; set; }
     }
 
-    public async Task<List<Models.University>> SearchUniversitiesAsync(string? searchQuery, string? country,
-        string? city, string? degreeType, decimal? minTuition, decimal? maxTuition, string? sortBy)
+    // -------------------------------------------------------------------
+    // SEARCH UNIVERSITIES (DOMAIN ENTITIES)
+    // -------------------------------------------------------------------
+    public async Task<List<University>> SearchUniversitiesAsync(
+        string? searchQuery,
+        string? country,
+        string? city,
+        string? degreeType,
+        decimal? minTuition,
+        decimal? maxTuition,
+        string? sortBy)
     {
-        var query = _context.Universities.Include(u => u.Programs).AsQueryable();
+        var query = _context.Universities
+            .Include(u => u.Programs)
+            .Where(u => !u.IsDeleted)
+            .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(searchQuery))
         {
             query = query.Where(u =>
                 u.Name.Contains(searchQuery) ||
-                u.Description!.Contains(searchQuery) ||
+                (u.Description != null && u.Description.Contains(searchQuery)) ||
                 u.Programs.Any(p => p.Name.Contains(searchQuery)));
         }
 
@@ -145,98 +182,27 @@ public class UniversityService : IUniversityService
             _ => query.OrderBy(u => u.Name)
         };
 
-        var domainUniversities = await query.ToListAsync();
-        
-        // Map Domain entities to Models entities for backward compatibility
-        return domainUniversities.Select(u => new Models.University
-        {
-            Id = u.Id,
-            Name = u.Name,
-            Country = u.Country,
-            City = u.City,
-            Description = u.Description,
-            WebsiteUrl = u.WebsiteUrl,
-            LogoUrl = u.LogoUrl,
-            TuitionFeeMin = u.TuitionFeeMin,
-            TuitionFeeMax = u.TuitionFeeMax,
-            LivingCostMonthly = u.LivingCostMonthly,
-            AcceptanceRate = u.AcceptanceRate,
-            StudentCount = u.StudentCount,
-            FoundedYear = u.FoundedYear,
-            ProfessionsOffered = u.ProfessionsOffered,
-            ApiIdReference = u.ApiIdReference,
-            CreatedAt = u.CreatedAt,
-            UpdatedAt = u.UpdatedAt ?? u.CreatedAt,
-            Programs = u.Programs.Select(p => new Models.Program
-            {
-                Id = p.Id,
-                UniversityId = p.UniversityId,
-                Name = p.Name,
-                DegreeType = p.DegreeType,
-                DurationYears = p.DurationYears,
-                Language = p.Language,
-                Description = p.Description,
-                CreatedAt = p.CreatedAt
-            }).ToList()
-        }).ToList();
+        return await query.ToListAsync();
     }
 
-    public async Task<Models.University?> GetUniversityByIdAsync(Guid id)
+    // -------------------------------------------------------------------
+    // GET SINGLE UNIVERSITY (DOMAIN)
+    // -------------------------------------------------------------------
+    public async Task<University?> GetUniversityByIdAsync(Guid id)
     {
-        var domainUniversity = await _context.Universities
+        return await _context.Universities
             .Include(u => u.Programs)
             .Include(u => u.Ratings)
-            .FirstOrDefaultAsync(u => u.Id == id);
-        
-        if (domainUniversity == null) return null;
-        
-        // Map Domain entity to Models entity for backward compatibility
-        return new Models.University
-        {
-            Id = domainUniversity.Id,
-            Name = domainUniversity.Name,
-            Country = domainUniversity.Country,
-            City = domainUniversity.City,
-            Description = domainUniversity.Description,
-            WebsiteUrl = domainUniversity.WebsiteUrl,
-            LogoUrl = domainUniversity.LogoUrl,
-            TuitionFeeMin = domainUniversity.TuitionFeeMin,
-            TuitionFeeMax = domainUniversity.TuitionFeeMax,
-            LivingCostMonthly = domainUniversity.LivingCostMonthly,
-            AcceptanceRate = domainUniversity.AcceptanceRate,
-            StudentCount = domainUniversity.StudentCount,
-            FoundedYear = domainUniversity.FoundedYear,
-            ProfessionsOffered = domainUniversity.ProfessionsOffered,
-            ApiIdReference = domainUniversity.ApiIdReference,
-            CreatedAt = domainUniversity.CreatedAt,
-            UpdatedAt = domainUniversity.UpdatedAt ?? domainUniversity.CreatedAt,
-            Programs = domainUniversity.Programs.Select(p => new Models.Program
-            {
-                Id = p.Id,
-                UniversityId = p.UniversityId,
-                Name = p.Name,
-                DegreeType = p.DegreeType,
-                DurationYears = p.DurationYears,
-                Language = p.Language,
-                Description = p.Description,
-                CreatedAt = p.CreatedAt
-            }).ToList(),
-            Ratings = domainUniversity.Ratings.Select(r => new Models.Rating
-            {
-                Id = r.Id,
-                UniversityId = r.UniversityId,
-                UserId = r.UserId,
-                Score = r.Score,
-                Comment = r.Comment,
-                CreatedAt = r.CreatedAt,
-                UpdatedAt = r.UpdatedAt
-            }).ToList()
-        };
+            .FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted);
     }
 
+    // -------------------------------------------------------------------
+    // FILTER HELPERS (COUNTRIES / CITIES)
+    // -------------------------------------------------------------------
     public async Task<List<string>> GetCountriesAsync()
     {
         return await _context.Universities
+            .Where(u => !u.IsDeleted)
             .Select(u => u.Country)
             .Distinct()
             .OrderBy(c => c)
@@ -245,38 +211,37 @@ public class UniversityService : IUniversityService
 
     public async Task<List<string>> GetCitiesByCountryAsync(string country)
     {
+        if (string.IsNullOrWhiteSpace(country))
+            return new List<string>();
+
         return await _context.Universities
-            .Where(u => u.Country == country)
+            .Where(u => u.Country == country && !u.IsDeleted)
             .Select(u => u.City)
             .Distinct()
             .OrderBy(c => c)
             .ToListAsync();
     }
 
-    public async Task<List<Models.Program>> GetProgramsByUniversityIdAsync(Guid universityId)
+    // -------------------------------------------------------------------
+    // PROGRAMS (DOMAIN)
+    // -------------------------------------------------------------------
+    public async Task<List<AcademicProgram>> GetProgramsByUniversityIdAsync(Guid universityId)
+
+
     {
-        var programs = await _context.Programs
+        return await _context.Programs
             .Where(p => p.UniversityId == universityId)
             .ToListAsync();
-        
-        // Map AcademicProgram (Domain) to Models.Program (legacy) for backward compatibility
-        return programs.Select(p => new Models.Program
-        {
-            Id = p.Id,
-            UniversityId = p.UniversityId,
-            Name = p.Name,
-            DegreeType = p.DegreeType,
-            DurationYears = p.DurationYears,
-            Language = p.Language,
-            Description = p.Description,
-            CreatedAt = p.CreatedAt
-        }).ToList();
     }
 
+    // -------------------------------------------------------------------
+    // RATINGS (DOMAIN)
+    // -------------------------------------------------------------------
     public async Task<double?> GetAverageRatingAsync(Guid universityId)
     {
         var hasAny = await _context.Ratings.AnyAsync(r => r.UniversityId == universityId);
         if (!hasAny) return null;
+
         return await _context.Ratings
             .Where(r => r.UniversityId == universityId)
             .AverageAsync(r => r.Score);
@@ -287,7 +252,6 @@ public class UniversityService : IUniversityService
         var ids = universityIds.ToList();
         if (!ids.Any()) return new Dictionary<Guid, double?>();
 
-        // Single query to get all ratings for the universities
         var ratings = await _context.Ratings
             .Where(r => ids.Contains(r.UniversityId))
             .GroupBy(r => r.UniversityId)
@@ -304,37 +268,26 @@ public class UniversityService : IUniversityService
         return result;
     }
 
-    public async Task<List<Models.Rating>> GetRatingsAsync(Guid universityId, int take = 10)
+    public async Task<List<Rating>> GetRatingsAsync(Guid universityId, int take = 10)
     {
-        var domainRatings = await _context.Ratings
+        return await _context.Ratings
             .Where(r => r.UniversityId == universityId)
             .OrderByDescending(r => r.CreatedAt)
             .Take(take)
             .ToListAsync();
-        
-        // Map Domain entities to Models entities for backward compatibility
-        return domainRatings.Select(r => new Models.Rating
-        {
-            Id = r.Id,
-            UniversityId = r.UniversityId,
-            UserId = r.UserId,
-            Score = r.Score,
-            Comment = r.Comment,
-            CreatedAt = r.CreatedAt,
-            UpdatedAt = r.UpdatedAt
-        }).ToList();
     }
 
     public async Task AddOrUpdateRatingAsync(Guid universityId, string userId, int score, string? comment)
     {
-        if (score < 1 || score > 5) throw new ArgumentOutOfRangeException(nameof(score));
+        if (score < 1 || score > 5)
+            throw new ArgumentOutOfRangeException(nameof(score));
 
         var existing = await _context.Ratings
             .FirstOrDefaultAsync(r => r.UniversityId == universityId && r.UserId == userId);
 
         if (existing == null)
         {
-            var rating = new DomainRating
+            var rating = new Rating
             {
                 Id = Guid.NewGuid(),
                 UniversityId = universityId,
@@ -343,12 +296,16 @@ public class UniversityService : IUniversityService
                 Comment = string.IsNullOrWhiteSpace(comment) ? null : comment,
                 CreatedAt = DateTime.UtcNow
             };
+
             _context.Ratings.Add(rating);
         }
         else
         {
             existing.Score = score;
-            existing.Comment = string.IsNullOrWhiteSpace(comment) ? existing.Comment : comment;
+            if (!string.IsNullOrWhiteSpace(comment))
+            {
+                existing.Comment = comment;
+            }
             existing.UpdatedAt = DateTime.UtcNow;
         }
 

@@ -1,23 +1,13 @@
-using UniversityAdvisor.Domain.Interfaces;
+using System;
 
 namespace UniversityAdvisor.Domain.Entities;
 
-/// <summary>
-/// Represents a user's search history entry
-/// </summary>
-public class SearchHistory : IAuditable
+public class SearchHistory : BaseEntity
 {
-    public Guid Id { get; set; }
-    public string UserId { get; set; } = string.Empty;
+    public string UserId { get; set; } = null!;
     public string SearchQuery { get; set; } = string.Empty;
     public string? FiltersApplied { get; set; }
-    
-    // Audit fields
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
-    public bool IsDeleted { get; set; } = false;
 
-    // Navigation property
+    // Navigation
     public ApplicationUser User { get; set; } = null!;
 }
-

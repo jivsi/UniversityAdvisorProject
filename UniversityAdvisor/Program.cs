@@ -70,6 +70,10 @@ builder.Services.AddDataProtection();
 // Memory Cache
 builder.Services.AddMemoryCache();
 
+builder.Services.AddScoped<ICountryRepository, CountryRepository>();
+
+builder.Services.AddScoped<SearchUniversitiesUseCase>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
