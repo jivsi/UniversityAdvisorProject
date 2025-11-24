@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using UniversityFinder.DTOs;
 using UniversityFinder.Services;
 
 namespace UniversityFinder.Controllers
@@ -39,12 +40,6 @@ namespace UniversityFinder.Controllers
                 return StatusCode(500, new { error = "An error occurred while processing your message." });
             }
         }
-    }
-
-    public class ChatRequest
-    {
-        public string Message { get; set; } = string.Empty;
-        public int? CityId { get; set; }
     }
 }
 

@@ -23,13 +23,25 @@ namespace UniversityFinder.Models
         [MaxLength(500)]
         public string? Website { get; set; }
 
-        [Column(TypeName = "nvarchar(max)")]
+        // ? FIXED: SQLite-friendly (TEXT maps perfectly here)
+        [Column(TypeName = "TEXT")]
         public string? Description { get; set; }
 
         public int? EstablishedYear { get; set; }
 
         [MaxLength(100)]
         public string? HeiApiId { get; set; } // For syncing with HEI API
+
+        /// <summary>
+        /// University ranking (e.g., QS World Ranking, Times Higher Education)
+        /// </summary>
+        public int? Ranking { get; set; }
+
+        /// <summary>
+        /// Average annual tuition fee in EUR (can be overridden by program-specific fees)
+        /// </summary>
+        [Column(TypeName = "REAL")]
+        public decimal? TuitionFee { get; set; }
 
         // Navigation properties
         [ForeignKey(nameof(CountryId))]
@@ -42,4 +54,3 @@ namespace UniversityFinder.Models
         public ICollection<UserFavorites> UserFavorites { get; set; } = new List<UserFavorites>();
     }
 }
-

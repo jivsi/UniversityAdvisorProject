@@ -11,8 +11,8 @@ using UniversityFinder.Data;
 namespace UniversityFinder.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251112222420_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251121143756_AddSyncStatusTable")]
+    partial class AddSyncStatusTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -226,10 +226,10 @@ namespace UniversityFinder.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal?>("Latitude")
-                        .HasColumnType("decimal(9,6)");
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal?>("Longitude")
-                        .HasColumnType("decimal(9,6)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -255,7 +255,7 @@ namespace UniversityFinder.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal?>("AccommodationMonthly")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("CityId")
                         .HasColumnType("INTEGER");
@@ -266,22 +266,22 @@ namespace UniversityFinder.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<decimal?>("EntertainmentMonthly")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal?>("FoodMonthly")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("LastUpdated")
                         .HasColumnType("TEXT");
 
                     b.Property<decimal?>("TotalMonthly")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal?>("TransportationMonthly")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal?>("UtilitiesMonthly")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -382,6 +382,85 @@ namespace UniversityFinder.Migrations
                     b.ToTable("Subjects");
                 });
 
+            modelBuilder.Entity("UniversityFinder.Models.SubjectAlias", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LanguageCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SubjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LanguageCode");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("SubjectId");
+
+                    b.HasIndex("SubjectId", "Name", "LanguageCode")
+                        .IsUnique();
+
+                    b.ToTable("SubjectAliases");
+                });
+
+            modelBuilder.Entity("UniversityFinder.Models.SyncStatus", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ErrorCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsRunning")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LastMessage")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProcessedItems")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SkippedCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SuccessCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SyncType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TotalItems")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsRunning");
+
+                    b.HasIndex("SyncType");
+
+                    b.ToTable("SyncStatuses");
+                });
+
             modelBuilder.Entity("UniversityFinder.Models.University", b =>
                 {
                     b.Property<int>("Id")
@@ -399,7 +478,7 @@ namespace UniversityFinder.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("EstablishedYear")
                         .HasColumnType("INTEGER");
@@ -442,7 +521,7 @@ namespace UniversityFinder.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("Duration")
                         .HasColumnType("INTEGER");
@@ -460,7 +539,7 @@ namespace UniversityFinder.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal?>("TuitionFee")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("UniversityId")
                         .HasColumnType("INTEGER");
@@ -595,6 +674,17 @@ namespace UniversityFinder.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("UniversityFinder.Models.SubjectAlias", b =>
+                {
+                    b.HasOne("UniversityFinder.Models.Subject", "Subject")
+                        .WithMany("Aliases")
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Subject");
+                });
+
             modelBuilder.Entity("UniversityFinder.Models.University", b =>
                 {
                     b.HasOne("UniversityFinder.Models.City", "City")
@@ -668,6 +758,8 @@ namespace UniversityFinder.Migrations
 
             modelBuilder.Entity("UniversityFinder.Models.Subject", b =>
                 {
+                    b.Navigation("Aliases");
+
                     b.Navigation("Programs");
                 });
 

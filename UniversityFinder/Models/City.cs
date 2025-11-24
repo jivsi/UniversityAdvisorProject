@@ -14,10 +14,10 @@ namespace UniversityFinder.Models
         [Required]
         public int CountryId { get; set; }
 
-        [Column(TypeName = "decimal(9,6)")]
+        // SQLite: decimal maps to REAL automatically, no TypeName needed
         public decimal? Latitude { get; set; }
 
-        [Column(TypeName = "decimal(9,6)")]
+        // SQLite: decimal maps to REAL automatically, no TypeName needed
         public decimal? Longitude { get; set; }
 
         public int? Population { get; set; }

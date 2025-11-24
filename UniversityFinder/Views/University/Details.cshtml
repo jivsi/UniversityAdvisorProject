@@ -4,138 +4,476 @@
     var isFavorited = ViewBag.IsFavorited as bool? ?? false;
 }
 
-<div class="container">
-    <div class="row">
-        <div class="col-md-8">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1>@Model.Name</h1>
+<!-- Hero Section with Parallax -->
+<section class="relative h-[60vh] min-h-[500px] overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-purple-600 via-pink-500 to-blue-600"></div>
+    <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+    
+    <div class="absolute inset-0 flex items-end">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 w-full">
+            <div class="flex flex-col md:flex-row items-end justify-between gap-6">
+                <div class="flex-1">
+                    <h1 class="text-4xl md:text-6xl font-bold font-display text-white mb-4">@Model.Name</h1>
+                    @if (!string.IsNullOrEmpty(Model.Acronym))
+                    {
+                        <p class="text-xl text-white/90 mb-4">@Model.Acronym</p>
+                    }
+                    <div class="flex items-center gap-4 text-white/90">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="map-pin" class="w-5 h-5"></i>
+                            <span>@Model.City.Name, @Model.Country.Name</span>
+                        </div>
+                        @if (Model.EstablishedYear.HasValue)
+                        {
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="calendar" class="w-5 h-5"></i>
+                                <span>Est. @Model.EstablishedYear</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+                
                 @if (User.Identity?.IsAuthenticated == true)
                 {
-                    <button id="favoriteBtn" class="btn @(isFavorited ? "btn-warning" : "btn-outline-warning")" data-university-id="@Model.Id">
-                        <i class="bi @(isFavorited ? "bi-star-fill" : "bi-star")"></i>
-                        <span id="favoriteText">@(isFavorited ? "Favorited" : "Add to Favorites")</span>
+                    <button 
+                        id="favoriteBtn" 
+                        class="px-6 py-3 rounded-2xl font-semibold transition-all transform hover:scale-105 @(isFavorited ? "bg-yellow-500 text-white" : "bg-white/20 backdrop-blur-sm text-white border-2 border-white/30")"
+                        data-university-id="@Model.Id"
+                    >
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="@(isFavorited ? "star" : "star")" class="w-5 h-5 @(isFavorited ? "fill-current" : "")"></i>
+                            <span id="favoriteText">@(isFavorited ? "Favorited" : "Add to Favorites")</span>
+                        </div>
                     </button>
                 }
             </div>
-
-            @if (!string.IsNullOrEmpty(Model.Acronym))
-            {
-                <p class="text-muted"><strong>Acronym:</strong> @Model.Acronym</p>
-            }
-
-            <p class="lead">
-                <i class="bi bi-geo-alt"></i> @Model.City.Name, @Model.Country.Name
-            </p>
-
-            @if (Model.EstablishedYear.HasValue)
-            {
-                <p><strong>Established:</strong> @Model.EstablishedYear</p>
-            }
-
-            @if (!string.IsNullOrEmpty(Model.Website))
-            {
-                <p>
-                    <strong>Website:</strong> 
-                    <a href="@Model.Website" target="_blank" rel="noopener noreferrer">@Model.Website</a>
-                </p>
-            }
-
-            @if (!string.IsNullOrEmpty(Model.Description))
-            {
-                <div class="mt-4">
-                    <h3>About</h3>
-                    <p>@Model.Description</p>
-                </div>
-            }
-
-            @if (Model.Programs.Any())
-            {
-                <div class="mt-4">
-                    <h3>Programs Offered</h3>
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Program Name</th>
-                                    <th>Subject</th>
-                                    <th>Degree Type</th>
-                                    <th>Duration</th>
-                                    <th>Language</th>
-                                    @if (Model.Programs.Any(p => p.TuitionFee.HasValue))
-                                    {
-                                        <th>Tuition Fee</th>
-                                    }
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var program in Model.Programs.OrderBy(p => p.Subject.Name))
-                                {
-                                    <tr>
-                                        <td>@program.Name</td>
-                                        <td>@program.Subject.Name</td>
-                                        <td>@program.DegreeType</td>
-                                        <td>@(program.Duration.HasValue ? $"{program.Duration} months" : "N/A")</td>
-                                        <td>@(program.Language ?? "N/A")</td>
-                                        @if (Model.Programs.Any(p => p.TuitionFee.HasValue))
-                                        {
-                                            <td>@(program.TuitionFee.HasValue ? $"€{program.TuitionFee:F2}" : "N/A")</td>
-                                        }
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            }
         </div>
+    </div>
+</section>
 
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Quick Info</h5>
-                    <ul class="list-unstyled">
-                        <li><strong>Country:</strong> @Model.Country.Name</li>
-                        <li><strong>City:</strong> @Model.City.Name</li>
-                        <li><strong>Programs:</strong> @Model.Programs.Count</li>
-                    </ul>
-                    <a asp-action="Search" asp-route-Query="@Model.Country.Name" class="btn btn-primary w-100 mt-3">
-                        Find More in @Model.Country.Name
-                    </a>
+<!-- Floating Info Panel -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10 mb-12">
+    <div class="glass dark:glass-dark rounded-3xl p-8 shadow-2xl">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="text-center">
+                <div class="text-3xl font-bold gradient-text mb-2">@Model.Programs.Count</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Programs</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold gradient-text mb-2">@Model.Country.Name</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Country</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold gradient-text mb-2">@Model.City.Name</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">City</div>
+            </div>
+            <div class="text-center">
+                <div class="flex items-center justify-center gap-1 mb-2">
+                    @for (int i = 0; i < 5; i++)
+                    {
+                        <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
+                    }
                 </div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Rating</div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Main Content -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+    <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Main Content Area -->
+        <div class="flex-1">
+            <!-- Tabs -->
+            <div class="mb-8">
+                <div class="flex space-x-1 glass dark:glass-dark rounded-2xl p-2 inline-flex">
+                    <button class="tab-btn active px-6 py-3 rounded-xl font-semibold transition-all" data-tab="overview">
+                        Overview
+                    </button>
+                    <button class="tab-btn px-6 py-3 rounded-xl font-semibold transition-all" data-tab="programs">
+                        Programs
+                    </button>
+                    <button class="tab-btn px-6 py-3 rounded-xl font-semibold transition-all" data-tab="costs">
+                        City Metrics
+                    </button>
+                    <button class="tab-btn px-6 py-3 rounded-xl font-semibold transition-all" data-tab="safety">
+                        Safety
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Tab Content -->
+            <div id="tab-content">
+                <!-- Overview Tab -->
+                <div id="overview" class="tab-panel active">
+                    <div class="glass dark:glass-dark rounded-3xl p-8 mb-6">
+                        <h2 class="text-3xl font-bold mb-6">About</h2>
+                        @if (!string.IsNullOrEmpty(Model.Description))
+                        {
+                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">@Model.Description</p>
+                        }
+                        else
+                        {
+                            <p class="text-gray-500 dark:text-gray-400 italic">No description available.</p>
+                        }
+                        
+                        @if (!string.IsNullOrEmpty(Model.Website))
+                        {
+                            <div class="mt-6">
+                                <a 
+                                    href="@Model.Website" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
+                                >
+                                    <i data-lucide="external-link" class="w-5 h-5"></i>
+                                    Visit Website
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+                
+                <!-- Programs Tab -->
+                <div id="programs" class="tab-panel hidden">
+                    <div class="glass dark:glass-dark rounded-3xl p-8">
+                        <h2 class="text-3xl font-bold mb-6">Programs Offered</h2>
+                        @if (Model.Programs.Any())
+                        {
+                            <div class="space-y-4">
+                                @foreach (var program in Model.Programs.OrderBy(p => p.Subject.Name))
+                                {
+                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6 hover:shadow-lg transition-all">
+                                        <div class="flex items-start justify-between mb-4">
+                                            <div class="flex-1">
+                                                <h3 class="text-xl font-bold mb-2">@program.Name</h3>
+                                                <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                                    <span class="flex items-center gap-2">
+                                                        <i data-lucide="book-open" class="w-4 h-4"></i>
+                                                        @program.Subject.Name
+                                                    </span>
+                                                    @if (!string.IsNullOrEmpty(program.DegreeType))
+                                                    {
+                                                        <span class="flex items-center gap-2">
+                                                            <i data-lucide="award" class="w-4 h-4"></i>
+                                                            @program.DegreeType
+                                                        </span>
+                                                    }
+                                                    @if (program.Duration.HasValue)
+                                                    {
+                                                        <span class="flex items-center gap-2">
+                                                            <i data-lucide="clock" class="w-4 h-4"></i>
+                                                            @program.Duration months
+                                                        </span>
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(program.Language))
+                                                    {
+                                                        <span class="flex items-center gap-2">
+                                                            <i data-lucide="languages" class="w-4 h-4"></i>
+                                                            @program.Language
+                                                        </span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(program.Description))
+                                        {
+                                            <p class="text-gray-700 dark:text-gray-300 text-sm">@program.Description</p>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-gray-500 dark:text-gray-400">No programs available.</p>
+                        }
+                    </div>
+                </div>
+                
+                <!-- Costs Tab -->
+                <div id="costs" class="tab-panel hidden">
+                    <div class="glass dark:glass-dark rounded-3xl p-8">
+                        <h2 class="text-3xl font-bold mb-6">Living Costs</h2>
+                        <p class="text-gray-500 dark:text-gray-400 mb-6">
+                            Cost of living information for @Model.City.Name, @Model.Country.Name
+                        </p>
+                        <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
+                            <p class="text-center text-gray-500 dark:text-gray-400">
+                                Use our AI assistant to get detailed cost of living information for this city.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- City Metrics Tab -->
+                <div id="costs" class="tab-panel hidden">
+                    <div class="glass dark:glass-dark rounded-3xl p-8">
+                        <h2 class="text-3xl font-bold mb-6">City Metrics</h2>
+                        @{
+                            var cityQuality = ViewBag.CityQuality as UniversityFinder.Models.CityQuality;
+                        }
+                        @if (cityQuality != null)
+                        {
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                @if (cityQuality.SafetyScore.HasValue)
+                                {
+                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
+                                        <h3 class="font-bold mb-2 flex items-center gap-2">
+                                            <i data-lucide="shield" class="w-5 h-5 text-green-500"></i>
+                                            Safety Score
+                                        </h3>
+                                        <div class="text-4xl font-bold gradient-text mb-2">@cityQuality.SafetyScore.Value.ToString("F0")</div>
+                                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                            <div class="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full" style="width: @cityQuality.SafetyScore.Value%"></div>
+                                        </div>
+                                    </div>
+                                }
+                                
+                                @if (cityQuality.EducationScore.HasValue)
+                                {
+                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
+                                        <h3 class="font-bold mb-2 flex items-center gap-2">
+                                            <i data-lucide="graduation-cap" class="w-5 h-5 text-blue-500"></i>
+                                            Education Score
+                                        </h3>
+                                        <div class="text-4xl font-bold gradient-text mb-2">@cityQuality.EducationScore.Value.ToString("F0")</div>
+                                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                            <div class="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full" style="width: @cityQuality.EducationScore.Value%"></div>
+                                        </div>
+                                    </div>
+                                }
+                                
+                                @if (cityQuality.HealthcareScore.HasValue)
+                                {
+                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
+                                        <h3 class="font-bold mb-2 flex items-center gap-2">
+                                            <i data-lucide="heart" class="w-5 h-5 text-red-500"></i>
+                                            Healthcare Score
+                                        </h3>
+                                        <div class="text-4xl font-bold gradient-text mb-2">@cityQuality.HealthcareScore.Value.ToString("F0")</div>
+                                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                            <div class="bg-gradient-to-r from-red-500 to-pink-500 h-2 rounded-full" style="width: @cityQuality.HealthcareScore.Value%"></div>
+                                        </div>
+                                    </div>
+                                }
+                                
+                                @if (cityQuality.QualityOfLifeScore.HasValue)
+                                {
+                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
+                                        <h3 class="font-bold mb-2 flex items-center gap-2">
+                                            <i data-lucide="star" class="w-5 h-5 text-yellow-500"></i>
+                                            Quality of Life
+                                        </h3>
+                                        <div class="text-4xl font-bold gradient-text mb-2">@cityQuality.QualityOfLifeScore.Value.ToString("F0")</div>
+                                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                            <div class="bg-gradient-to-r from-yellow-500 to-orange-500 h-2 rounded-full" style="width: @cityQuality.QualityOfLifeScore.Value%"></div>
+                                        </div>
+                                    </div>
+                                }
+                                
+                                @if (cityQuality.EconomyScore.HasValue)
+                                {
+                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
+                                        <h3 class="font-bold mb-2 flex items-center gap-2">
+                                            <i data-lucide="trending-up" class="w-5 h-5 text-purple-500"></i>
+                                            Economy Score
+                                        </h3>
+                                        <div class="text-4xl font-bold gradient-text mb-2">@cityQuality.EconomyScore.Value.ToString("F0")</div>
+                                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                            <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full" style="width: @cityQuality.EconomyScore.Value%"></div>
+                                        </div>
+                                    </div>
+                                }
+                                
+                                @if (cityQuality.EnvironmentalScore.HasValue)
+                                {
+                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
+                                        <h3 class="font-bold mb-2 flex items-center gap-2">
+                                            <i data-lucide="leaf" class="w-5 h-5 text-green-500"></i>
+                                            Environmental Score
+                                        </h3>
+                                        <div class="text-4xl font-bold gradient-text mb-2">@cityQuality.EnvironmentalScore.Value.ToString("F0")</div>
+                                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                            <div class="bg-gradient-to-r from-green-500 to-teal-500 h-2 rounded-full" style="width: @cityQuality.EnvironmentalScore.Value%"></div>
+                                        </div>
+                                    </div>
+                                }
+                                
+                                @if (cityQuality.HousingCost.HasValue)
+                                {
+                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
+                                        <h3 class="font-bold mb-2 flex items-center gap-2">
+                                            <i data-lucide="home" class="w-5 h-5 text-indigo-500"></i>
+                                            Housing Cost Index
+                                        </h3>
+                                        <div class="text-4xl font-bold gradient-text mb-2">@cityQuality.HousingCost.Value.ToString("F1")</div>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">Relative to base city</p>
+                                    </div>
+                                }
+                                
+                                @if (cityQuality.CostOfLivingIndex.HasValue)
+                                {
+                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
+                                        <h3 class="font-bold mb-2 flex items-center gap-2">
+                                            <i data-lucide="dollar-sign" class="w-5 h-5 text-emerald-500"></i>
+                                            Cost of Living Index
+                                        </h3>
+                                        <div class="text-4xl font-bold gradient-text mb-2">@cityQuality.CostOfLivingIndex.Value.ToString("F1")</div>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">Relative to base city</p>
+                                    </div>
+                                }
+                            </div>
+                            
+                            @if (cityQuality.LastUpdated.HasValue)
+                            {
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-6 text-center">
+                                    Last updated: @cityQuality.LastUpdated.Value.ToString("MMMM dd, yyyy")
+                                </p>
+                            }
+                        }
+                        else
+                        {
+                            <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-8 text-center">
+                                <i data-lucide="info" class="w-16 h-16 mx-auto mb-4 text-gray-400"></i>
+                                <p class="text-gray-600 dark:text-gray-400">
+                                    City quality metrics are being loaded. Please refresh the page in a moment.
+                                </p>
+                            </div>
+                        }
+                    </div>
+                </div>
+                
+                <!-- Safety Tab -->
+                <div id="safety" class="tab-panel hidden">
+                    <div class="glass dark:glass-dark rounded-3xl p-8">
+                        <h2 class="text-3xl font-bold mb-6">Safety & Lifestyle</h2>
+                        @{
+                            var safetyData = ViewBag.CityQuality as UniversityFinder.Models.CityQuality;
+                        }
+                        @if (safetyData != null && safetyData.SafetyScore.HasValue)
+                        {
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
+                                    <h3 class="font-bold mb-2">Safety Index</h3>
+                                    <div class="text-4xl font-bold gradient-text mb-2">@safetyData.SafetyScore.Value.ToString("F0")</div>
+                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                        <div class="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full" style="width: @safetyData.SafetyScore.Value%"></div>
+                                    </div>
+                                </div>
+                                @if (safetyData.QualityOfLifeScore.HasValue)
+                                {
+                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
+                                        <h3 class="font-bold mb-2">Quality of Life</h3>
+                                        <div class="text-4xl font-bold gradient-text mb-2">@safetyData.QualityOfLifeScore.Value.ToString("F0")</div>
+                                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                            <div class="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full" style="width: @safetyData.QualityOfLifeScore.Value%"></div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-gray-500 dark:text-gray-400">Safety data is being loaded. Please refresh the page.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <aside class="lg:w-80 flex-shrink-0">
+            <div class="glass dark:glass-dark rounded-3xl p-6 sticky top-24">
+                <h3 class="text-xl font-bold mb-6">Quick Info</h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Country</div>
+                        <div class="font-semibold">@Model.Country.Name</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">City</div>
+                        <div class="font-semibold">@Model.City.Name</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Programs</div>
+                        <div class="font-semibold">@Model.Programs.Count</div>
+                    </div>
+                </div>
+                
+                <a 
+                    asp-controller="University" 
+                    asp-action="Search" 
+                    asp-route-Query="@Model.Country.Name" 
+                    class="block w-full mt-6 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
+                >
+                    Find More in @Model.Country.Name
+                </a>
+            </div>
+        </aside>
+    </div>
+</div>
+
 @section Scripts {
     <script>
-        $(document).ready(function() {
-            $('#favoriteBtn').click(function() {
-                var universityId = $(this).data('university-id');
-                var btn = $(this);
-                var text = $('#favoriteText');
+        lucide.createIcons();
+        
+        // Tab functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tabName = this.dataset.tab;
                 
-                $.ajax({
-                    url: '@Url.Action("ToggleFavorite", "University")',
-                    type: 'POST',
-                    data: { universityId: universityId },
-                    success: function(response) {
-                        if (response.favorited) {
-                            btn.removeClass('btn-outline-warning').addClass('btn-warning');
-                            text.text('Favorited');
-                            btn.find('i').removeClass('bi-star').addClass('bi-star-fill');
-                        } else {
-                            btn.removeClass('btn-warning').addClass('btn-outline-warning');
-                            text.text('Add to Favorites');
-                            btn.find('i').removeClass('bi-star-fill').addClass('bi-star');
-                        }
-                    },
-                    error: function() {
-                        alert('An error occurred. Please try again.');
-                    }
+                // Update active tab button
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('active', 'bg-gradient-to-r', 'from-purple-600', 'to-pink-600', 'text-white');
+                    b.classList.add('text-gray-600', 'dark:text-gray-400');
                 });
+                this.classList.add('active', 'bg-gradient-to-r', 'from-purple-600', 'to-pink-600', 'text-white');
+                this.classList.remove('text-gray-600', 'dark:text-gray-400');
+                
+                // Show/hide tab panels
+                document.querySelectorAll('.tab-panel').forEach(panel => {
+                    panel.classList.add('hidden');
+                    panel.classList.remove('active');
+                });
+                const targetPanel = document.getElementById(tabName);
+                if (targetPanel) {
+                    targetPanel.classList.remove('hidden');
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Favorite toggle
+        $('#favoriteBtn').click(function() {
+            var universityId = $(this).data('university-id');
+            var btn = $(this);
+            var text = $('#favoriteText');
+            var icon = btn.find('i');
+            
+            $.ajax({
+                url: '@Url.Action("ToggleFavorite", "University")',
+                type: 'POST',
+                data: { universityId: universityId },
+                success: function(response) {
+                    if (response.favorited) {
+                        btn.removeClass('bg-white/20 border-white/30').addClass('bg-yellow-500');
+                        text.text('Favorited');
+                        icon.attr('data-lucide', 'star');
+                        icon.addClass('fill-current');
+                    } else {
+                        btn.removeClass('bg-yellow-500').addClass('bg-white/20 border-white/30');
+                        text.text('Add to Favorites');
+                        icon.attr('data-lucide', 'star');
+                        icon.removeClass('fill-current');
+                    }
+                    lucide.createIcons();
+                },
+                error: function() {
+                    alert('An error occurred. Please try again.');
+                }
             });
         });
     </script>
 }
-

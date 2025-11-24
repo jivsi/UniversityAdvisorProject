@@ -28,6 +28,8 @@ builder.Services.AddControllersWithViews();
 // Register HttpClient for API services
 builder.Services.AddHttpClient<HeiApiService>();
 builder.Services.AddHttpClient<OpenAiService>();
+builder.Services.AddHttpClient<HipolabsApiService>();
+builder.Services.AddHttpClient<TeleportApiService>();
 
 // Register Repositories
 builder.Services.AddScoped<IUniversityRepository, UniversityRepository>();
@@ -39,6 +41,18 @@ builder.Services.AddScoped<ICostOfLivingRepository, CostOfLivingRepository>();
 builder.Services.AddScoped<HeiApiService>();
 builder.Services.AddScoped<OpenAiService>();
 builder.Services.AddScoped<DataSeeder>();
+builder.Services.AddScoped<IHipolabsApiService, HipolabsApiService>();
+builder.Services.AddScoped<ITeleportApiService, TeleportApiService>();
+
+// Add Memory Cache for API response caching
+builder.Services.AddMemoryCache();
+
+// Register Application Services
+builder.Services.AddScoped<IUniversitySearchService, UniversitySearchService>();
+builder.Services.AddScoped<IUserFavoriteService, UserFavoriteService>();
+builder.Services.AddScoped<IUserSearchHistoryService, UserSearchHistoryService>();
+builder.Services.AddScoped<ISubjectNormalizationService, SubjectNormalizationService>();
+builder.Services.AddScoped<ISubjectInferenceService, SubjectInferenceService>();
 
 var app = builder.Build();
 
@@ -80,6 +94,19 @@ using (var scope = app.Services.CreateScope())
         
         // Seed initial data
         await seeder.SeedAsync();
+        
+        // ✅ HARDENED: Check and reset any stale sync statuses on startup
+        // This prevents sync from being stuck after application restart
+        try
+        {
+            var heiApiService = services.GetRequiredService<HeiApiService>();
+            await heiApiService.CheckAndResetStaleSyncStatusesAsync();
+        }
+        catch (Exception ex)
+        {
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogWarning(ex, "Warning: Failed to check stale sync statuses on startup. This is non-critical.");
+        }
     }
     catch (Exception ex)
     {

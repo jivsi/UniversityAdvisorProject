@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UniversityFinder.Data;
 
@@ -10,9 +11,11 @@ using UniversityFinder.Data;
 namespace UniversityFinder.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251121133031_AddSubjectAliasTable")]
+    partial class AddSubjectAliasTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.20");
@@ -411,53 +414,6 @@ namespace UniversityFinder.Migrations
                     b.ToTable("SubjectAliases");
                 });
 
-            modelBuilder.Entity("UniversityFinder.Models.SyncStatus", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ErrorCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsRunning")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("LastMessage")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ProcessedItems")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("SkippedCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("StartedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("SuccessCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("SyncType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("TotalItems")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IsRunning");
-
-                    b.HasIndex("SyncType");
-
-                    b.ToTable("SyncStatuses");
-                });
-
             modelBuilder.Entity("UniversityFinder.Models.University", b =>
                 {
                     b.Property<int>("Id")
@@ -523,11 +479,6 @@ namespace UniversityFinder.Migrations
                     b.Property<int?>("Duration")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("IsInferred")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(false);
-
                     b.Property<string>("Language")
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
@@ -549,8 +500,6 @@ namespace UniversityFinder.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DegreeType");
-
-                    b.HasIndex("IsInferred");
 
                     b.HasIndex("SubjectId");
 

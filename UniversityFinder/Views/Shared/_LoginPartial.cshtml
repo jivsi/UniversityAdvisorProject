@@ -2,25 +2,47 @@
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 
-<ul class="navbar-nav">
 @if (SignInManager.IsSignedIn(User))
 {
-    <li class="nav-item">
-        <a  class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @User.Identity?.Name!</a>
-    </li>
-    <li class="nav-item">
-        <form  class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-            <button  type="submit" class="nav-link btn btn-link text-dark">Logout</button>
+    <div class="flex items-center gap-4">
+        <a 
+            asp-area="Identity" 
+            asp-page="/Account/Manage/Index" 
+            class="text-sm font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+            title="Manage Account"
+        >
+            <div class="flex items-center gap-2">
+                <i data-lucide="user" class="w-4 h-4"></i>
+                <span>@User.Identity?.Name</span>
+            </div>
+        </a>
+        <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" class="inline">
+            <button 
+                type="submit" 
+                class="px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl text-sm font-semibold hover:shadow-lg transform hover:scale-105 transition-all flex items-center gap-2"
+            >
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                Logout
+            </button>
         </form>
-    </li>
+    </div>
 }
 else
 {
-    <li class="nav-item">
-        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Register</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Login</a>
-    </li>
+    <div class="flex items-center gap-3">
+        <a 
+            asp-area="Identity" 
+            asp-page="/Account/Login" 
+            class="text-sm font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+        >
+            Login
+        </a>
+        <a 
+            asp-area="Identity" 
+            asp-page="/Account/Register" 
+            class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl text-sm font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
+        >
+            Sign Up
+        </a>
+    </div>
 }
-</ul>

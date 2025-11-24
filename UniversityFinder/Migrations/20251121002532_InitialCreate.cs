@@ -194,8 +194,8 @@ namespace UniversityFinder.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     CountryId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Latitude = table.Column<decimal>(type: "decimal(9,6)", nullable: true),
-                    Longitude = table.Column<decimal>(type: "decimal(9,6)", nullable: true),
+                    Latitude = table.Column<decimal>(type: "TEXT", nullable: true),
+                    Longitude = table.Column<decimal>(type: "TEXT", nullable: true),
                     Population = table.Column<int>(type: "INTEGER", nullable: true)
                 },
                 constraints: table =>
@@ -245,12 +245,12 @@ namespace UniversityFinder.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     CityId = table.Column<int>(type: "INTEGER", nullable: false),
-                    AccommodationMonthly = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    FoodMonthly = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    TransportationMonthly = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    UtilitiesMonthly = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    EntertainmentMonthly = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    TotalMonthly = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    AccommodationMonthly = table.Column<decimal>(type: "TEXT", nullable: true),
+                    FoodMonthly = table.Column<decimal>(type: "TEXT", nullable: true),
+                    TransportationMonthly = table.Column<decimal>(type: "TEXT", nullable: true),
+                    UtilitiesMonthly = table.Column<decimal>(type: "TEXT", nullable: true),
+                    EntertainmentMonthly = table.Column<decimal>(type: "TEXT", nullable: true),
+                    TotalMonthly = table.Column<decimal>(type: "TEXT", nullable: true),
                     Currency = table.Column<string>(type: "TEXT", maxLength: 10, nullable: false),
                     LastUpdated = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
@@ -276,7 +276,7 @@ namespace UniversityFinder.Migrations
                     CountryId = table.Column<int>(type: "INTEGER", nullable: false),
                     CityId = table.Column<int>(type: "INTEGER", nullable: false),
                     Website = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "TEXT", nullable: true),
                     EstablishedYear = table.Column<int>(type: "INTEGER", nullable: true),
                     HeiApiId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true)
                 },
@@ -309,8 +309,8 @@ namespace UniversityFinder.Migrations
                     DegreeType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
                     Duration = table.Column<int>(type: "INTEGER", nullable: true),
                     Language = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
-                    TuitionFee = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    TuitionFee = table.Column<decimal>(type: "TEXT", nullable: true),
+                    Description = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {

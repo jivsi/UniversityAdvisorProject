@@ -6,6 +6,23 @@
 <div class="container">
     <h2 class="mb-4">Search Universities</h2>
 
+    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage as string))
+    {
+        <div class="alert alert-danger">
+            <h5>Database Error</h5>
+            <p>@ViewBag.ErrorMessage</p>
+            <p>Please apply database migrations by clicking the "Apply Migrations" button on the error page, or run <code>dotnet ef database update</code> in the terminal.</p>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(ViewBag.InfoMessage as string))
+    {
+        <div class="alert alert-info">
+            <h5>Information</h5>
+            <p>@ViewBag.InfoMessage</p>
+        </div>
+    }
+
     <div class="card mb-4">
         <div class="card-body">
             <form asp-action="Search" method="get" class="row g-3">

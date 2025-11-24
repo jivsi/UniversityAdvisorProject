@@ -1,5 +1,7 @@
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using UniversityFinder.DTOs;
 using UniversityFinder.Repositories;
 
 namespace UniversityFinder.Services
@@ -106,21 +108,6 @@ If specific data is not available, provide general guidance based on your knowle
                 _logger.LogError(ex, "Error calling OpenAI API.");
                 return "I'm sorry, I encountered an error. Please try again later.";
             }
-        }
-
-        private class OpenAiResponse
-        {
-            public List<OpenAiChoice>? Choices { get; set; }
-        }
-
-        private class OpenAiChoice
-        {
-            public OpenAiMessage? Message { get; set; }
-        }
-
-        private class OpenAiMessage
-        {
-            public string? Content { get; set; }
         }
     }
 }

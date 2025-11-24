@@ -25,11 +25,18 @@ namespace UniversityFinder.Models
         [MaxLength(50)]
         public string? Language { get; set; }
 
-        [Column(TypeName = "decimal(18,2)")]
+        // SQLite: decimal maps to REAL automatically, no TypeName needed
         public decimal? TuitionFee { get; set; }
 
-        [Column(TypeName = "nvarchar(max)")]
+        // SQLite: TEXT type for long strings (replaces nvarchar(max))
+        [Column(TypeName = "TEXT")]
         public string? Description { get; set; }
+
+        /// <summary>
+        /// Indicates whether this program was inferred from university name/description
+        /// (true) or came from the HEI API (false)
+        /// </summary>
+        public bool IsInferred { get; set; } = false;
 
         // Navigation properties
         [ForeignKey(nameof(UniversityId))]

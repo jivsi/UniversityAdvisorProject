@@ -18,6 +18,7 @@ namespace UniversityFinder.Models
 
         // Navigation properties
         public ICollection<UniversityProgram> Programs { get; set; } = new List<UniversityProgram>();
+        public ICollection<SubjectAlias> Aliases { get; set; } = new List<SubjectAlias>();
     }
 }
 
