@@ -1,18 +1,20 @@
 using Microsoft.Extensions.Logging;
-using UniversityFinder.Data;
 using UniversityFinder.Models;
 using UniversityFinder.ViewModels;
 
 namespace UniversityFinder.Services
 {
+    /// <summary>
+    /// Service for tracking user search history using Supabase REST API
+    /// </summary>
     public class UserSearchHistoryService : IUserSearchHistoryService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly SupabaseService _supabaseService;
         private readonly ILogger<UserSearchHistoryService> _logger;
 
-        public UserSearchHistoryService(ApplicationDbContext context, ILogger<UserSearchHistoryService> logger)
+        public UserSearchHistoryService(SupabaseService supabaseService, ILogger<UserSearchHistoryService> logger)
         {
-            _context = context;
+            _supabaseService = supabaseService;
             _logger = logger;
         }
 
@@ -20,22 +22,16 @@ namespace UniversityFinder.Services
         {
             try
             {
-                var searchHistory = new SearchHistory
-                {
-                    UserId = userId,
-                    Query = searchViewModel.Query,
-                    SubjectId = searchViewModel.SubjectId,
-                    ResultsCount = searchViewModel.TotalResults,
-                    SearchedAt = DateTime.UtcNow
-                };
-
-                _context.SearchHistory.Add(searchHistory);
-                await _context.SaveChangesAsync();
+                await _supabaseService.TrackSearchAsync(
+                    userId, 
+                    searchViewModel.Query, 
+                    searchViewModel.SubjectId, 
+                    searchViewModel.TotalResults);
             }
             catch (Exception ex)
             {
                 // Log but don't throw - search history tracking should not break the search flow
-                _logger.LogWarning(ex, "Failed to track search history for user {UserId}", userId);
+                _logger.LogWarning(ex, "Failed to track search history for user {UserId}: {Message}", userId, ex.Message);
             }
         }
     }

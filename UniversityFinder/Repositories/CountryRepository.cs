@@ -1,34 +1,42 @@
-using Microsoft.EntityFrameworkCore;
-using UniversityFinder.Data;
+// LEGACY: EF Core removed - ApplicationDbContext no longer available
+// using Microsoft.EntityFrameworkCore;
+// using UniversityFinder.Data;
 using UniversityFinder.Models;
 
 namespace UniversityFinder.Repositories
 {
+    /// <summary>
+    /// LEGACY: This repository uses EF Core which has been removed.
+    /// TODO: Update to use SupabaseService instead of ApplicationDbContext
+    /// </summary>
     public class CountryRepository : ICountryRepository
     {
-        private readonly ApplicationDbContext _context;
+        // LEGACY: ApplicationDbContext removed - all data now in Supabase
+        // private readonly ApplicationDbContext _context;
 
-        public CountryRepository(ApplicationDbContext context)
+        public CountryRepository(
+            // ApplicationDbContext context // LEGACY: Removed - use SupabaseService instead
+            )
         {
-            _context = context;
+            // _context = context; // LEGACY: Removed
         }
 
         public async Task<IEnumerable<Country>> GetAllAsync()
         {
-            return await _context.Countries
-                .OrderBy(c => c.Name)
-                .ToListAsync();
+            // LEGACY: EF Core removed - TODO: Implement using SupabaseService
+            return Enumerable.Empty<Country>();
         }
 
         public async Task<Country?> GetByIdAsync(int id)
         {
-            return await _context.Countries.FindAsync(id);
+            // LEGACY: EF Core removed - TODO: Implement using SupabaseService
+            return null;
         }
 
         public async Task<Country?> GetByCodeAsync(string code)
         {
-            return await _context.Countries
-                .FirstOrDefaultAsync(c => c.Code == code);
+            // LEGACY: EF Core removed - TODO: Implement using SupabaseService
+            return null;
         }
     }
 }

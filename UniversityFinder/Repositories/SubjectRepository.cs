@@ -1,42 +1,48 @@
-using Microsoft.EntityFrameworkCore;
-using UniversityFinder.Data;
+// LEGACY: EF Core removed - ApplicationDbContext no longer available
+// using Microsoft.EntityFrameworkCore;
+// using UniversityFinder.Data;
 using UniversityFinder.Models;
 
 namespace UniversityFinder.Repositories
 {
+    /// <summary>
+    /// LEGACY: This repository uses EF Core which has been removed.
+    /// TODO: Update to use SupabaseService instead of ApplicationDbContext
+    /// </summary>
     public class SubjectRepository : ISubjectRepository
     {
-        private readonly ApplicationDbContext _context;
+        // LEGACY: ApplicationDbContext removed - all data now in Supabase
+        // private readonly ApplicationDbContext _context;
 
-        public SubjectRepository(ApplicationDbContext context)
+        public SubjectRepository(
+            // ApplicationDbContext context // LEGACY: Removed - use SupabaseService instead
+            )
         {
-            _context = context;
+            // _context = context; // LEGACY: Removed
         }
 
         public async Task<IEnumerable<Subject>> GetAllAsync()
         {
-            return await _context.Subjects
-                .OrderBy(s => s.Name)
-                .ToListAsync();
+            // LEGACY: EF Core removed - TODO: Implement using SupabaseService
+            return Enumerable.Empty<Subject>();
         }
 
         public async Task<Subject?> GetByIdAsync(int id)
         {
-            return await _context.Subjects.FindAsync(id);
+            // LEGACY: EF Core removed - TODO: Implement using SupabaseService
+            return null;
         }
 
         public async Task<Subject?> GetByNameAsync(string name)
         {
-            return await _context.Subjects
-                .FirstOrDefaultAsync(s => s.Name == name);
+            // LEGACY: EF Core removed - TODO: Implement using SupabaseService
+            return null;
         }
 
         public async Task<IEnumerable<Subject>> GetByCategoryAsync(string category)
         {
-            return await _context.Subjects
-                .Where(s => s.Category == category)
-                .OrderBy(s => s.Name)
-                .ToListAsync();
+            // LEGACY: EF Core removed - TODO: Implement using SupabaseService
+            return Enumerable.Empty<Subject>();
         }
     }
 }

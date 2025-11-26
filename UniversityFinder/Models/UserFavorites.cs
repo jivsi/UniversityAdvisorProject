@@ -1,15 +1,19 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.AspNetCore.Identity;
 
 namespace UniversityFinder.Models
 {
+    /// <summary>
+    /// User favorites stored in Supabase
+    /// UserId is the Supabase user ID (UUID string)
+    /// </summary>
     public class UserFavorites
     {
         public int Id { get; set; }
 
         [Required]
-        public string UserId { get; set; } = string.Empty;
+        [MaxLength(255)]
+        public string UserId { get; set; } = string.Empty; // Supabase user ID
 
         [Required]
         public int UniversityId { get; set; }
@@ -17,9 +21,6 @@ namespace UniversityFinder.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties
-        [ForeignKey(nameof(UserId))]
-        public IdentityUser User { get; set; } = null!;
-
         [ForeignKey(nameof(UniversityId))]
         public University University { get; set; } = null!;
     }

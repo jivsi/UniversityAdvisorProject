@@ -87,7 +87,7 @@
                                     }
                                 </h5>
                                 <p class="card-text">
-                                    <i class="bi bi-geo-alt"></i> @university.City.Name, @university.Country.Name
+                                    <i class="bi bi-geo-alt"></i> @(university.City ?? "Unknown city"), @(university.Country ?? "Unknown country")
                                 </p>
                                 @if (university.Programs.Any())
                                 {

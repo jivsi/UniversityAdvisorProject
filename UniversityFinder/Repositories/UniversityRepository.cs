@@ -1,27 +1,39 @@
 using System;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
-using UniversityFinder.Data;
+// LEGACY: EF Core removed - ApplicationDbContext no longer available
+// using Microsoft.EntityFrameworkCore;
+// using UniversityFinder.Data;
 using UniversityFinder.Models;
 using UniversityFinder.Services;
 
 namespace UniversityFinder.Repositories
 {
+    /// <summary>
+    /// LEGACY: This repository uses EF Core which has been removed.
+    /// TODO: Update to use SupabaseService instead of ApplicationDbContext
+    /// </summary>
     public class UniversityRepository : IUniversityRepository
     {
-        private readonly ApplicationDbContext _context;
+        // LEGACY: ApplicationDbContext removed - all data now in Supabase
+        // private readonly ApplicationDbContext _context;
         private readonly ISubjectNormalizationService _normalizationService;
 
         public UniversityRepository(
-            ApplicationDbContext context,
+            // ApplicationDbContext context, // LEGACY: Removed - use SupabaseService instead
             ISubjectNormalizationService normalizationService)
         {
-            _context = context;
+            // _context = context; // LEGACY: Removed
             _normalizationService = normalizationService;
         }
 
         public async Task<IEnumerable<University>> SearchBySubjectAsync(string subjectName, int? countryId = null, int? cityId = null, string? degreeType = null)
         {
+            // LEGACY: EF Core removed - this method needs to be updated to use SupabaseService
+            // For now, return empty to prevent build errors
+            // TODO: Implement using SupabaseService
+            return Enumerable.Empty<University>();
+            
+            /* LEGACY CODE - KEPT FOR REFERENCE
             if (string.IsNullOrWhiteSpace(subjectName))
             {
                 return Enumerable.Empty<University>();
@@ -98,51 +110,37 @@ namespace UniversityFinder.Repositories
             }
 
             return await query.Distinct().ToListAsync();
+            */
         }
 
         public async Task<University?> GetByIdAsync(int id)
         {
-            return await _context.Universities
-                .Include(u => u.Country)
-                .Include(u => u.City)
-                .FirstOrDefaultAsync(u => u.Id == id);
+            // LEGACY: EF Core removed - TODO: Implement using SupabaseService
+            return null;
         }
 
         public async Task<University?> GetByIdWithDetailsAsync(int id)
         {
-            return await _context.Universities
-                .Include(u => u.Country)
-                .Include(u => u.City)
-                .Include(u => u.Programs)
-                    .ThenInclude(p => p.Subject)
-                        .ThenInclude(s => s.Aliases)
-                .FirstOrDefaultAsync(u => u.Id == id);
+            // LEGACY: EF Core removed - TODO: Implement using SupabaseService
+            return null;
         }
 
         public async Task<IEnumerable<University>> GetAllAsync()
         {
-            return await _context.Universities
-                .Include(u => u.Country)
-                .Include(u => u.City)
-                .ToListAsync();
+            // LEGACY: EF Core removed - TODO: Implement using SupabaseService
+            return Enumerable.Empty<University>();
         }
 
         public async Task<IEnumerable<University>> GetByCountryAsync(int countryId)
         {
-            return await _context.Universities
-                .Include(u => u.Country)
-                .Include(u => u.City)
-                .Where(u => u.CountryId == countryId)
-                .ToListAsync();
+            // LEGACY: EF Core removed - TODO: Implement using SupabaseService
+            return Enumerable.Empty<University>();
         }
 
         public async Task<IEnumerable<University>> GetByCityAsync(int cityId)
         {
-            return await _context.Universities
-                .Include(u => u.Country)
-                .Include(u => u.City)
-                .Where(u => u.CityId == cityId)
-                .ToListAsync();
+            // LEGACY: EF Core removed - TODO: Implement using SupabaseService
+            return Enumerable.Empty<University>();
         }
     }
 }

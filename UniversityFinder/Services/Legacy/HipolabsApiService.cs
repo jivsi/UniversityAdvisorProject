@@ -1,13 +1,27 @@
+/*
+ * ============================================================================
+ * LEGACY SERVICE - No longer in use. Replaced by RVU (NACID) data source.
+ * ============================================================================
+ * 
+ * This service is kept for reference only and should not be used in new code.
+ * The system now uses RVU (NACID Register of Higher Education Institutions)
+ * as the primary data source for Bulgarian universities.
+ * 
+ * TODO: Remove this service entirely once RVU integration is complete.
+ * ============================================================================
+ */
+
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using UniversityFinder.Services;
 
-namespace UniversityFinder.Services
+namespace UniversityFinder.Services.Legacy
 {
+    // TODO: LEGACY - This service is deprecated. Replace with Bulgarian university search.
     /// <summary>
-    /// Implementation of Hipolabs API service for university search
-    /// Uses caching to reduce API calls
+    /// LEGACY: Hipolabs API service for international university search (deprecated).
+    /// This service will be replaced with Bulgarian-focused search using RVU/NACID data.
     /// </summary>
     public class HipolabsApiService : IHipolabsApiService
     {

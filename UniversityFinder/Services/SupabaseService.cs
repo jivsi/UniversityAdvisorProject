@@ -194,7 +194,8 @@ namespace UniversityFinder.Services
             const string endpoint = "GET universities";
             try
             {
-                var url = "universities?select=*";
+                // ✅ Query using text fields: Country and City (not relational IDs)
+                var url = "universities?select=Id,Name,Country,City,Acronym,Website,Description,EstablishedYear,DataSource,IsAccredited,AccreditationBody,Ranking,TuitionFee";
                 if (!string.IsNullOrEmpty(filter))
                     url += $"&{filter}";
 
@@ -208,7 +209,15 @@ namespace UniversityFinder.Services
                 }
 
                 var json = await response.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<List<University>>(json, JsonOptions()) ?? new List<University>();
+                var universities = JsonSerializer.Deserialize<List<University>>(json, JsonOptions()) ?? new List<University>();
+                
+                _logger.LogInformation("Supabase {Endpoint} succeeded: {Count} universities loaded", endpoint, universities.Count);
+                return universities;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Supabase {Endpoint} HTTP error: {Message}", endpoint, ex.Message);
+                throw;
             }
             catch (Exception ex)
             {
@@ -238,6 +247,48 @@ namespace UniversityFinder.Services
                     .Where(u => !string.IsNullOrEmpty(u.HeiApiId))
                     .Select(u => u.HeiApiId!)
                     .ToHashSet();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Supabase {Endpoint} error: {Message}", endpoint, ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<University?> GetUniversityByIdAsync(int id)
+        {
+            const string endpoint = "GET university by id";
+            try
+            {
+                // ✅ Query using text fields: Country and City (not relational IDs)
+                var response = await _httpClient.GetAsync($"universities?id=eq.{id}&select=Id,Name,Country,City,Acronym,Website,Description,EstablishedYear,DataSource,IsAccredited,AccreditationBody,Ranking,TuitionFee");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Supabase {Endpoint} failed: {Status} - {Body}", endpoint, response.StatusCode, body);
+                    response.EnsureSuccessStatusCode();
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                var universities = JsonSerializer.Deserialize<List<University>>(json, JsonOptions());
+                var university = universities?.FirstOrDefault();
+                
+                if (university != null)
+                {
+                    _logger.LogInformation("Supabase {Endpoint} succeeded: University {Id} loaded", endpoint, id);
+                }
+                else
+                {
+                    _logger.LogWarning("Supabase {Endpoint}: University {Id} not found", endpoint, id);
+                }
+                
+                return university;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Supabase {Endpoint} HTTP error: {Message}", endpoint, ex.Message);
+                throw;
             }
             catch (Exception ex)
             {
@@ -367,6 +418,281 @@ namespace UniversityFinder.Services
                 }
 
                 return universities.Count;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Supabase {Endpoint} error: {Message}", endpoint, ex.Message);
+                throw;
+            }
+        }
+
+        // ======================== USER FAVORITES ========================
+
+        public async Task<bool> IsFavoriteAsync(string userId, int universityId)
+        {
+            const string endpoint = "GET user_favorites (check)";
+            try
+            {
+                var response = await _httpClient.GetAsync($"user_favorites?userId=eq.{userId}&universityId=eq.{universityId}&select=id");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Supabase {Endpoint} failed: {Status} - {Body}", endpoint, response.StatusCode, body);
+                    return false;
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                var favorites = JsonSerializer.Deserialize<List<UserFavorites>>(json, JsonOptions()) ?? new List<UserFavorites>();
+                return favorites.Any();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Supabase {Endpoint} error: {Message}", endpoint, ex.Message);
+                return false;
+            }
+        }
+
+        public async Task<bool> ToggleFavoriteAsync(string userId, int universityId)
+        {
+            const string endpoint = "POST/DELETE user_favorites";
+            try
+            {
+                // Check if favorite exists
+                var exists = await IsFavoriteAsync(userId, universityId);
+                
+                if (exists)
+                {
+                    // Delete favorite
+                    var response = await _httpClient.DeleteAsync($"user_favorites?userId=eq.{userId}&universityId=eq.{universityId}");
+                    
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var body = await response.Content.ReadAsStringAsync();
+                        _logger.LogError("Supabase {Endpoint} DELETE failed: {Status} - {Body}", endpoint, response.StatusCode, body);
+                        response.EnsureSuccessStatusCode();
+                    }
+                    
+                    _logger.LogInformation("Favorite removed for user {UserId}, university {UniversityId}", userId, universityId);
+                    return false;
+                }
+                else
+                {
+                    // Create favorite
+                    var favorite = new UserFavorites
+                    {
+                        UserId = userId,
+                        UniversityId = universityId,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    var json = JsonSerializer.Serialize(favorite, JsonWriteOptions());
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                    var response = await _httpClient.PostAsync("user_favorites", content);
+                    
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var body = await response.Content.ReadAsStringAsync();
+                        _logger.LogError("Supabase {Endpoint} POST failed: {Status} - {Body}", endpoint, response.StatusCode, body);
+                        response.EnsureSuccessStatusCode();
+                    }
+                    
+                    _logger.LogInformation("Favorite added for user {UserId}, university {UniversityId}", userId, universityId);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Supabase {Endpoint} error: {Message}", endpoint, ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<List<University>> GetUserFavoritesAsync(string userId)
+        {
+            const string endpoint = "GET user_favorites";
+            try
+            {
+                // Get favorites with university data
+                var response = await _httpClient.GetAsync($"user_favorites?userId=eq.{userId}&select=*,university(*,city(*),country(*))&order=createdAt.desc");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Supabase {Endpoint} failed: {Status} - {Body}", endpoint, response.StatusCode, body);
+                    response.EnsureSuccessStatusCode();
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                var favorites = JsonSerializer.Deserialize<List<UserFavorites>>(json, JsonOptions()) ?? new List<UserFavorites>();
+                
+                return favorites
+                    .Where(f => f.University != null)
+                    .Select(f => f.University!)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Supabase {Endpoint} error: {Message}", endpoint, ex.Message);
+                throw;
+            }
+        }
+
+        // ======================== SEARCH HISTORY ========================
+
+        public async Task TrackSearchAsync(string userId, string? query, int? subjectId, int resultsCount)
+        {
+            const string endpoint = "POST search_history";
+            try
+            {
+                var searchHistory = new SearchHistory
+                {
+                    UserId = userId,
+                    Query = query,
+                    SubjectId = subjectId,
+                    ResultsCount = resultsCount,
+                    SearchedAt = DateTime.UtcNow
+                };
+
+                var json = JsonSerializer.Serialize(searchHistory, JsonWriteOptions());
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync("search_history", content);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Supabase {Endpoint} failed: {Status} - {Body}", endpoint, response.StatusCode, body);
+                    // Don't throw - search history tracking should not break the search flow
+                    _logger.LogWarning("Failed to track search history for user {UserId}", userId);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log but don't throw - search history tracking should not break the search flow
+                _logger.LogWarning(ex, "Failed to track search history for user {UserId}: {Message}", userId, ex.Message);
+            }
+        }
+
+        // ======================== RVU SYNC ========================
+
+        /// <summary>
+        /// Syncs universities from RVU import into Supabase
+        /// Upserts by Name to avoid duplicates
+        /// Sets DataSource = "RVU", IsAccredited = true, AccreditationBody = "NACID"
+        /// </summary>
+        public async Task SyncUniversitiesAsync(List<University> universities)
+        {
+            const string endpoint = "POST/PATCH universities (RVU sync)";
+            try
+            {
+                if (universities == null || !universities.Any())
+                {
+                    _logger.LogWarning("No universities to sync");
+                    return;
+                }
+
+                _logger.LogInformation("🔄 Starting RVU sync: {Count} universities to process", universities.Count);
+
+                // Get Bulgaria country (create if doesn't exist)
+                var bulgaria = await GetOrCreateCountryAsync("Bulgaria");
+                _logger.LogInformation("✅ Bulgaria country ID: {Id}", bulgaria.Id);
+
+                int successCount = 0;
+                int errorCount = 0;
+                int skippedCount = 0;
+
+                foreach (var university in universities)
+                {
+                    try
+                    {
+                        // Skip if name is empty
+                        if (string.IsNullOrWhiteSpace(university.Name))
+                        {
+                            skippedCount++;
+                            continue;
+                        }
+
+                        // Set RVU-specific fields
+                        university.DataSource = "RVU";
+                        university.IsAccredited = true;
+                        university.AccreditationBody = "NACID";
+                        
+                        // Set Country and City as text fields (not relational IDs)
+                        university.Country = "Bulgaria";
+                        
+                        // Use city from university object or default to "Unknown"
+                        if (university.City == null || string.IsNullOrWhiteSpace(university.City))
+                        {
+                            // If city was set as navigation property, extract name
+                            // Otherwise default to "Unknown"
+                            university.City = "Unknown";
+                            _logger.LogWarning("⚠️ University {Name} missing city, defaulting to Unknown", university.Name);
+                        }
+                        else
+                        {
+                            // Ensure city is a string (not navigation property)
+                            university.City = university.City.Trim();
+                        }
+
+                        // Check if university already exists by name
+                        var existing = await GetUniversitiesAsync($"name=eq.{Uri.EscapeDataString(university.Name)}");
+                        var existingUni = existing.FirstOrDefault();
+
+                        if (existingUni != null)
+                        {
+                            // Update existing university
+                            university.Id = existingUni.Id;
+                            var json = JsonSerializer.Serialize(university, JsonWriteOptions());
+                            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                            var response = await _httpClient.PatchAsync($"universities?id=eq.{university.Id}", content);
+
+                            if (!response.IsSuccessStatusCode)
+                            {
+                                var body = await response.Content.ReadAsStringAsync();
+                                _logger.LogError("Supabase {Endpoint} PATCH failed for {Name}: {Status} - {Body}", 
+                                    endpoint, university.Name, response.StatusCode, body);
+                                errorCount++;
+                            }
+                            else
+                            {
+                                _logger.LogInformation("✅ Updated university: {Name}", university.Name);
+                                successCount++;
+                            }
+                        }
+                        else
+                        {
+                            // Insert new university
+                            var json = JsonSerializer.Serialize(university, JsonWriteOptions());
+                            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                            var response = await _httpClient.PostAsync("universities", content);
+
+                            if (!response.IsSuccessStatusCode)
+                            {
+                                var body = await response.Content.ReadAsStringAsync();
+                                _logger.LogError("Supabase {Endpoint} POST failed for {Name}: {Status} - {Body}", 
+                                    endpoint, university.Name, response.StatusCode, body);
+                                errorCount++;
+                            }
+                            else
+                            {
+                                _logger.LogInformation("✅ Inserted university: {Name}", university.Name);
+                                successCount++;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "❌ Error syncing university {Name}: {Message}", university.Name, ex.Message);
+                        errorCount++;
+                    }
+                }
+
+                _logger.LogInformation("✅ RVU sync complete: {Success} inserted/updated, {Errors} errors, {Skipped} skipped", 
+                    successCount, errorCount, skippedCount);
             }
             catch (Exception ex)
             {

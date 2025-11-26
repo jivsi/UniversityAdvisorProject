@@ -134,6 +134,7 @@
                     <div class="hidden md:flex items-center space-x-6">
                         <a asp-controller="Home" asp-action="Index" class="nav-link text-sm font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Home</a>
                         <a asp-controller="University" asp-action="Index" class="nav-link text-sm font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Universities</a>
+                        <a asp-controller="Statistics" asp-action="Index" class="nav-link text-sm font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Education Statistics</a>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <a asp-controller="University" asp-action="Favorites" class="nav-link text-sm font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors">My Favorites</a>
@@ -164,6 +165,7 @@
             <div class="px-4 py-4 space-y-3">
                 <a asp-controller="Home" asp-action="Index" class="block nav-link text-sm font-medium">Home</a>
                 <a asp-controller="University" asp-action="Index" class="block nav-link text-sm font-medium">Universities</a>
+                <a asp-controller="Statistics" asp-action="Index" class="block nav-link text-sm font-medium">Education Statistics</a>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     <a asp-controller="University" asp-action="Favorites" class="block nav-link text-sm font-medium">My Favorites</a>

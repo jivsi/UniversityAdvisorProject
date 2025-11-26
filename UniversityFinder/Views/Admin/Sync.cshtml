@@ -41,24 +41,48 @@
         }
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Sync Universities Card -->
+            <!-- Sync Universities from RVU Card -->
             <div class="lg:col-span-1">
                 <div class="glass dark:glass-dark rounded-3xl p-8">
-                    <div class="w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <div class="w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
                         <i data-lucide="building-2" class="w-8 h-8 text-white"></i>
                     </div>
-                    <h2 class="text-2xl font-bold mb-3">Sync Universities</h2>
+                    <h2 class="text-2xl font-bold mb-3">Sync from RVU (NACID)</h2>
                     <p class="text-gray-600 dark:text-gray-400 mb-6">
-                        Fetch and sync universities from the HEI API. This should be done first before syncing programs.
+                        Fetch and sync accredited Bulgarian universities from the official RVU (NACID) register. This is the primary data source for Bulgarian universities.
+                    </p>
+                    <form asp-action="SyncFromRvu" method="post">
+                        @Html.AntiForgeryToken()
+                        <button 
+                            type="submit" 
+                            class="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center gap-2"
+                        >
+                            <i data-lucide="download" class="w-5 h-5"></i>
+                            Sync Universities from RVU
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Legacy HEI Sync Card (Deprecated) -->
+            <div class="lg:col-span-1">
+                <div class="glass dark:glass-dark rounded-3xl p-8 opacity-60">
+                    <div class="w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
+                        <i data-lucide="building-2" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-3">Sync Universities (Legacy)</h2>
+                    <p class="text-gray-600 dark:text-gray-400 mb-6">
+                        <span class="text-red-500 font-semibold">DEPRECATED:</span> HEI API sync is no longer available. Please use RVU (NACID) data source instead.
                     </p>
                     <form asp-action="SyncUniversities" method="post">
                         @Html.AntiForgeryToken()
                         <button 
                             type="submit" 
-                            class="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center gap-2"
+                            class="w-full px-6 py-3 bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded-xl font-semibold cursor-not-allowed opacity-50"
+                            disabled
                         >
-                            <i data-lucide="download" class="w-5 h-5"></i>
-                            Sync Universities
+                            <i data-lucide="x-circle" class="w-5 h-5"></i>
+                            Deprecated
                         </button>
                     </form>
                 </div>

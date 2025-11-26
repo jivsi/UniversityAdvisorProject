@@ -1,48 +1,50 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using UniversityFinder.Data;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using UniversityFinder.Repositories;
 using UniversityFinder.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ✅ TLS Configuration for Hipolabs API
+// ✅ TLS Configuration
 System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
 
 // Add services to the container.
-// ✅ SUPABASE REST API: Application data (Universities, Programs, etc.) uses Supabase REST API (PostgREST)
-// This eliminates direct PostgreSQL TCP connections and works on restricted networks (school WiFi)
-// No more "No such host is known" errors - all data operations use HTTP REST API
-// Identity uses local SQLite database for authentication (cookie-based login only)
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite("Data Source=Identity.db")); // Local SQLite for Identity only - application data uses Supabase REST
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-builder.Services.AddDefaultIdentity<IdentityUser>(options => 
-{
-    options.SignIn.RequireConfirmedAccount = false; // Disable email confirmation for easier development
-    options.Password.RequireDigit = true;
-    options.Password.RequireLowercase = true;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequiredLength = 6;
-})
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+// ✅ SUPABASE-ONLY ARCHITECTURE: All data (including authentication) uses Supabase
+// No SQLite, no EF Core Identity - everything goes through Supabase REST API and Auth
 
 builder.Services.AddControllersWithViews();
+
+// ✅ SUPABASE AUTHENTICATION: Configure cookie authentication for Supabase sessions
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromDays(7);
+        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    });
 
 // ✅ SUPABASE REST API: Register Supabase REST service
 builder.Services.AddHttpClient<SupabaseService>();
 
-// Register HttpClient for API services
-builder.Services.AddHttpClient<HeiApiService>(client =>
-{
-    client.Timeout = TimeSpan.FromSeconds(60);
-});
-builder.Services.AddHttpClient<OpenAiService>();
-builder.Services.AddHttpClient<HipolabsApiService>();
-builder.Services.AddHttpClient<TeleportApiService>();
+// ✅ SUPABASE AUTHENTICATION: Register Supabase Auth service
+builder.Services.AddSingleton<SupabaseAuthService>();
 
+// ✅ RVU IMPORT: Register RVU (NACID) import service
+builder.Services.AddHttpClient<RvuImportService>();
+
+// Register HttpClient for API services
+builder.Services.AddHttpClient<OpenAiService>();
+
+// LEGACY: TeleportApiService moved to Services/Legacy - no longer used
+// Teleport API is deprecated in favor of official Bulgarian sources (RVU + NSI)
+// builder.Services.AddHttpClient<TeleportApiService>();
+// builder.Services.AddScoped<ITeleportApiService, TeleportApiService>();
+
+// LEGACY: Repositories use EF Core which has been removed
+// TODO: Update repositories to use SupabaseService or remove them
 // Register Repositories
 builder.Services.AddScoped<IUniversityRepository, UniversityRepository>();
 builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
@@ -50,11 +52,9 @@ builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddScoped<ICostOfLivingRepository, CostOfLivingRepository>();
 
 // Register Services
-builder.Services.AddScoped<HeiApiService>();
 builder.Services.AddScoped<OpenAiService>();
-builder.Services.AddScoped<DataSeeder>();
-builder.Services.AddScoped<IHipolabsApiService, HipolabsApiService>();
-builder.Services.AddScoped<ITeleportApiService, TeleportApiService>();
+// LEGACY: DataSeeder removed - uses ApplicationDbContext which is no longer available
+// builder.Services.AddScoped<DataSeeder>();
 
 // Add Memory Cache for API response caching
 builder.Services.AddMemoryCache();
@@ -69,11 +69,7 @@ builder.Services.AddScoped<ISubjectInferenceService, SubjectInferenceService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseMigrationsEndPoint();
-}
-else
+if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
@@ -85,45 +81,17 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// ✅ SUPABASE AUTHENTICATION: Use authentication middleware
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-app.MapRazorPages();
 
-// ✅ SUPABASE REST API: Initialize Identity database only (application data uses Supabase REST)
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<ApplicationDbContext>();
-        
-        // Apply migrations for Identity database only (local SQLite)
-        context.Database.Migrate();
-        
-        // Note: Application data (Universities, Programs, etc.) is stored in Supabase via REST API
-        // No EF Core migrations needed for application data - tables must be created in Supabase dashboard
-        
-        // ✅ HARDENED: Check and reset any stale sync statuses on startup
-        // This prevents sync from being stuck after application restart
-        try
-        {
-            var heiApiService = services.GetRequiredService<HeiApiService>();
-            await heiApiService.CheckAndResetStaleSyncStatusesAsync();
-        }
-        catch (Exception ex)
-        {
-            var logger = services.GetRequiredService<ILogger<Program>>();
-            logger.LogWarning(ex, "Warning: Failed to check stale sync statuses on startup. This is non-critical.");
-        }
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while initializing Identity database.");
-    }
-}
+// ✅ SUPABASE-ONLY: No database initialization needed - all data is in Supabase
+// Application data (Universities, Programs, etc.) is stored in Supabase via REST API
+// Authentication is handled by Supabase Auth
+// No EF Core migrations or SQLite database needed
 
 app.Run();

@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using UniversityFinder.Data;
 using UniversityFinder.Models;
 using UniversityFinder.Repositories;
 using UniversityFinder.ViewModels;
@@ -12,7 +11,8 @@ namespace UniversityFinder.Services
         private readonly IUniversityRepository _universityRepository; // Legacy - may be used for complex queries
         private readonly ISubjectRepository _subjectRepository;
         private readonly ICountryRepository _countryRepository;
-        private readonly ApplicationDbContext _context; // Only for Identity-related operations
+        // LEGACY: ApplicationDbContext removed - all data now in Supabase
+        // private readonly ApplicationDbContext _context;
         private readonly ILogger<UniversitySearchService> _logger;
 
         public UniversitySearchService(
@@ -20,14 +20,14 @@ namespace UniversityFinder.Services
             IUniversityRepository universityRepository,
             ISubjectRepository subjectRepository,
             ICountryRepository countryRepository,
-            ApplicationDbContext context,
+            // ApplicationDbContext context, // LEGACY: Removed - use Supabase instead
             ILogger<UniversitySearchService> logger)
         {
             _supabaseService = supabaseService;
             _universityRepository = universityRepository;
             _subjectRepository = subjectRepository;
             _countryRepository = countryRepository;
-            _context = context; // Only for Identity-related operations
+            // _context = context; // LEGACY: Removed
             _logger = logger;
         }
 

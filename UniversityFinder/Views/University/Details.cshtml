@@ -21,7 +21,7 @@
                     <div class="flex items-center gap-4 text-white/90">
                         <div class="flex items-center gap-2">
                             <i data-lucide="map-pin" class="w-5 h-5"></i>
-                            <span>@Model.City.Name, @Model.Country.Name</span>
+                            <span>@(Model.City ?? "Unknown city"), @(Model.Country ?? "Unknown country")</span>
                         </div>
                         @if (Model.EstablishedYear.HasValue)
                         {
@@ -60,11 +60,11 @@
                 <div class="text-sm text-gray-600 dark:text-gray-400">Programs</div>
             </div>
             <div class="text-center">
-                <div class="text-3xl font-bold gradient-text mb-2">@Model.Country.Name</div>
+                <div class="text-3xl font-bold gradient-text mb-2">@(Model.Country ?? "Unknown country")</div>
                 <div class="text-sm text-gray-600 dark:text-gray-400">Country</div>
             </div>
             <div class="text-center">
-                <div class="text-3xl font-bold gradient-text mb-2">@Model.City.Name</div>
+                <div class="text-3xl font-bold gradient-text mb-2">@(Model.City ?? "Unknown city")</div>
                 <div class="text-sm text-gray-600 dark:text-gray-400">City</div>
             </div>
             <div class="text-center">
@@ -142,7 +142,7 @@
                         @if (Model.Programs.Any())
                         {
                             <div class="space-y-4">
-                                @foreach (var program in Model.Programs.OrderBy(p => p.Subject.Name))
+                                @foreach (var program in Model.Programs.OrderBy(p => p.Subject?.Name ?? ""))
                                 {
                                     <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6 hover:shadow-lg transition-all">
                                         <div class="flex items-start justify-between mb-4">
@@ -151,7 +151,7 @@
                                                 <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                                                     <span class="flex items-center gap-2">
                                                         <i data-lucide="book-open" class="w-4 h-4"></i>
-                                                        @program.Subject.Name
+                                                        @(program.Subject?.Name ?? "Unknown subject")
                                                     </span>
                                                     @if (!string.IsNullOrEmpty(program.DegreeType))
                                                     {
@@ -197,7 +197,7 @@
                     <div class="glass dark:glass-dark rounded-3xl p-8">
                         <h2 class="text-3xl font-bold mb-6">Living Costs</h2>
                         <p class="text-gray-500 dark:text-gray-400 mb-6">
-                            Cost of living information for @Model.City.Name, @Model.Country.Name
+                            Cost of living information for @(Model.City ?? "Unknown city"), @(Model.Country ?? "Unknown country")
                         </p>
                         <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
                             <p class="text-center text-gray-500 dark:text-gray-400">
@@ -210,138 +210,16 @@
                 <!-- City Metrics Tab -->
                 <div id="costs" class="tab-panel hidden">
                     <div class="glass dark:glass-dark rounded-3xl p-8">
-                        <h2 class="text-3xl font-bold mb-6">City Metrics</h2>
-                        @{
-                            var cityQuality = ViewBag.CityQuality as UniversityFinder.Models.CityQuality;
-                        }
-                        @if (cityQuality != null)
-                        {
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                @if (cityQuality.SafetyScore.HasValue)
-                                {
-                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
-                                        <h3 class="font-bold mb-2 flex items-center gap-2">
-                                            <i data-lucide="shield" class="w-5 h-5 text-green-500"></i>
-                                            Safety Score
-                                        </h3>
-                                        <div class="text-4xl font-bold gradient-text mb-2">@cityQuality.SafetyScore.Value.ToString("F0")</div>
-                                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                            <div class="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full" style="width: @cityQuality.SafetyScore.Value%"></div>
-                                        </div>
-                                    </div>
-                                }
-                                
-                                @if (cityQuality.EducationScore.HasValue)
-                                {
-                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
-                                        <h3 class="font-bold mb-2 flex items-center gap-2">
-                                            <i data-lucide="graduation-cap" class="w-5 h-5 text-blue-500"></i>
-                                            Education Score
-                                        </h3>
-                                        <div class="text-4xl font-bold gradient-text mb-2">@cityQuality.EducationScore.Value.ToString("F0")</div>
-                                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                            <div class="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full" style="width: @cityQuality.EducationScore.Value%"></div>
-                                        </div>
-                                    </div>
-                                }
-                                
-                                @if (cityQuality.HealthcareScore.HasValue)
-                                {
-                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
-                                        <h3 class="font-bold mb-2 flex items-center gap-2">
-                                            <i data-lucide="heart" class="w-5 h-5 text-red-500"></i>
-                                            Healthcare Score
-                                        </h3>
-                                        <div class="text-4xl font-bold gradient-text mb-2">@cityQuality.HealthcareScore.Value.ToString("F0")</div>
-                                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                            <div class="bg-gradient-to-r from-red-500 to-pink-500 h-2 rounded-full" style="width: @cityQuality.HealthcareScore.Value%"></div>
-                                        </div>
-                                    </div>
-                                }
-                                
-                                @if (cityQuality.QualityOfLifeScore.HasValue)
-                                {
-                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
-                                        <h3 class="font-bold mb-2 flex items-center gap-2">
-                                            <i data-lucide="star" class="w-5 h-5 text-yellow-500"></i>
-                                            Quality of Life
-                                        </h3>
-                                        <div class="text-4xl font-bold gradient-text mb-2">@cityQuality.QualityOfLifeScore.Value.ToString("F0")</div>
-                                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                            <div class="bg-gradient-to-r from-yellow-500 to-orange-500 h-2 rounded-full" style="width: @cityQuality.QualityOfLifeScore.Value%"></div>
-                                        </div>
-                                    </div>
-                                }
-                                
-                                @if (cityQuality.EconomyScore.HasValue)
-                                {
-                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
-                                        <h3 class="font-bold mb-2 flex items-center gap-2">
-                                            <i data-lucide="trending-up" class="w-5 h-5 text-purple-500"></i>
-                                            Economy Score
-                                        </h3>
-                                        <div class="text-4xl font-bold gradient-text mb-2">@cityQuality.EconomyScore.Value.ToString("F0")</div>
-                                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                            <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full" style="width: @cityQuality.EconomyScore.Value%"></div>
-                                        </div>
-                                    </div>
-                                }
-                                
-                                @if (cityQuality.EnvironmentalScore.HasValue)
-                                {
-                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
-                                        <h3 class="font-bold mb-2 flex items-center gap-2">
-                                            <i data-lucide="leaf" class="w-5 h-5 text-green-500"></i>
-                                            Environmental Score
-                                        </h3>
-                                        <div class="text-4xl font-bold gradient-text mb-2">@cityQuality.EnvironmentalScore.Value.ToString("F0")</div>
-                                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                            <div class="bg-gradient-to-r from-green-500 to-teal-500 h-2 rounded-full" style="width: @cityQuality.EnvironmentalScore.Value%"></div>
-                                        </div>
-                                    </div>
-                                }
-                                
-                                @if (cityQuality.HousingCost.HasValue)
-                                {
-                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
-                                        <h3 class="font-bold mb-2 flex items-center gap-2">
-                                            <i data-lucide="home" class="w-5 h-5 text-indigo-500"></i>
-                                            Housing Cost Index
-                                        </h3>
-                                        <div class="text-4xl font-bold gradient-text mb-2">@cityQuality.HousingCost.Value.ToString("F1")</div>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">Relative to base city</p>
-                                    </div>
-                                }
-                                
-                                @if (cityQuality.CostOfLivingIndex.HasValue)
-                                {
-                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
-                                        <h3 class="font-bold mb-2 flex items-center gap-2">
-                                            <i data-lucide="dollar-sign" class="w-5 h-5 text-emerald-500"></i>
-                                            Cost of Living Index
-                                        </h3>
-                                        <div class="text-4xl font-bold gradient-text mb-2">@cityQuality.CostOfLivingIndex.Value.ToString("F1")</div>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">Relative to base city</p>
-                                    </div>
-                                }
-                            </div>
-                            
-                            @if (cityQuality.LastUpdated.HasValue)
-                            {
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-6 text-center">
-                                    Last updated: @cityQuality.LastUpdated.Value.ToString("MMMM dd, yyyy")
-                                </p>
-                            }
-                        }
-                        else
-                        {
-                            <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-8 text-center">
-                                <i data-lucide="info" class="w-16 h-16 mx-auto mb-4 text-gray-400"></i>
-                                <p class="text-gray-600 dark:text-gray-400">
-                                    City quality metrics are being loaded. Please refresh the page in a moment.
-                                </p>
-                            </div>
-                        }
+                        <h2 class="text-3xl font-bold mb-6">City Information</h2>
+                        <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-8 text-center">
+                            <i data-lucide="info" class="w-16 h-16 mx-auto mb-4 text-gray-400"></i>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">
+                                City quality metrics from Teleport API are no longer available.
+                            </p>
+                            <p class="text-sm text-gray-500 dark:text-gray-500">
+                                The system now focuses exclusively on Bulgarian universities using official sources (RVU + NSI).
+                            </p>
+                        </div>
                     </div>
                 </div>
                 
@@ -349,35 +227,15 @@
                 <div id="safety" class="tab-panel hidden">
                     <div class="glass dark:glass-dark rounded-3xl p-8">
                         <h2 class="text-3xl font-bold mb-6">Safety & Lifestyle</h2>
-                        @{
-                            var safetyData = ViewBag.CityQuality as UniversityFinder.Models.CityQuality;
-                        }
-                        @if (safetyData != null && safetyData.SafetyScore.HasValue)
-                        {
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
-                                    <h3 class="font-bold mb-2">Safety Index</h3>
-                                    <div class="text-4xl font-bold gradient-text mb-2">@safetyData.SafetyScore.Value.ToString("F0")</div>
-                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                        <div class="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full" style="width: @safetyData.SafetyScore.Value%"></div>
-                                    </div>
-                                </div>
-                                @if (safetyData.QualityOfLifeScore.HasValue)
-                                {
-                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
-                                        <h3 class="font-bold mb-2">Quality of Life</h3>
-                                        <div class="text-4xl font-bold gradient-text mb-2">@safetyData.QualityOfLifeScore.Value.ToString("F0")</div>
-                                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                            <div class="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full" style="width: @safetyData.QualityOfLifeScore.Value%"></div>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <p class="text-gray-500 dark:text-gray-400">Safety data is being loaded. Please refresh the page.</p>
-                        }
+                        <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-8 text-center">
+                            <i data-lucide="info" class="w-16 h-16 mx-auto mb-4 text-gray-400"></i>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">
+                                Safety and lifestyle metrics from Teleport API are no longer available.
+                            </p>
+                            <p class="text-sm text-gray-500 dark:text-gray-500">
+                                The system now focuses exclusively on Bulgarian universities using official sources (RVU + NSI).
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -390,11 +248,11 @@
                 <div class="space-y-4">
                     <div>
                         <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Country</div>
-                        <div class="font-semibold">@Model.Country.Name</div>
+                        <div class="font-semibold">@(Model.Country ?? "Unknown country")</div>
                     </div>
                     <div>
                         <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">City</div>
-                        <div class="font-semibold">@Model.City.Name</div>
+                        <div class="font-semibold">@(Model.City ?? "Unknown city")</div>
                     </div>
                     <div>
                         <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Programs</div>
@@ -402,14 +260,17 @@
                     </div>
                 </div>
                 
-                <a 
-                    asp-controller="University" 
-                    asp-action="Search" 
-                    asp-route-Query="@Model.Country.Name" 
-                    class="block w-full mt-6 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
-                >
-                    Find More in @Model.Country.Name
-                </a>
+                @if (Model.Country != null)
+                {
+                    <a 
+                        asp-controller="University" 
+                        asp-action="Search" 
+                        asp-route-Query="@(Model.Country ?? "Bulgaria")" 
+                        class="block w-full mt-6 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
+                    >
+                        Find More in @(Model.Country ?? "Bulgaria")
+                    </a>
+                }
             </div>
         </aside>
     </div>

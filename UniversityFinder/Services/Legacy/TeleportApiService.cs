@@ -1,21 +1,41 @@
+/*
+ * ============================================================================
+ * LEGACY SERVICE - Teleport API is no longer used. Replaced by official Bulgarian sources (RVU + NSI).
+ * ============================================================================
+ * 
+ * This service is kept for reference only and should not be used in new code.
+ * The system now focuses exclusively on Bulgarian universities using official sources:
+ * - RVU (NACID Register of Higher Education Institutions) - primary university data
+ * - NSI (National Statistical Institute) - statistical and analytical data
+ * 
+ * Teleport API provided city quality metrics (safety, housing, education scores) which
+ * are no longer needed for the Bulgarian-focused platform.
+ * 
+ * TODO: Remove this service entirely once all references are cleaned up.
+ * ============================================================================
+ */
+
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
+// LEGACY: EF Core removed - ApplicationDbContext no longer available
+// using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using UniversityFinder.Data;
+// using UniversityFinder.Data;
 using UniversityFinder.Models;
-using UniversityFinder.Services;
+using UniversityFinder.Services.Legacy;
 
-namespace UniversityFinder.Services
+namespace UniversityFinder.Services.Legacy
 {
     /// <summary>
-    /// Implementation of Teleport API service for city quality metrics
-    /// Caches data in database to reduce API calls
+    /// LEGACY: Implementation of Teleport API service for city quality metrics
+    /// No longer used - replaced by official Bulgarian sources (RVU + NSI)
     /// </summary>
     public class TeleportApiService : ITeleportApiService
     {
         private readonly HttpClient _httpClient;
-        private readonly ApplicationDbContext _context;
+        // LEGACY: ApplicationDbContext removed - all data now in Supabase
+        // TODO: Update to use SupabaseService for caching city quality data
+        // private readonly ApplicationDbContext _context;
         private readonly IMemoryCache _cache;
         private readonly ILogger<TeleportApiService> _logger;
         private const string BaseUrl = "https://api.teleport.org/api";
@@ -23,12 +43,12 @@ namespace UniversityFinder.Services
 
         public TeleportApiService(
             HttpClient httpClient,
-            ApplicationDbContext context,
+            // ApplicationDbContext context, // LEGACY: Removed - use SupabaseService instead
             IMemoryCache cache,
             ILogger<TeleportApiService> logger)
         {
             _httpClient = httpClient;
-            _context = context;
+            // _context = context; // LEGACY: Removed
             _cache = cache;
             _logger = logger;
             _httpClient.BaseAddress = new Uri(BaseUrl);
@@ -37,6 +57,12 @@ namespace UniversityFinder.Services
 
         public async Task<CityQuality?> GetCityQualityAsync(string cityName, string countryName, CancellationToken cancellationToken = default)
         {
+            // LEGACY: EF Core removed - TODO: Update to use SupabaseService for caching
+            // For now, return null to prevent build errors
+            _logger.LogWarning("TeleportApiService.GetCityQualityAsync is disabled - EF Core removed. TODO: Implement using SupabaseService.");
+            return null;
+            
+            /* LEGACY CODE - KEPT FOR REFERENCE
             if (string.IsNullOrWhiteSpace(cityName) || string.IsNullOrWhiteSpace(countryName))
             {
                 return null;
@@ -149,6 +175,7 @@ namespace UniversityFinder.Services
                 _logger.LogError(ex, "Error fetching city quality from Teleport API for: {City}", cityName);
                 return cachedQuality; // Return stale data if available
             }
+            */
         }
 
         public async Task<string?> GetCitySlugAsync(string cityName, string countryName, CancellationToken cancellationToken = default)

@@ -1,22 +1,35 @@
-using Microsoft.EntityFrameworkCore;
-using UniversityFinder.Data;
+// LEGACY: EF Core removed - ApplicationDbContext no longer available
+// using Microsoft.EntityFrameworkCore;
+// using UniversityFinder.Data;
 using UniversityFinder.Models;
 
 namespace UniversityFinder.Services
 {
+    /// <summary>
+    /// LEGACY: This service uses EF Core which has been removed.
+    /// TODO: Update to use SupabaseService for seeding data
+    /// </summary>
     public class DataSeeder
     {
-        private readonly ApplicationDbContext _context;
+        // LEGACY: ApplicationDbContext removed - all data now in Supabase
+        // private readonly ApplicationDbContext _context;
         private readonly ILogger<DataSeeder> _logger;
 
-        public DataSeeder(ApplicationDbContext context, ILogger<DataSeeder> logger)
+        public DataSeeder(
+            // ApplicationDbContext context, // LEGACY: Removed - use SupabaseService instead
+            ILogger<DataSeeder> logger)
         {
-            _context = context;
+            // _context = context; // LEGACY: Removed
             _logger = logger;
         }
 
         public async Task SeedAsync()
         {
+            // LEGACY: EF Core removed - TODO: Implement using SupabaseService
+            _logger.LogInformation("DataSeeder is disabled - EF Core removed. Use SupabaseService for seeding.");
+            await Task.CompletedTask;
+            
+            /* LEGACY CODE - KEPT FOR REFERENCE
             try
             {
                 await SeedCountriesAsync();
@@ -29,10 +42,15 @@ namespace UniversityFinder.Services
                 _logger.LogError(ex, "Error occurred while seeding database.");
                 throw;
             }
+            */
         }
 
         private async Task SeedCountriesAsync()
         {
+            // LEGACY: EF Core removed
+            await Task.CompletedTask;
+            
+            /* LEGACY CODE - KEPT FOR REFERENCE
             if (await _context.Countries.AnyAsync())
             {
                 _logger.LogInformation("Countries already seeded.");
@@ -77,10 +95,15 @@ namespace UniversityFinder.Services
 
             await _context.Countries.AddRangeAsync(countries);
             _logger.LogInformation($"Seeded {countries.Count} countries.");
+            */
         }
 
         private async Task SeedSubjectsAsync()
         {
+            // LEGACY: EF Core removed
+            await Task.CompletedTask;
+            
+            /* LEGACY CODE - KEPT FOR REFERENCE
             if (await _context.Subjects.AnyAsync())
             {
                 _logger.LogInformation("Subjects already seeded.");
@@ -133,6 +156,7 @@ namespace UniversityFinder.Services
 
             await _context.Subjects.AddRangeAsync(subjects);
             _logger.LogInformation($"Seeded {subjects.Count} subjects.");
+            */
         }
     }
 }

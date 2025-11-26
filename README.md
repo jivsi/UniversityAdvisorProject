@@ -1,15 +1,16 @@
-# UniversityFinder - Premium University Discovery Platform
+# UniversityFinder - Official Bulgarian Higher Education Platform
 
-A modern, premium ASP.NET Core MVC application for discovering universities across Europe. Built with .NET 8, SQLite, and featuring a beautiful glassmorphism UI with dark/light theme support.
+A modern ASP.NET Core MVC application for discovering and analyzing accredited universities in Bulgaria. Built with .NET 8, Supabase, and featuring a beautiful glassmorphism UI with dark/light theme support. Uses official data from NACID (National Agency for Evaluation and Accreditation) and NSI (National Statistical Institute).
 
 ## 🎨 Design Features
 
 - **Premium UI/UX**: Glassmorphism design with smooth animations
 - **Dark/Light Theme**: Automatic detection with manual toggle
 - **Responsive Design**: Mobile-first, works on all devices
-- **Real-time Search**: Autocomplete powered by Hipolabs API
-- **City Metrics**: Safety, education, and quality of life scores from Teleport API
-- **Advanced Filtering**: Filter by country, city, tuition, ranking, degree type, language
+- **Official Data Sources**: RVU (NACID Register) for universities, NSI for statistics
+- **Accreditation Tracking**: All universities verified through NACID
+- **Regional Analytics**: Education statistics by Bulgarian regions
+- **Advanced Filtering**: Filter by region, city, accreditation status, field of study
 
 ## 🚀 Quick Start
 
@@ -50,11 +51,11 @@ A modern, premium ASP.NET Core MVC application for discovering universities acro
 
 ### Database
 
-The application uses **SQLite** - no external database installation needed!
+The application uses **Supabase** (PostgreSQL) for application data and **SQLite** for Identity.
 
-- Database file: `app.db` (created automatically in the project root)
+- Application data (universities, statistics) stored in Supabase
+- Identity/authentication uses local SQLite database
 - Migrations run automatically on startup
-- All data persists in the SQLite file
 
 ## 📁 Project Structure
 
@@ -71,9 +72,9 @@ UniversityFinder/
 │   ├── CityQuality.cs   # Teleport API data
 │   └── ...
 ├── Services/            # Business logic
-│   ├── HeiApiService.cs
-│   ├── HipolabsApiService.cs
-│   ├── TeleportApiService.cs
+│   ├── RvuService.cs (TODO: Automate RVU scraping/import pipeline)
+│   ├── NsiService.cs (TODO: Integrate NSI statistical data feed)
+│   ├── HeiApiService.cs (Legacy - deprecated)
 │   └── ...
 ├── Views/               # Razor views
 │   ├── Home/
@@ -126,29 +127,29 @@ dotnet ef database update --context ApplicationDbContext
 
 ### Homepage
 - Full-screen hero section with animated gradients
-- Search bar with live autocomplete (Hipolabs API)
-- Stats cards (Universities, Countries, Programs)
-- Feature highlights
+- Search bar for accredited Bulgarian universities
+- Stats cards (Universities, Regions, Programs)
+- Feature highlights focused on Bulgarian higher education
 
 ### Universities List
 - Card-based grid layout with hover animations
 - Advanced filter sidebar:
-  - Country & City
-  - Tuition range (min/max)
-  - Ranking range (min/max)
+  - Region & City (Bulgarian regions)
+  - Accreditation status
+  - Field of study
   - Degree type (Bachelor, Master, PhD)
-  - Language of instruction
 - Search with autocomplete
 - Responsive design (1/2/3 columns)
+- All universities verified through NACID
 
 ### University Details
 - Parallax hero section
 - Floating info panel with stats
 - Interactive tabs:
-  - **Overview**: Description, website, basic info
+  - **Overview**: Description, website, accreditation info
   - **Programs**: All programs with details
-  - **City Metrics**: Safety, education, healthcare scores (Teleport API)
-  - **Safety**: Safety and quality of life metrics
+  - **Education Statistics**: NSI data (enrollment, graduates, regional analytics)
+  - **Accreditation**: NACID accreditation details
 - Favorite button (for logged-in users)
 
 ### Favorites
@@ -163,24 +164,23 @@ dotnet ef database update --context ApplicationDbContext
 - Status chips (Running/Completed/Failed)
 - Statistics grid
 
-## 🔌 API Integrations
+## 🔌 Data Sources
 
-### Hipolabs API
-- **Endpoint**: `http://universities.hipolabs.com`
-- **Purpose**: University search and autocomplete
-- **Caching**: 60 minutes in-memory cache
-- **Usage**: Real-time autocomplete suggestions
+### RVU (NACID Register of Higher Education Institutions)
+- **Source**: Official Bulgarian National Agency for Evaluation and Accreditation
+- **Purpose**: Primary source for accredited universities in Bulgaria
+- **Status**: Primary data source
+- **TODO**: Automate RVU scraping/import pipeline
 
-### Teleport API
-- **Endpoint**: `https://api.teleport.org/api`
-- **Purpose**: City quality metrics (safety, education, healthcare, etc.)
-- **Caching**: 24 hours in database
-- **Usage**: City metrics tab on university details page
+### NSI (National Statistical Institute)
+- **Source**: Official Bulgarian National Statistical Institute
+- **Purpose**: Statistical and analytical educational data (enrollment, graduates, regional breakdowns)
+- **Status**: Statistical enrichment layer
+- **TODO**: Integrate NSI statistical data feed
 
-### HEI API
-- **Endpoint**: `https://hei.api.uni-foundation.eu`
-- **Purpose**: Sync universities and programs
-- **Usage**: Admin sync dashboard
+### Legacy APIs (Deprecated)
+- **HEI API**: Legacy European university data (deprecated)
+- **Hipolabs API**: Legacy international university search (deprecated)
 
 ## 🎨 Design System
 
@@ -220,14 +220,14 @@ The application uses ASP.NET Core Identity with SQLite.
 ## 📊 Database Schema
 
 ### Key Tables
-- `Universities` - University information
-- `Cities` - City data with coordinates
-- `Countries` - Country information
-- `CityQualities` - Teleport API metrics
+- `Universities` - Accredited Bulgarian universities (RVU/NACID data)
+- `Cities` - Bulgarian cities with coordinates
+- `Countries` - Country information (Bulgaria-focused)
+- `HigherEducationStatistics` - NSI statistical data
 - `Programs` - University programs
 - `Subjects` - Subject areas
 - `UserFavorites` - User's favorite universities
-- `SyncStatuses` - HEI sync status tracking
+- `SyncStatuses` - Data sync status tracking
 
 ## 🛠️ Configuration
 

@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using UniversityFinder.Data;
 using UniversityFinder.Models;
 using UniversityFinder.Services;
 
@@ -10,37 +8,87 @@ namespace UniversityFinder.Controllers
     [Authorize]
     public class AdminController : Controller
     {
-        private readonly HeiApiService _heiApiService;
+        // LEGACY: HeiApiService moved to Services/Legacy - no longer injected
+        // private readonly HeiApiService _heiApiService;
         private readonly SupabaseService _supabaseService;
-        private readonly ApplicationDbContext _context; // Only for Identity/SyncStatus operations
+        private readonly RvuImportService _rvuImportService;
+        // LEGACY: ApplicationDbContext removed - all data now in Supabase
+        // private readonly ApplicationDbContext _context;
         private readonly ILogger<AdminController> _logger;
 
         public AdminController(
-            HeiApiService heiApiService,
+            // HeiApiService heiApiService, // LEGACY: Removed from DI
             SupabaseService supabaseService,
-            ApplicationDbContext context,
+            RvuImportService rvuImportService,
+            // ApplicationDbContext context, // LEGACY: Removed - use Supabase instead
             ILogger<AdminController> logger)
         {
-            _heiApiService = heiApiService;
+            // _heiApiService = heiApiService; // LEGACY: Removed
             _supabaseService = supabaseService;
-            _context = context; // Only for Identity/SyncStatus operations
+            _rvuImportService = rvuImportService;
+            // _context = context; // LEGACY: Removed
             _logger = logger;
         }
 
         [HttpGet]
         public async Task<IActionResult> Sync()
         {
-            var programsStatus = await _context.SyncStatuses
-                .FirstOrDefaultAsync(s => s.SyncType == "Programs");
-
-            ViewBag.ProgramsStatus = programsStatus;
+            // TODO: Implement sync status tracking using Supabase
+            // For now, return empty status
+            ViewBag.ProgramsStatus = null;
             return View();
+        }
+
+        /// <summary>
+        /// Syncs universities from RVU (NACID) register
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SyncFromRvu()
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Starting RVU sync from admin panel...");
+
+                // Fetch universities from RVU
+                var universities = await _rvuImportService.FetchUniversitiesFromRvuAsync();
+
+                if (universities == null || !universities.Any())
+                {
+                    TempData["ErrorMessage"] = "❌ No universities found in RVU register. Please check the RVU website structure.";
+                    _logger.LogWarning("⚠️ No universities returned from RVU import");
+                    return RedirectToAction(nameof(Sync));
+                }
+
+                _logger.LogInformation("✅ Fetched {Count} universities from RVU", universities.Count);
+
+                // Sync to Supabase
+                await _supabaseService.SyncUniversitiesAsync(universities);
+
+                TempData["SuccessMessage"] = $"✅ Successfully synced {universities.Count} universities from RVU (NACID) register.";
+                _logger.LogInformation("✅ RVU sync completed successfully");
+
+                return RedirectToAction(nameof(Sync));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error during RVU sync: {Message}", ex.Message);
+                TempData["ErrorMessage"] = $"❌ Error syncing from RVU: {ex.Message}";
+                return RedirectToAction(nameof(Sync));
+            }
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SyncUniversities()
         {
+            // LEGACY: HEI API sync removed - replaced with RVU (NACID) data source
+            // TODO: Implement RVU sync functionality
+            TempData["ErrorMessage"] = "❌ HEI API sync is no longer available. Please use RVU (NACID) data source instead.";
+            _logger.LogWarning("⚠ HEI university sync requested but service is deprecated. Use RVU (NACID) instead.");
+            return RedirectToAction(nameof(Sync));
+            
+            /* LEGACY CODE - KEPT FOR REFERENCE
             try
             {
                 _logger.LogInformation("🔄 HEI university sync requested by user {User}", User.Identity?.Name);
@@ -66,12 +114,20 @@ namespace UniversityFinder.Controllers
             }
 
             return RedirectToAction(nameof(Sync));
+            */
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SyncPrograms()
         {
+            // LEGACY: HEI API program sync removed - replaced with RVU (NACID) data source
+            // TODO: Implement RVU program sync functionality
+            TempData["ErrorMessage"] = "❌ HEI API program sync is no longer available. Please use RVU (NACID) data source instead.";
+            _logger.LogWarning("⚠ HEI program sync requested but service is deprecated. Use RVU (NACID) instead.");
+            return RedirectToAction(nameof(Sync));
+            
+            /* LEGACY CODE - KEPT FOR REFERENCE
             try
             {
                 _logger.LogInformation("🔄 Program sync requested by user {User}", User.Identity?.Name);
@@ -127,11 +183,30 @@ namespace UniversityFinder.Controllers
             }
 
             return RedirectToAction(nameof(Sync));
+            */
         }
 
         [HttpGet]
         public async Task<IActionResult> GetSyncStatus(string syncType = "Programs")
         {
+            // LEGACY: EF Core removed - sync status tracking now uses Supabase
+            // TODO: Implement sync status tracking using SupabaseService
+            // For now, return idle status
+            return Json(new
+            {
+                isRunning = false,
+                status = "Idle",
+                message = "Sync status tracking not yet implemented with Supabase.",
+                lastSyncTime = (DateTime?)null,
+                totalItems = 0,
+                processedItems = 0,
+                successCount = 0,
+                errorCount = 0,
+                skippedCount = 0,
+                progressPercent = 0
+            });
+            
+            /* LEGACY CODE - KEPT FOR REFERENCE
             var status = await _context.SyncStatuses
                 .FirstOrDefaultAsync(s => s.SyncType == syncType);
 
@@ -232,6 +307,7 @@ namespace UniversityFinder.Controllers
                 skippedCount = status.SkippedCount,
                 progressPercent = progressPercent
             });
+            */
         }
 
         /// <summary>

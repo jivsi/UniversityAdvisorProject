@@ -1,64 +1,67 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using UniversityFinder.Data;
+using System.Security.Claims;
 using UniversityFinder.Models;
-using UniversityFinder.Repositories;
 using UniversityFinder.Services;
 using UniversityFinder.ViewModels;
 
 namespace UniversityFinder.Controllers
 {
+    /// <summary>
+    /// Controller for managing Bulgarian universities from RVU (NACID Register).
+    /// All universities are accredited and sourced from official Bulgarian data.
+    /// </summary>
     public class UniversityController : Controller
     {
-        private readonly IUniversitySearchService _searchService;
-        private readonly IUniversityRepository _universityRepository;
         private readonly IUserFavoriteService _favoriteService;
         private readonly IUserSearchHistoryService _searchHistoryService;
-        private readonly IHipolabsApiService _hipolabsApiService;
-        private readonly ITeleportApiService _teleportApiService;
+        // LEGACY: IHipolabsApiService moved to Services/Legacy - no longer injected
+        // private readonly IHipolabsApiService _hipolabsApiService;
+        // LEGACY: ITeleportApiService moved to Services/Legacy - no longer used
+        // Teleport API is deprecated in favor of official Bulgarian sources (RVU + NSI)
+        // private readonly ITeleportApiService _teleportApiService;
         private readonly SupabaseService _supabaseService;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly ApplicationDbContext _context; // Only for Identity-related operations
+        private readonly SupabaseAuthService _authService;
         private readonly ILogger<UniversityController> _logger;
 
         public UniversityController(
-            IUniversitySearchService searchService,
-            IUniversityRepository universityRepository,
             IUserFavoriteService favoriteService,
             IUserSearchHistoryService searchHistoryService,
-            IHipolabsApiService hipolabsApiService,
-            ITeleportApiService teleportApiService,
+            // IHipolabsApiService hipolabsApiService, // LEGACY: Removed from DI
+            // ITeleportApiService teleportApiService, // LEGACY: Removed from DI
             SupabaseService supabaseService,
-            UserManager<IdentityUser> userManager,
-            ApplicationDbContext context,
+            SupabaseAuthService authService,
             ILogger<UniversityController> logger)
         {
-            _searchService = searchService;
-            _universityRepository = universityRepository;
             _favoriteService = favoriteService;
             _searchHistoryService = searchHistoryService;
-            _hipolabsApiService = hipolabsApiService;
-            _teleportApiService = teleportApiService;
+            // _hipolabsApiService = hipolabsApiService; // LEGACY: Removed
+            // _teleportApiService = teleportApiService; // LEGACY: Removed
             _supabaseService = supabaseService;
-            _userManager = userManager;
-            _context = context; // Only for Identity-related operations
+            _authService = authService;
             _logger = logger;
+        }
+
+        /// <summary>
+        /// Gets the current user ID from Supabase authentication claims
+        /// </summary>
+        private string? GetCurrentUserId()
+        {
+            return User.FindFirstValue(ClaimTypes.NameIdentifier);
         }
 
         [HttpGet]
         public async Task<IActionResult> Search(SearchViewModel model)
         {
-            // Load filter options
+            // Load filter options from Supabase
             try
             {
-                model.Subjects = (await _searchService.GetSubjectsAsync()).ToList();
-                model.Countries = (await _searchService.GetCountriesAsync()).ToList();
+                model.Countries = (await _supabaseService.GetCountriesAsync()).ToList();
+                model.Subjects = new List<Subject>(); // Subjects would need separate Supabase endpoint
             }
             catch (HttpRequestException ex)
             {
-                // ✅ SUPABASE REST API: Handle HTTP errors from Supabase REST API
                 _logger.LogError(ex, "Error fetching data from Supabase REST API: {Message}", ex.Message);
                 ViewBag.ErrorMessage = "Error connecting to Supabase. Please check your connection.";
                 model.Subjects = new List<Subject>();
@@ -71,18 +74,67 @@ namespace UniversityFinder.Controllers
             {
                 try
                 {
-                    var searchResult = await _searchService.SearchAsync(model);
-                    model.Universities = searchResult.Universities;
-                    model.TotalResults = searchResult.TotalResults;
+                    // ✅ SUPABASE REST API: Get all universities from Supabase and filter in memory
+                    // TODO: Move filtering to Supabase query instead of in-memory processing for large datasets
+                    var allUniversities = await _supabaseService.GetUniversitiesAsync();
+                    
+                    // ✅ NULL-SAFE: Filter universities by search query with comprehensive null checks
+                    var searchTerm = model.Query.Trim();
+                    var filtered = allUniversities.AsQueryable();
+
+                    // Search across multiple fields (null-safe OR conditions)
+                    if (!string.IsNullOrWhiteSpace(searchTerm))
+                    {
+                        filtered = filtered.Where(u =>
+                            (u.Name != null && u.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                            (!string.IsNullOrEmpty(u.Acronym) && u.Acronym.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                            (!string.IsNullOrEmpty(u.City) && u.City.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                            (!string.IsNullOrEmpty(u.Country) && u.Country.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                        );
+                    }
+
+                    // ✅ NULL-SAFE: Apply additional filters with null checks
+                    // LEGACY: CountryId and CityId filters removed - using text fields instead
+                    // TODO: Add text-based Country and City filters if needed
+                    // if (model.CountryId.HasValue)
+                    // {
+                    //     filtered = filtered.Where(u => u.CountryId == model.CountryId.Value);
+                    // }
+
+                    // if (model.CityId.HasValue)
+                    // {
+                    //     filtered = filtered.Where(u => u.CityId == model.CityId.Value);
+                    // }
+
+                    if (!string.IsNullOrWhiteSpace(model.DegreeType))
+                    {
+                        filtered = filtered.Where(u => 
+                            u.Programs != null && 
+                            u.Programs.Any(p => p.DegreeType == model.DegreeType)
+                        );
+                    }
+
+                    // Order and convert to list (null-safe)
+                    var universitiesList = filtered
+                        .Where(u => u.Name != null) // Ensure name exists for ordering
+                        .OrderBy(u => u.Name)
+                        .ToList();
+                    
+                    model.TotalResults = universitiesList.Count;
+
+                    // Apply pagination
+                    model.Universities = universitiesList
+                        .Skip((model.Page - 1) * model.PageSize)
+                        .Take(model.PageSize)
+                        .ToList();
 
                     // Track search history for logged-in users
                     if (User.Identity?.IsAuthenticated == true)
                     {
-                        var user = await _userManager.GetUserAsync(User);
-                        if (user != null)
+                        var userId = GetCurrentUserId();
+                        if (!string.IsNullOrEmpty(userId))
                         {
-                            model.TotalResults = searchResult.TotalResults; // Set before tracking
-                            await _searchHistoryService.TrackSearchAsync(user.Id, model);
+                            await _searchHistoryService.TrackSearchAsync(userId, model);
                         }
                     }
 
@@ -91,7 +143,7 @@ namespace UniversityFinder.Controllers
                     {
                         try
                         {
-                            var totalUniversities = await _context.Universities.CountAsync();
+                            var totalUniversities = await _supabaseService.GetUniversityCountAsync();
                             if (totalUniversities == 0)
                             {
                                 ViewBag.InfoMessage = "No universities found in database. Please sync universities from the HEI API using the admin sync page.";
@@ -105,7 +157,6 @@ namespace UniversityFinder.Controllers
                 }
                 catch (HttpRequestException ex)
                 {
-                    // ✅ SUPABASE REST API: Handle HTTP errors from Supabase REST API
                     _logger.LogError(ex, "Error fetching data from Supabase REST API during search: {Message}", ex.Message);
                     ViewBag.ErrorMessage = "Error connecting to Supabase. Please check your connection.";
                     model.Universities = new List<University>();
@@ -126,7 +177,18 @@ namespace UniversityFinder.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            var university = await _universityRepository.GetByIdWithDetailsAsync(id);
+            // ✅ SUPABASE REST API: Get university from Supabase
+            University? university;
+            try
+            {
+                university = await _supabaseService.GetUniversityByIdAsync(id);
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Error fetching university from Supabase REST API: {Message}", ex.Message);
+                return NotFound();
+            }
+
             if (university == null)
             {
                 return NotFound();
@@ -136,29 +198,18 @@ namespace UniversityFinder.Controllers
             bool isFavorited = false;
             if (User.Identity?.IsAuthenticated == true)
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user != null)
+                var userId = GetCurrentUserId();
+                if (!string.IsNullOrEmpty(userId))
                 {
-                    isFavorited = await _favoriteService.IsFavoriteAsync(user.Id, id);
+                    isFavorited = await _favoriteService.IsFavoriteAsync(userId, id);
                 }
             }
 
-            // Fetch city quality data from Teleport API
-            CityQuality? cityQuality = null;
-            try
-            {
-                cityQuality = await _teleportApiService.GetCityQualityAsync(
-                    university.City.Name, 
-                    university.Country.Name);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Could not fetch city quality data for {City}, {Country}", 
-                    university.City.Name, university.Country.Name);
-            }
+            // LEGACY: Teleport API city quality data removed
+            // System now focuses exclusively on Bulgarian universities using official sources (RVU + NSI)
+            // City quality metrics from Teleport API are no longer available
 
             ViewBag.IsFavorited = isFavorited;
-            ViewBag.CityQuality = cityQuality;
             return View(university);
         }
 
@@ -176,22 +227,17 @@ namespace UniversityFinder.Controllers
         {
             try
             {
-                // ✅ SUPABASE REST API: Get universities from Supabase via REST
+                // ✅ SUPABASE REST API: Get Bulgarian universities from Supabase via REST
+                // TODO: Move filtering to Supabase query instead of in-memory processing for large datasets
+                // TODO: Default to Bulgaria country filter for Bulgarian-focused platform
                 var allUniversities = await _supabaseService.GetUniversitiesAsync();
                 
-                // Apply filters in memory (Supabase REST can be extended with query parameters later)
+                // ✅ NULL-SAFE: Apply filters in memory with null checks
                 var query = allUniversities.AsQueryable();
 
-                // Apply filters
-                if (countryId.HasValue)
-                {
-                    query = query.Where(u => u.CountryId == countryId.Value);
-                }
-
-                if (cityId.HasValue)
-                {
-                    query = query.Where(u => u.CityId == cityId.Value);
-                }
+                // Apply filters using text fields (null-safe)
+                // Note: countryId and cityId filters are deprecated - using text matching instead
+                // TODO: Update filters to use Country and City text fields
 
                 if (minTuition.HasValue || maxTuition.HasValue)
                 {
@@ -236,14 +282,16 @@ namespace UniversityFinder.Controllers
                     query = query.Where(u => u.Programs.Any(p => p.Language == language));
                 }
 
+                // ✅ NULL-SAFE: Search query with comprehensive null checks using text fields
                 if (!string.IsNullOrWhiteSpace(searchQuery))
                 {
-                    var searchLower = searchQuery.ToLower();
+                    var searchTerm = searchQuery.Trim();
                     query = query.Where(u => 
-                        u.Name.ToLower().Contains(searchLower) ||
-                        u.Acronym != null && u.Acronym.ToLower().Contains(searchLower) ||
-                        u.City.Name.ToLower().Contains(searchLower) ||
-                        u.Country.Name.ToLower().Contains(searchLower));
+                        (u.Name != null && u.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                        (!string.IsNullOrEmpty(u.Acronym) && u.Acronym.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                        (!string.IsNullOrEmpty(u.City) && u.City.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                        (!string.IsNullOrEmpty(u.Country) && u.Country.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                    );
                 }
 
                 // ✅ SUPABASE REST API: Filter in memory (related data needs to be loaded separately)
@@ -291,7 +339,8 @@ namespace UniversityFinder.Controllers
         }
 
         /// <summary>
-        /// Autocomplete endpoint for university search using Hipolabs API
+        /// Autocomplete endpoint for university search
+        /// LEGACY: Hipolabs API removed - now uses Supabase data
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> Autocomplete(string query, CancellationToken cancellationToken = default)
@@ -303,20 +352,26 @@ namespace UniversityFinder.Controllers
 
             try
             {
-                var results = await _hipolabsApiService.SearchUniversitiesAsync(query, cancellationToken);
+                // LEGACY: Hipolabs API removed - now search from Supabase
+                // TODO: Implement autocomplete using Supabase universities
+                var universities = await _supabaseService.GetUniversitiesAsync();
                 
-                // Return first 10 results as JSON
-                var suggestions = results
+                var searchTerm = query.Trim();
+                var matching = universities
+                    .Where(u => 
+                        (u.Name != null && u.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                        (!string.IsNullOrEmpty(u.Acronym) && u.Acronym.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                    )
                     .Take(10)
                     .Select(u => new
                     {
                         name = u.Name,
-                        country = u.Country,
-                        webPages = u.WebPages.FirstOrDefault()
+                        country = u.Country ?? "Unknown",
+                        webPages = u.Website
                     })
                     .ToList();
 
-                return Json(suggestions);
+                return Json(matching);
             }
             catch (Exception ex)
             {
@@ -330,7 +385,8 @@ namespace UniversityFinder.Controllers
         {
             try
             {
-                var cities = await _searchService.GetCitiesByCountryAsync(countryId);
+                // ✅ SUPABASE REST API: Get cities from Supabase
+                var cities = await _supabaseService.GetCitiesAsync(countryId);
                 var result = cities.Select(c => new { c.Id, c.Name }).ToList();
                 return Json(result);
             }
@@ -347,13 +403,13 @@ namespace UniversityFinder.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null)
+                var userId = GetCurrentUserId();
+                if (string.IsNullOrEmpty(userId))
                 {
                     return Unauthorized();
                 }
 
-                var isFavorited = await _favoriteService.ToggleFavoriteAsync(user.Id, universityId);
+                var isFavorited = await _favoriteService.ToggleFavoriteAsync(userId, universityId);
                 return Json(new { favorited = isFavorited });
             }
             catch (Exception ex)
@@ -367,20 +423,20 @@ namespace UniversityFinder.Controllers
         [Authorize]
         public async Task<IActionResult> Favorites()
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId))
             {
                 return Unauthorized();
             }
 
             try
             {
-                var favorites = await _favoriteService.GetUserFavoritesAsync(user.Id);
+                var favorites = await _favoriteService.GetUserFavoritesAsync(userId);
                 return View(favorites);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error loading favorites for user {UserId}", user.Id);
+                _logger.LogError(ex, "Error loading favorites for user {UserId}", userId);
                 return View(new List<University>());
             }
         }
