@@ -1,5 +1,3 @@
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using UniversityFinder.Data;
 using UniversityFinder.Models;
@@ -10,23 +8,26 @@ namespace UniversityFinder.Services
 {
     public class UniversitySearchService : IUniversitySearchService
     {
-        private readonly IUniversityRepository _universityRepository;
+        private readonly SupabaseService _supabaseService;
+        private readonly IUniversityRepository _universityRepository; // Legacy - may be used for complex queries
         private readonly ISubjectRepository _subjectRepository;
         private readonly ICountryRepository _countryRepository;
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context; // Only for Identity-related operations
         private readonly ILogger<UniversitySearchService> _logger;
 
         public UniversitySearchService(
+            SupabaseService supabaseService,
             IUniversityRepository universityRepository,
             ISubjectRepository subjectRepository,
             ICountryRepository countryRepository,
             ApplicationDbContext context,
             ILogger<UniversitySearchService> logger)
         {
+            _supabaseService = supabaseService;
             _universityRepository = universityRepository;
             _subjectRepository = subjectRepository;
             _countryRepository = countryRepository;
-            _context = context;
+            _context = context; // Only for Identity-related operations
             _logger = logger;
         }
 
@@ -57,9 +58,10 @@ namespace UniversityFinder.Services
                     .Take(searchViewModel.PageSize)
                     .ToList();
             }
-            catch (SqliteException ex) when (ex.Message.Contains("no such table"))
+            catch (HttpRequestException ex)
             {
-                _logger.LogError(ex, "Database table does not exist during search.");
+                // ✅ SUPABASE REST API: Handle HTTP errors from Supabase REST API
+                _logger.LogError(ex, "Error fetching data from Supabase REST API during search: {Message}", ex.Message);
                 // Return empty result - error message will be shown by controller
                 return result;
             }
@@ -78,9 +80,10 @@ namespace UniversityFinder.Services
             {
                 return await _subjectRepository.GetAllAsync();
             }
-            catch (SqliteException ex) when (ex.Message.Contains("no such table"))
+            catch (HttpRequestException ex)
             {
-                _logger.LogError(ex, "Subjects table does not exist.");
+                // ✅ SUPABASE REST API: Handle HTTP errors from Supabase REST API
+                _logger.LogError(ex, "Error fetching subjects from Supabase REST API: {Message}", ex.Message);
                 return new List<Subject>();
             }
         }
@@ -89,21 +92,30 @@ namespace UniversityFinder.Services
         {
             try
             {
-                return await _countryRepository.GetAllAsync();
+                // ✅ SUPABASE REST API: Get countries from Supabase via REST
+                return await _supabaseService.GetCountriesAsync();
             }
-            catch (SqliteException ex) when (ex.Message.Contains("no such table"))
+            catch (HttpRequestException ex)
             {
-                _logger.LogError(ex, "Countries table does not exist.");
+                // ✅ SUPABASE REST API: Handle HTTP errors from Supabase REST API
+                _logger.LogError(ex, "Error fetching countries from Supabase REST API: {Message}", ex.Message);
                 return new List<Country>();
             }
         }
 
         public async Task<IEnumerable<City>> GetCitiesByCountryAsync(int countryId)
         {
-            return await _context.Cities
-                .Where(c => c.CountryId == countryId)
-                .OrderBy(c => c.Name)
-                .ToListAsync();
+            try
+            {
+                // ✅ SUPABASE REST API: Get cities from Supabase via REST
+                return await _supabaseService.GetCitiesAsync(countryId);
+            }
+            catch (HttpRequestException ex)
+            {
+                // ✅ SUPABASE REST API: Handle HTTP errors from Supabase REST API
+                _logger.LogError(ex, "Error fetching cities from Supabase REST API: {Message}", ex.Message);
+                return new List<City>();
+            }
         }
     }
 }

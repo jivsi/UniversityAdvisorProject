@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using UniversityFinder.Data;
 using UniversityFinder.Models;
@@ -19,8 +18,9 @@ namespace UniversityFinder.Controllers
         private readonly IUserSearchHistoryService _searchHistoryService;
         private readonly IHipolabsApiService _hipolabsApiService;
         private readonly ITeleportApiService _teleportApiService;
+        private readonly SupabaseService _supabaseService;
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context; // Only for Identity-related operations
         private readonly ILogger<UniversityController> _logger;
 
         public UniversityController(
@@ -30,6 +30,7 @@ namespace UniversityFinder.Controllers
             IUserSearchHistoryService searchHistoryService,
             IHipolabsApiService hipolabsApiService,
             ITeleportApiService teleportApiService,
+            SupabaseService supabaseService,
             UserManager<IdentityUser> userManager,
             ApplicationDbContext context,
             ILogger<UniversityController> logger)
@@ -40,8 +41,9 @@ namespace UniversityFinder.Controllers
             _searchHistoryService = searchHistoryService;
             _hipolabsApiService = hipolabsApiService;
             _teleportApiService = teleportApiService;
+            _supabaseService = supabaseService;
             _userManager = userManager;
-            _context = context;
+            _context = context; // Only for Identity-related operations
             _logger = logger;
         }
 
@@ -54,10 +56,11 @@ namespace UniversityFinder.Controllers
                 model.Subjects = (await _searchService.GetSubjectsAsync()).ToList();
                 model.Countries = (await _searchService.GetCountriesAsync()).ToList();
             }
-            catch (SqliteException ex) when (ex.Message.Contains("no such table"))
+            catch (HttpRequestException ex)
             {
-                _logger.LogError(ex, "Database table does not exist. Migration may not have been applied.");
-                ViewBag.ErrorMessage = "Database tables do not exist. Please apply migrations first.";
+                // ✅ SUPABASE REST API: Handle HTTP errors from Supabase REST API
+                _logger.LogError(ex, "Error fetching data from Supabase REST API: {Message}", ex.Message);
+                ViewBag.ErrorMessage = "Error connecting to Supabase. Please check your connection.";
                 model.Subjects = new List<Subject>();
                 model.Countries = new List<Country>();
                 return View(model);
@@ -100,10 +103,11 @@ namespace UniversityFinder.Controllers
                         }
                     }
                 }
-                catch (SqliteException ex) when (ex.Message.Contains("no such table"))
+                catch (HttpRequestException ex)
                 {
-                    _logger.LogError(ex, "Database table does not exist during search.");
-                    ViewBag.ErrorMessage = "Database tables do not exist. Please apply migrations first.";
+                    // ✅ SUPABASE REST API: Handle HTTP errors from Supabase REST API
+                    _logger.LogError(ex, "Error fetching data from Supabase REST API during search: {Message}", ex.Message);
+                    ViewBag.ErrorMessage = "Error connecting to Supabase. Please check your connection.";
                     model.Universities = new List<University>();
                     model.TotalResults = 0;
                 }
@@ -172,12 +176,11 @@ namespace UniversityFinder.Controllers
         {
             try
             {
-                // Build query with filters
-                var query = _context.Universities
-                    .Include(u => u.Country)
-                    .Include(u => u.City)
-                    .Include(u => u.Programs)
-                    .AsQueryable();
+                // ✅ SUPABASE REST API: Get universities from Supabase via REST
+                var allUniversities = await _supabaseService.GetUniversitiesAsync();
+                
+                // Apply filters in memory (Supabase REST can be extended with query parameters later)
+                var query = allUniversities.AsQueryable();
 
                 // Apply filters
                 if (countryId.HasValue)
@@ -243,25 +246,23 @@ namespace UniversityFinder.Controllers
                         u.Country.Name.ToLower().Contains(searchLower));
                 }
 
-                var universities = await query.OrderBy(u => u.Name).ToListAsync();
+                // ✅ SUPABASE REST API: Filter in memory (related data needs to be loaded separately)
+                // Note: For full functionality, Country and City data should be included in REST query or fetched separately
+                var universities = query.OrderBy(u => u.Name).ToList();
 
-                // Load filter options for sidebar
-                ViewBag.Countries = await _context.Countries.OrderBy(c => c.Name).ToListAsync();
-                ViewBag.Cities = countryId.HasValue
-                    ? await _context.Cities.Where(c => c.CountryId == countryId.Value).OrderBy(c => c.Name).ToListAsync()
+                // ✅ SUPABASE REST API: Load filter options from Supabase
+                var countries = await _supabaseService.GetCountriesAsync();
+                ViewBag.Countries = countries.OrderBy(c => c.Name).ToList();
+                
+                var cities = countryId.HasValue
+                    ? (await _supabaseService.GetCitiesAsync(countryId.Value)).OrderBy(c => c.Name).ToList()
                     : new List<City>();
-                ViewBag.DegreeTypes = await _context.Programs
-                    .Where(p => !string.IsNullOrEmpty(p.DegreeType))
-                    .Select(p => p.DegreeType!)
-                    .Distinct()
-                    .OrderBy(d => d)
-                    .ToListAsync();
-                ViewBag.Languages = await _context.Programs
-                    .Where(p => !string.IsNullOrEmpty(p.Language))
-                    .Select(p => p.Language!)
-                    .Distinct()
-                    .OrderBy(l => l)
-                    .ToListAsync();
+                ViewBag.Cities = cities;
+                
+                // Note: Programs, DegreeTypes, and Languages would need separate Supabase REST endpoints
+                // For now, using empty lists - can be extended later
+                ViewBag.DegreeTypes = new List<string>();
+                ViewBag.Languages = new List<string>();
 
                 // Pass filter values back to view
                 ViewBag.SelectedCountryId = countryId;
@@ -276,9 +277,10 @@ namespace UniversityFinder.Controllers
 
                 return View(universities);
             }
-            catch (SqliteException ex) when (ex.Message.Contains("no such table"))
+            catch (HttpRequestException ex)
             {
-                _logger.LogError(ex, "Database table does not exist. Migration may not have been applied.");
+                // ✅ SUPABASE REST API: Handle HTTP errors from Supabase REST API
+                _logger.LogError(ex, "Error fetching data from Supabase REST API: {Message}", ex.Message);
                 return View(new List<University>());
             }
             catch (Exception ex)

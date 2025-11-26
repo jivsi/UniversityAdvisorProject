@@ -25,11 +25,10 @@ namespace UniversityFinder.Models
         [MaxLength(50)]
         public string? Language { get; set; }
 
-        // SQLite: decimal maps to REAL automatically, no TypeName needed
+        // ✅ MIGRATED TO SQL SERVER: Decimal maps to decimal(18,2) automatically (no explicit type needed)
         public decimal? TuitionFee { get; set; }
 
-        // SQLite: TEXT type for long strings (replaces nvarchar(max))
-        [Column(TypeName = "TEXT")]
+        // ✅ MIGRATED TO SQL SERVER: Description uses nvarchar(max) by default (no explicit type needed)
         public string? Description { get; set; }
 
         /// <summary>

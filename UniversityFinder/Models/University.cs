@@ -23,8 +23,7 @@ namespace UniversityFinder.Models
         [MaxLength(500)]
         public string? Website { get; set; }
 
-        // ? FIXED: SQLite-friendly (TEXT maps perfectly here)
-        [Column(TypeName = "TEXT")]
+        // ✅ MIGRATED TO SQL SERVER: Description uses nvarchar(max) by default (no explicit type needed)
         public string? Description { get; set; }
 
         public int? EstablishedYear { get; set; }
@@ -40,7 +39,7 @@ namespace UniversityFinder.Models
         /// <summary>
         /// Average annual tuition fee in EUR (can be overridden by program-specific fees)
         /// </summary>
-        [Column(TypeName = "REAL")]
+        // ✅ MIGRATED TO SQL SERVER: Decimal maps to decimal(18,2) automatically (no explicit type needed)
         public decimal? TuitionFee { get; set; }
 
         // Navigation properties

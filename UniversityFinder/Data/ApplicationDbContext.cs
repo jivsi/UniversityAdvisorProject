@@ -40,8 +40,8 @@ namespace UniversityFinder.Data
             {
                 entity.HasKey(e => e.Id);
                 
-                // SQLite: decimal properties (Latitude, Longitude) map to REAL automatically
-                // No explicit TypeName needed - EF Core handles this correctly
+                // ✅ SUPABASE POSTGRESQL: Decimal properties (Latitude, Longitude) map to numeric automatically
+                // EF Core handles this correctly for PostgreSQL
                 
                 entity.HasIndex(e => e.CountryId);
                 entity.HasIndex(e => e.Name);
@@ -52,14 +52,13 @@ namespace UniversityFinder.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // ---------- University (FORCE SQLITE SAFE TYPES) ----------
+            // ---------- University ----------
             builder.Entity<University>(entity =>
             {
                 entity.HasKey(e => e.Id);
 
-                // ✅ Critical Fix: SQLite-safe column types
-                entity.Property(e => e.Description)
-                      .HasColumnType("TEXT"); // removes nvarchar(max) problem
+                // ✅ SUPABASE POSTGRESQL: Description uses text type automatically (no explicit type needed)
+                // ✅ SUPABASE POSTGRESQL: Decimal properties map to numeric automatically
 
                 entity.Property(e => e.Name)
                       .IsRequired()
@@ -118,12 +117,8 @@ namespace UniversityFinder.Data
             {
                 entity.HasKey(e => e.Id);
                 
-                // SQLite: Ensure TEXT type for Description (replaces nvarchar(max))
-                entity.Property(e => e.Description)
-                      .HasColumnType("TEXT");
-                
-                // SQLite: decimal maps to REAL automatically, no explicit mapping needed
-                // TuitionFee will use REAL type automatically
+                // ✅ SUPABASE POSTGRESQL: Description uses text type automatically (no explicit type needed)
+                // ✅ SUPABASE POSTGRESQL: Decimal properties map to numeric automatically
                 
                 // IsInferred flag: indicates if program was inferred from university name/description
                 // Defaults to false (real HEI API programs)
@@ -152,8 +147,8 @@ namespace UniversityFinder.Data
             {
                 entity.HasKey(e => e.Id);
                 
-                // SQLite: decimal properties map to REAL automatically
-                // No explicit TypeName needed - EF Core handles this correctly
+                // ✅ SUPABASE POSTGRESQL: Decimal properties map to numeric automatically
+                // EF Core handles this correctly for PostgreSQL
                 
                 entity.HasIndex(e => e.CityId).IsUnique();
 

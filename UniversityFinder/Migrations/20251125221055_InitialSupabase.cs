@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace UniversityFinder.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialSupabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -78,6 +78,28 @@ namespace UniversityFinder.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Subjects", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SyncStatuses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    SyncType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    IsRunning = table.Column<bool>(type: "INTEGER", nullable: false),
+                    StartedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CompletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    LastMessage = table.Column<string>(type: "TEXT", nullable: true),
+                    TotalItems = table.Column<int>(type: "INTEGER", nullable: false),
+                    ProcessedItems = table.Column<int>(type: "INTEGER", nullable: false),
+                    SuccessCount = table.Column<int>(type: "INTEGER", nullable: false),
+                    ErrorCount = table.Column<int>(type: "INTEGER", nullable: false),
+                    SkippedCount = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SyncStatuses", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -239,6 +261,56 @@ namespace UniversityFinder.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SubjectAliases",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    SubjectId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    LanguageCode = table.Column<string>(type: "TEXT", maxLength: 10, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SubjectAliases", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SubjectAliases_Subjects_SubjectId",
+                        column: x => x.SubjectId,
+                        principalTable: "Subjects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CityQualities",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CityId = table.Column<int>(type: "INTEGER", nullable: false),
+                    SafetyScore = table.Column<decimal>(type: "REAL", nullable: true),
+                    HousingCost = table.Column<decimal>(type: "REAL", nullable: true),
+                    EducationScore = table.Column<decimal>(type: "REAL", nullable: true),
+                    HealthcareScore = table.Column<decimal>(type: "REAL", nullable: true),
+                    CostOfLivingIndex = table.Column<decimal>(type: "REAL", nullable: true),
+                    QualityOfLifeScore = table.Column<decimal>(type: "REAL", nullable: true),
+                    EnvironmentalScore = table.Column<decimal>(type: "REAL", nullable: true),
+                    EconomyScore = table.Column<decimal>(type: "REAL", nullable: true),
+                    StartupScore = table.Column<decimal>(type: "REAL", nullable: true),
+                    LastUpdated = table.Column<DateTime>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CityQualities", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CityQualities_Cities_CityId",
+                        column: x => x.CityId,
+                        principalTable: "Cities",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CostOfLiving",
                 columns: table => new
                 {
@@ -278,7 +350,9 @@ namespace UniversityFinder.Migrations
                     Website = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
                     Description = table.Column<string>(type: "TEXT", nullable: true),
                     EstablishedYear = table.Column<int>(type: "INTEGER", nullable: true),
-                    HeiApiId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true)
+                    HeiApiId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    Ranking = table.Column<int>(type: "INTEGER", nullable: true),
+                    TuitionFee = table.Column<decimal>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -310,7 +384,8 @@ namespace UniversityFinder.Migrations
                     Duration = table.Column<int>(type: "INTEGER", nullable: true),
                     Language = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
                     TuitionFee = table.Column<decimal>(type: "TEXT", nullable: true),
-                    Description = table.Column<string>(type: "TEXT", nullable: true)
+                    Description = table.Column<string>(type: "TEXT", nullable: true),
+                    IsInferred = table.Column<bool>(type: "INTEGER", nullable: false, defaultValue: false)
                 },
                 constraints: table =>
                 {
@@ -404,6 +479,12 @@ namespace UniversityFinder.Migrations
                 column: "Name");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CityQualities_CityId",
+                table: "CityQualities",
+                column: "CityId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CostOfLiving_CityId",
                 table: "CostOfLiving",
                 column: "CityId",
@@ -424,6 +505,11 @@ namespace UniversityFinder.Migrations
                 name: "IX_Programs_DegreeType",
                 table: "Programs",
                 column: "DegreeType");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Programs_IsInferred",
+                table: "Programs",
+                column: "IsInferred");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Programs_SubjectId",
@@ -451,6 +537,27 @@ namespace UniversityFinder.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SubjectAliases_LanguageCode",
+                table: "SubjectAliases",
+                column: "LanguageCode");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubjectAliases_Name",
+                table: "SubjectAliases",
+                column: "Name");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubjectAliases_SubjectId",
+                table: "SubjectAliases",
+                column: "SubjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubjectAliases_SubjectId_Name_LanguageCode",
+                table: "SubjectAliases",
+                columns: new[] { "SubjectId", "Name", "LanguageCode" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Subjects_Category",
                 table: "Subjects",
                 column: "Category");
@@ -459,6 +566,16 @@ namespace UniversityFinder.Migrations
                 name: "IX_Subjects_Name",
                 table: "Subjects",
                 column: "Name");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SyncStatuses_IsRunning",
+                table: "SyncStatuses",
+                column: "IsRunning");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SyncStatuses_SyncType",
+                table: "SyncStatuses",
+                column: "SyncType");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Universities_CityId",
@@ -517,6 +634,9 @@ namespace UniversityFinder.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "CityQualities");
+
+            migrationBuilder.DropTable(
                 name: "CostOfLiving");
 
             migrationBuilder.DropTable(
@@ -524,6 +644,12 @@ namespace UniversityFinder.Migrations
 
             migrationBuilder.DropTable(
                 name: "SearchHistory");
+
+            migrationBuilder.DropTable(
+                name: "SubjectAliases");
+
+            migrationBuilder.DropTable(
+                name: "SyncStatuses");
 
             migrationBuilder.DropTable(
                 name: "UserFavorites");

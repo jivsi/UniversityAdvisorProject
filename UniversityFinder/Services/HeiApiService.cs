@@ -1,5 +1,7 @@
 ﻿using System.Text.Json;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -13,7 +15,8 @@ namespace UniversityFinder.Services
     public class HeiApiService
     {
         private readonly HttpClient _httpClient;
-        private readonly ApplicationDbContext _context;
+        private readonly SupabaseService _supabaseService;
+        private readonly ApplicationDbContext _context; // Only for Identity-related operations
         private readonly ILogger<HeiApiService> _logger;
         private readonly IServiceProvider _serviceProvider;
         private readonly ISubjectInferenceService? _inferenceService;
@@ -29,229 +32,176 @@ namespace UniversityFinder.Services
 
         public HeiApiService(
             HttpClient httpClient,
-            ApplicationDbContext context,
+            SupabaseService supabaseService,
+            ApplicationDbContext context, // Only for Identity-related operations
             ILogger<HeiApiService> logger,
             IServiceProvider serviceProvider,
             ISubjectInferenceService? inferenceService = null)
         {
             _httpClient = httpClient;
-            _context = context;
+            _supabaseService = supabaseService;
+            _context = context; // Only for Identity/SyncStatus operations
             _logger = logger;
             _serviceProvider = serviceProvider;
             _inferenceService = inferenceService;
 
             _httpClient.BaseAddress = new Uri(BaseUrl);
-            _httpClient.Timeout = TimeSpan.FromSeconds(30);
+            _httpClient.Timeout = TimeSpan.FromSeconds(20);
         }
 
-        public async Task<int> SyncUniversitiesAsync(CancellationToken cancellationToken = default)
+        public async Task<(int Inserted, int Fetched)> SyncUniversitiesAsync(CancellationToken cancellationToken = default)
         {
-            int totalInserted = 0;
-            int totalSkipped = 0;
-
             _logger.LogInformation("🚀 Starting HEI University Sync...");
 
-            var countries = await _context.Countries
-                .Where(c => !string.IsNullOrWhiteSpace(c.Code))
-                .ToListAsync(cancellationToken);
-
-            _logger.LogInformation($"📋 Found {countries.Count} countries with ISO codes");
-
-            if (countries.Count == 0)
+            try
             {
-                _logger.LogWarning("⚠ No countries found in database. Please seed countries first.");
-                return 0;
-            }
+                // Fetch universities from HEI API - use full URL with timeout protection
+                var url = "https://hei.api.uni-foundation.eu/api/public/hei";
+                _logger.LogInformation($"🌐 Fetching from: {url}");
 
-            // Pre-load all existing HeiApiIds for efficient duplicate checking
-            var existingHeiApiIdsList = await _context.Universities
-                .Where(u => !string.IsNullOrWhiteSpace(u.HeiApiId))
-                .Select(u => u.HeiApiId!)
-                .ToListAsync(cancellationToken);
-            var existingHeiApiIds = existingHeiApiIdsList.ToHashSet();
+                // Wrap request in CancellationTokenSource with 20 second timeout
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+                using var combinedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
 
-            _logger.LogInformation($"📊 Found {existingHeiApiIds.Count} existing universities in database");
-
-            foreach (var country in countries)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
+                HttpResponseMessage response;
+                string responseJson;
 
                 try
                 {
-                    var isoCode = country.Code!.Trim().ToUpper();
-                    _logger.LogInformation($"➡ Processing {country.Name} (ISO: {isoCode})");
-
-                    var apiUniversities = await FetchUniversitiesByCountryWithRetryAsync(isoCode, cancellationToken);
-
-                    if (apiUniversities == null || apiUniversities.Count == 0)
-                    {
-                        _logger.LogInformation($"ℹ No universities returned for {country.Name}");
-                        await Task.Delay(300, cancellationToken);
-                        continue;
-                    }
-
-                    _logger.LogInformation($"📥 Received {apiUniversities.Count} universities for {country.Name}");
-
-                    int countryInserted = 0;
-                    int countrySkipped = 0;
-                    var universitiesToAdd = new List<University>();
-                    var citiesToAdd = new Dictionary<string, City>(); // Key: cityName_countryId
-                    var citiesToCheck = new HashSet<string>(); // Track which cities we need to check
-
-                    // Pre-load existing cities for this country
-                    var existingCities = await _context.Cities
-                        .Where(c => c.CountryId == country.Id)
-                        .ToDictionaryAsync(c => c.Name, c => c, cancellationToken);
-
-                    foreach (var apiUni in apiUniversities)
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        try
-                        {
-                            if (string.IsNullOrWhiteSpace(apiUni.Id))
-                            {
-                                _logger.LogWarning($"⚠ Skipping university with empty ID for country {country.Name}");
-                                countrySkipped++;
-                                continue;
-                            }
-
-                            // Fast duplicate check using HashSet
-                            if (existingHeiApiIds.Contains(apiUni.Id))
-                            {
-                                _logger.LogDebug($"⏭ Skipping university {apiUni.Id} - already exists in database");
-                                countrySkipped++;
-                                continue;
-                            }
-
-                            var universityName = apiUni.Attributes?.FirstName?.Trim();
-                            if (string.IsNullOrWhiteSpace(universityName))
-                            {
-                                universityName = apiUni.Attributes?.HeiId?.Trim();
-                                if (string.IsNullOrWhiteSpace(universityName))
-                                {
-                                    universityName = apiUni.Id;
-                                }
-                                _logger.LogWarning($"⚠ University {apiUni.Id} missing name, using: {universityName}");
-                            }
-
-                            var cityName = apiUni.Attributes?.City?.Trim();
-                            if (string.IsNullOrWhiteSpace(cityName))
-                            {
-                                cityName = "Unknown";
-                            }
-
-                            // Get or create city (batch operation)
-                            City city;
-                            var cityKey = $"{cityName}_{country.Id}";
-                            
-                            if (existingCities.TryGetValue(cityName, out var existingCity))
-                            {
-                                city = existingCity;
-                            }
-                            else if (citiesToAdd.TryGetValue(cityKey, out var queuedCity))
-                            {
-                                city = queuedCity;
-                            }
-                            else
-                            {
-                                city = new City
-                                {
-                                    Name = cityName,
-                                    CountryId = country.Id
-                                };
-                                citiesToAdd[cityKey] = city;
-                                _context.Cities.Add(city);
-                                existingCities[cityName] = city; // Cache for subsequent universities
-                                _logger.LogDebug($"➕ Queued city: {cityName}");
-                            }
-
-                            var university = new University
-                            {
-                                Name = universityName,
-                                Acronym = apiUni.Attributes?.Acronym?.Trim(),
-                                Website = apiUni.Attributes?.WebsiteUrl?.Trim(),
-                                Description = null,
-                                CountryId = country.Id,
-                                CityId = city.Id, // Will be set after SaveChanges
-                                HeiApiId = apiUni.Id,
-                                EstablishedYear = null
-                            };
-
-                            universitiesToAdd.Add(university);
-                            existingHeiApiIds.Add(apiUni.Id); // Track in memory to avoid duplicates in same batch
-                            countryInserted++;
-
-                            _logger.LogDebug($"➕ Queued: {universityName} ({apiUni.Id})");
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, $"❌ Error processing university {apiUni.Id}: {ex.Message}");
-                            countrySkipped++;
-                        }
-                    }
-
-                    // Batch save: cities first, then universities
-                    if (citiesToAdd.Count > 0)
-                    {
-                        try
-                        {
-                            await _context.SaveChangesAsync(cancellationToken);
-                            _logger.LogInformation($"💾 Saved {citiesToAdd.Count} new cities for {country.Name}");
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, $"❌ Database save failed for cities in {country.Name}: {ex.Message}");
-                            // Continue - some cities might already exist
-                        }
-                    }
-
-                    if (universitiesToAdd.Count > 0)
-                    {
-                        try
-                        {
-                            // Set CityId now that cities are saved
-                            foreach (var uni in universitiesToAdd)
-                            {
-                                if (uni.CityId == 0 && existingCities.TryGetValue(uni.Name, out var city))
-                                {
-                                    uni.CityId = city.Id;
-                                }
-                            }
-
-                            await _context.SaveChangesAsync(cancellationToken);
-                            _logger.LogInformation($"💾 Saved {countryInserted} new universities for {country.Name} ({countrySkipped} skipped: already existed or invalid)");
-                            totalInserted += countryInserted;
-                            totalSkipped += countrySkipped;
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, $"❌ Database save failed for universities in {country.Name}: {ex.Message}");
-                            _logger.LogError($"   Stack trace: {ex.StackTrace}");
-                            // Continue with next country instead of throwing
-                        }
-                    }
-                    else
-                    {
-                        _logger.LogInformation($"ℹ No new universities for {country.Name} ({countrySkipped} skipped: already existed or invalid)");
-                        totalSkipped += countrySkipped;
-                    }
-
-                    await Task.Delay(600, cancellationToken);
+                    response = await _httpClient.GetAsync(url, combinedCts.Token);
+                    responseJson = await response.Content.ReadAsStringAsync(combinedCts.Token);
                 }
-                catch (OperationCanceledException)
+                catch (TaskCanceledException ex) when (cts.Token.IsCancellationRequested)
                 {
-                    _logger.LogWarning("⚠ University sync cancelled by user");
-                    throw;
+                    _logger.LogError($"❌ HEI request timed out after 20 seconds");
+                    return (0, 0);
                 }
-                catch (Exception ex)
+                catch (TaskCanceledException ex)
                 {
-                    _logger.LogError(ex, $"❌ Error processing country {country.Name}: {ex.Message}");
+                    _logger.LogError(ex, $"❌ HEI request was cancelled: {ex.Message}");
+                    return (0, 0);
                 }
+
+                // Log raw response for debugging
+                var responsePreview = responseJson.Length > 1000 
+                    ? responseJson.Substring(0, 1000) 
+                    : responseJson;
+                _logger.LogInformation($"📦 RAW HEI RESPONSE (first 1000 chars): {responsePreview}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError($"❌ HTTP ERROR: {response.StatusCode} - {responseJson}");
+                    return (0, 0);
+                }
+
+                // Deserialize HEI API response
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                List<HeiApiUniversity> apiUniversities;
+
+                // Try to deserialize as HeiApiResponse first (wrapped in "data")
+                try
+                {
+                    var heiResponse = JsonSerializer.Deserialize<HeiApiResponse>(responseJson, options);
+                    apiUniversities = heiResponse?.Data ?? new List<HeiApiUniversity>();
+                }
+                catch
+                {
+                    // If that fails, try deserializing directly as a list
+                    try
+                    {
+                        apiUniversities = JsonSerializer.Deserialize<List<HeiApiUniversity>>(responseJson, options) 
+                            ?? new List<HeiApiUniversity>();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"❌ Failed to deserialize HEI response: {ex.Message}");
+                        return (0, 0);
+                    }
+                }
+
+                _logger.LogInformation($"✅ HEI FETCHED: {apiUniversities.Count}");
+
+                int inserted = 0;
+
+                // Insert each university one by one
+                foreach (var apiUni in apiUniversities)
+                {
+                    try
+                    {
+                        // Map HEI data to University model with guaranteed fallbacks
+                        var universityName = apiUni.Attributes?.FirstName 
+                            ?? apiUni.Attributes?.HeiId 
+                            ?? apiUni.Id 
+                            ?? "Unknown University";
+                        
+                        // Force fallback safety - Name is NEVER null
+                        if (string.IsNullOrWhiteSpace(universityName))
+                        {
+                            universityName = "Unknown University";
+                        }
+                        universityName = universityName.Trim();
+
+                        // HeiApiId is NEVER null - fallback to Guid
+                        var heiApiId = apiUni.Id;
+                        if (string.IsNullOrWhiteSpace(heiApiId))
+                        {
+                            heiApiId = Guid.NewGuid().ToString();
+                        }
+
+                        // City fallback → "Unknown"
+                        var cityName = apiUni.Attributes?.City ?? "Unknown";
+                        if (string.IsNullOrWhiteSpace(cityName))
+                        {
+                            cityName = "Unknown";
+                        }
+
+                        // Country fallback → "Unknown"
+                        var countryName = "Unknown";
+
+                        // Get or create country
+                        var country = await _supabaseService.GetOrCreateCountryAsync(countryName);
+
+                        // Get or create city
+                        var city = await _supabaseService.GetOrCreateCityAsync(cityName, country.Id);
+
+                        // Create university with guaranteed valid fields
+                        var university = new University
+                        {
+                            Name = universityName, // NEVER null
+                            HeiApiId = heiApiId, // NEVER null
+                            CountryId = country.Id,
+                            CityId = city.Id,
+                            Website = apiUni.Attributes?.WebsiteUrl,
+                            Acronym = apiUni.Attributes?.Acronym,
+                            Description = null,
+                            EstablishedYear = null
+                        };
+
+                        // Insert into Supabase one by one
+                        var result = await _supabaseService.InsertUniversityAsync(university);
+
+                        if (result != null)
+                            inserted++;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"Insert failed for {apiUni.Id ?? "Unknown"}: {ex.Message}");
+                    }
+                }
+
+                _logger.LogInformation($"✅ HEI INSERTED: {inserted}");
+                _logger.LogInformation($"✅ HEI sync complete. Fetched: {apiUniversities.Count}, Inserted: {inserted}");
+                return (inserted, apiUniversities.Count);
             }
-
-            _logger.LogInformation($"✅ Sync complete! Total universities added: {totalInserted}, Total skipped: {totalSkipped}");
-            return totalInserted;
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"❌ HEI sync failed: {ex.Message}");
+                throw;
+            }
         }
 
         /// <summary>
@@ -384,6 +334,7 @@ namespace UniversityFinder.Services
         /// <summary>
         /// Background sync of programs with batching, rate limiting, and progress tracking
         /// HARDENED: Guaranteed cleanup with try/finally, timeout protection, and stale state detection
+        /// ✅ SUPABASE REST API: Uses Supabase REST for reading universities, but SyncStatus still uses local DB
         /// </summary>
         private async Task SyncProgramsBackgroundAsync(ApplicationDbContext context, ILogger<HeiApiService> logger, ISubjectInferenceService? inferenceService = null)
         {
@@ -498,11 +449,12 @@ namespace UniversityFinder.Services
 
                 await context.SaveChangesAsync(cancellationToken);
 
-                // Get all universities with HeiApiId
-                var universities = await context.Universities
+                // ✅ SUPABASE REST API: Get all universities with HeiApiId from Supabase via REST
+                var allUniversities = await _supabaseService.GetUniversitiesAsync();
+                var universities = allUniversities
                     .Where(u => !string.IsNullOrWhiteSpace(u.HeiApiId))
                     .OrderBy(u => u.Id)
-                    .ToListAsync();
+                    .ToList();
 
                 status.TotalItems = universities.Count;
                 status.LastMessage = $"Found {universities.Count} universities to sync. Processing in batches of {BatchSize}...";

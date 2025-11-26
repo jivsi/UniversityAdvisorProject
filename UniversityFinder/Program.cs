@@ -6,10 +6,16 @@ using UniversityFinder.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ✅ TLS Configuration for Hipolabs API
+System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
 // Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+// ✅ SUPABASE REST API: Application data (Universities, Programs, etc.) uses Supabase REST API (PostgREST)
+// This eliminates direct PostgreSQL TCP connections and works on restricted networks (school WiFi)
+// No more "No such host is known" errors - all data operations use HTTP REST API
+// Identity uses local SQLite database for authentication (cookie-based login only)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(connectionString));
+    options.UseSqlite("Data Source=Identity.db")); // Local SQLite for Identity only - application data uses Supabase REST
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => 
@@ -25,8 +31,14 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 
 builder.Services.AddControllersWithViews();
 
+// ✅ SUPABASE REST API: Register Supabase REST service
+builder.Services.AddHttpClient<SupabaseService>();
+
 // Register HttpClient for API services
-builder.Services.AddHttpClient<HeiApiService>();
+builder.Services.AddHttpClient<HeiApiService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
 builder.Services.AddHttpClient<OpenAiService>();
 builder.Services.AddHttpClient<HipolabsApiService>();
 builder.Services.AddHttpClient<TeleportApiService>();
@@ -80,20 +92,19 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapRazorPages();
 
-// Seed database on startup
+// ✅ SUPABASE REST API: Initialize Identity database only (application data uses Supabase REST)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
-        var seeder = services.GetRequiredService<DataSeeder>();
         
-        // Ensure database is created
+        // Apply migrations for Identity database only (local SQLite)
         context.Database.Migrate();
         
-        // Seed initial data
-        await seeder.SeedAsync();
+        // Note: Application data (Universities, Programs, etc.) is stored in Supabase via REST API
+        // No EF Core migrations needed for application data - tables must be created in Supabase dashboard
         
         // ✅ HARDENED: Check and reset any stale sync statuses on startup
         // This prevents sync from being stuck after application restart
@@ -111,7 +122,7 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
+        logger.LogError(ex, "An error occurred while initializing Identity database.");
     }
 }
 

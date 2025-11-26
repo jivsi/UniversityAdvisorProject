@@ -10,22 +10,22 @@ namespace UniversityFinder.Models
         [Required]
         public int CityId { get; set; }
 
-        // SQLite: decimal maps to REAL automatically, no TypeName needed
+        // ✅ MIGRATED TO SQL SERVER: Decimal maps to decimal(18,2) automatically (no explicit type needed)
         public decimal? AccommodationMonthly { get; set; }
 
-        // SQLite: decimal maps to REAL automatically, no TypeName needed
+        // ✅ MIGRATED TO SQL SERVER: Decimal maps to decimal(18,2) automatically (no explicit type needed)
         public decimal? FoodMonthly { get; set; }
 
-        // SQLite: decimal maps to REAL automatically, no TypeName needed
+        // ✅ MIGRATED TO SQL SERVER: Decimal maps to decimal(18,2) automatically (no explicit type needed)
         public decimal? TransportationMonthly { get; set; }
 
-        // SQLite: decimal maps to REAL automatically, no TypeName needed
+        // ✅ MIGRATED TO SQL SERVER: Decimal maps to decimal(18,2) automatically (no explicit type needed)
         public decimal? UtilitiesMonthly { get; set; }
 
-        // SQLite: decimal maps to REAL automatically, no TypeName needed
+        // ✅ MIGRATED TO SQL SERVER: Decimal maps to decimal(18,2) automatically (no explicit type needed)
         public decimal? EntertainmentMonthly { get; set; }
 
-        // SQLite: decimal maps to REAL automatically, no TypeName needed
+        // ✅ MIGRATED TO SQL SERVER: Decimal maps to decimal(18,2) automatically (no explicit type needed)
         public decimal? TotalMonthly { get; set; }
 
         [MaxLength(10)]

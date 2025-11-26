@@ -11,16 +11,19 @@ namespace UniversityFinder.Controllers
     public class AdminController : Controller
     {
         private readonly HeiApiService _heiApiService;
-        private readonly ApplicationDbContext _context;
+        private readonly SupabaseService _supabaseService;
+        private readonly ApplicationDbContext _context; // Only for Identity/SyncStatus operations
         private readonly ILogger<AdminController> _logger;
 
         public AdminController(
             HeiApiService heiApiService,
+            SupabaseService supabaseService,
             ApplicationDbContext context,
             ILogger<AdminController> logger)
         {
             _heiApiService = heiApiService;
-            _context = context;
+            _supabaseService = supabaseService;
+            _context = context; // Only for Identity/SyncStatus operations
             _logger = logger;
         }
 
@@ -40,15 +43,26 @@ namespace UniversityFinder.Controllers
         {
             try
             {
-                _logger.LogInformation("🔄 University sync requested by user {User}", User.Identity?.Name);
-                var result = await _heiApiService.SyncUniversitiesAsync();
-                TempData["SuccessMessage"] = $"✅ University sync complete! {result} universities added.";
-                _logger.LogInformation("✅ University sync completed successfully. {Count} universities added.", result);
+                _logger.LogInformation("🔄 HEI university sync requested by user {User}", User.Identity?.Name);
+                var (inserted, fetched) = await _heiApiService.SyncUniversitiesAsync();
+                TempData["SuccessMessage"] = $"✅ HEI sync complete. Fetched: {fetched}, Inserted: {inserted}.";
+                _logger.LogInformation("✅ HEI sync completed successfully. Fetched: {FetchedCount}, Inserted: {InsertedCount}.", fetched, inserted);
+            }
+            catch (HttpRequestException httpEx)
+            {
+                _logger.LogError(httpEx, "❌ University sync failed (HTTP error): {Message}", httpEx.Message);
+                var errorMessage = httpEx.Message.Contains("401") 
+                    ? "❌ University sync failed: 401 Unauthorized from Supabase. Check API key configuration and RLS policies."
+                    : $"❌ University sync failed: {httpEx.Message}. Check application logs for details.";
+                TempData["ErrorMessage"] = errorMessage;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ University sync failed: {Message}", ex.Message);
-                TempData["ErrorMessage"] = $"❌ University sync failed: {ex.Message}. Check application logs for details.";
+                var errorMessage = ex.Message.Contains("401") || ex.Message.Contains("Unauthorized")
+                    ? "❌ University sync failed: 401 Unauthorized from Supabase. Check API key configuration and RLS policies."
+                    : $"❌ University sync failed: {ex.Message}. Check application logs for details.";
+                TempData["ErrorMessage"] = errorMessage;
             }
 
             return RedirectToAction(nameof(Sync));
@@ -218,6 +232,72 @@ namespace UniversityFinder.Controllers
                 skippedCount = status.SkippedCount,
                 progressPercent = progressPercent
             });
+        }
+
+        /// <summary>
+        /// Diagnostic endpoint to check university count in Supabase
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> DebugUniversityCount()
+        {
+            try
+            {
+                // ✅ SUPABASE REST API: Get university count from Supabase via REST
+                var universities = await _supabaseService.GetUniversitiesAsync();
+                var totalCount = universities.Count;
+                var withHeiApiId = universities.Count(u => !string.IsNullOrWhiteSpace(u.HeiApiId));
+                var withoutHeiApiId = totalCount - withHeiApiId;
+
+                var result = new
+                {
+                    totalUniversities = totalCount,
+                    withHeiApiId = withHeiApiId,
+                    withoutHeiApiId = withoutHeiApiId,
+                    timestamp = DateTime.UtcNow,
+                    message = totalCount == 0 
+                        ? "⚠️ WARNING: Universities table is EMPTY in Supabase. HEI sync may have failed." 
+                        : $"✅ Found {totalCount} universities in Supabase (via REST API)"
+                };
+
+                _logger.LogInformation($"🔍 Debug: University count from Supabase REST = {totalCount} (with HeiApiId: {withHeiApiId}, without: {withoutHeiApiId})");
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error getting university count: {Message}", ex.Message);
+                return Json(new
+                {
+                    error = ex.Message,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+        }
+
+        /// <summary>
+        /// Debug endpoint to test Supabase REST API connection
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> DebugSupabase()
+        {
+            try
+            {
+                var universities = await _supabaseService.GetUniversitiesAsync();
+                return Content($"Supabase OK. Universities count: {universities.Count}");
+            }
+            catch (HttpRequestException httpEx)
+            {
+                _logger.LogError(httpEx, "DebugSupabase failed (HTTP error): {Message}", httpEx.Message);
+                var errorMsg = httpEx.Message.Contains("401") 
+                    ? "DebugSupabase failed: 401 Unauthorized - Check Supabase API key and RLS policies"
+                    : $"DebugSupabase failed: {httpEx.Message}";
+                return Content(errorMsg);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "DebugSupabase failed: {Message}", ex.Message);
+                return Content("DebugSupabase failed: " + ex.Message);
+            }
         }
     }
 }

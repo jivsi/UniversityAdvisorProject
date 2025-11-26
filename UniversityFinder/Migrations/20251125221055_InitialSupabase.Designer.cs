@@ -11,8 +11,8 @@ using UniversityFinder.Data;
 namespace UniversityFinder.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251121143756_AddSyncStatusTable")]
-    partial class AddSyncStatusTable
+    [Migration("20251125221055_InitialSupabase")]
+    partial class InitialSupabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -246,6 +246,53 @@ namespace UniversityFinder.Migrations
                     b.HasIndex("Name");
 
                     b.ToTable("Cities");
+                });
+
+            modelBuilder.Entity("UniversityFinder.Models.CityQuality", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CityId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("CostOfLivingIndex")
+                        .HasColumnType("REAL");
+
+                    b.Property<decimal?>("EconomyScore")
+                        .HasColumnType("REAL");
+
+                    b.Property<decimal?>("EducationScore")
+                        .HasColumnType("REAL");
+
+                    b.Property<decimal?>("EnvironmentalScore")
+                        .HasColumnType("REAL");
+
+                    b.Property<decimal?>("HealthcareScore")
+                        .HasColumnType("REAL");
+
+                    b.Property<decimal?>("HousingCost")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTime?>("LastUpdated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("QualityOfLifeScore")
+                        .HasColumnType("REAL");
+
+                    b.Property<decimal?>("SafetyScore")
+                        .HasColumnType("REAL");
+
+                    b.Property<decimal?>("StartupScore")
+                        .HasColumnType("REAL");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CityId")
+                        .IsUnique();
+
+                    b.ToTable("CityQualities");
                 });
 
             modelBuilder.Entity("UniversityFinder.Models.CostOfLiving", b =>
@@ -492,6 +539,12 @@ namespace UniversityFinder.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("Ranking")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("TuitionFee")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Website")
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
@@ -526,6 +579,11 @@ namespace UniversityFinder.Migrations
                     b.Property<int?>("Duration")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsInferred")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Language")
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
@@ -547,6 +605,8 @@ namespace UniversityFinder.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DegreeType");
+
+                    b.HasIndex("IsInferred");
 
                     b.HasIndex("SubjectId");
 
@@ -643,6 +703,17 @@ namespace UniversityFinder.Migrations
                         .IsRequired();
 
                     b.Navigation("Country");
+                });
+
+            modelBuilder.Entity("UniversityFinder.Models.CityQuality", b =>
+                {
+                    b.HasOne("UniversityFinder.Models.City", "City")
+                        .WithMany()
+                        .HasForeignKey("CityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("City");
                 });
 
             modelBuilder.Entity("UniversityFinder.Models.CostOfLiving", b =>
