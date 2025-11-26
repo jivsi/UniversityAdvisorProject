@@ -14,22 +14,11 @@
             <div class="flex flex-col md:flex-row items-end justify-between gap-6">
                 <div class="flex-1">
                     <h1 class="text-4xl md:text-6xl font-bold font-display text-white mb-4">@Model.Name</h1>
-                    @if (!string.IsNullOrEmpty(Model.Acronym))
-                    {
-                        <p class="text-xl text-white/90 mb-4">@Model.Acronym</p>
-                    }
                     <div class="flex items-center gap-4 text-white/90">
                         <div class="flex items-center gap-2">
                             <i data-lucide="map-pin" class="w-5 h-5"></i>
-                            <span>@(Model.City ?? "Unknown city"), @(Model.Country ?? "Unknown country")</span>
+                            <span>@Model.City, @Model.Country</span>
                         </div>
-                        @if (Model.EstablishedYear.HasValue)
-                        {
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="calendar" class="w-5 h-5"></i>
-                                <span>Est. @Model.EstablishedYear</span>
-                            </div>
-                        }
                     </div>
                 </div>
                 
@@ -38,7 +27,7 @@
                     <button 
                         id="favoriteBtn" 
                         class="px-6 py-3 rounded-2xl font-semibold transition-all transform hover:scale-105 @(isFavorited ? "bg-yellow-500 text-white" : "bg-white/20 backdrop-blur-sm text-white border-2 border-white/30")"
-                        data-university-id="@Model.Id"
+                        data-university-name="@Model.Name"
                     >
                         <div class="flex items-center gap-2">
                             <i data-lucide="@(isFavorited ? "star" : "star")" class="w-5 h-5 @(isFavorited ? "fill-current" : "")"></i>
@@ -109,29 +98,9 @@
                 <div id="overview" class="tab-panel active">
                     <div class="glass dark:glass-dark rounded-3xl p-8 mb-6">
                         <h2 class="text-3xl font-bold mb-6">About</h2>
-                        @if (!string.IsNullOrEmpty(Model.Description))
-                        {
-                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">@Model.Description</p>
-                        }
-                        else
-                        {
-                            <p class="text-gray-500 dark:text-gray-400 italic">No description available.</p>
-                        }
-                        
-                        @if (!string.IsNullOrEmpty(Model.Website))
-                        {
-                            <div class="mt-6">
-                                <a 
-                                    href="@Model.Website" 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
-                                >
-                                    <i data-lucide="external-link" class="w-5 h-5"></i>
-                                    Visit Website
-                                </a>
-                            </div>
-                        }
+                        <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
+                            @Model.Name is located in @Model.City, @Model.Country.
+                        </p>
                     </div>
                 </div>
                 

@@ -8,25 +8,14 @@ namespace UniversityFinder.Controllers
     [Authorize]
     public class AdminController : Controller
     {
-        // LEGACY: HeiApiService moved to Services/Legacy - no longer injected
-        // private readonly HeiApiService _heiApiService;
         private readonly SupabaseService _supabaseService;
-        private readonly RvuImportService _rvuImportService;
-        // LEGACY: ApplicationDbContext removed - all data now in Supabase
-        // private readonly ApplicationDbContext _context;
         private readonly ILogger<AdminController> _logger;
 
         public AdminController(
-            // HeiApiService heiApiService, // LEGACY: Removed from DI
             SupabaseService supabaseService,
-            RvuImportService rvuImportService,
-            // ApplicationDbContext context, // LEGACY: Removed - use Supabase instead
             ILogger<AdminController> logger)
         {
-            // _heiApiService = heiApiService; // LEGACY: Removed
             _supabaseService = supabaseService;
-            _rvuImportService = rvuImportService;
-            // _context = context; // LEGACY: Removed
             _logger = logger;
         }
 
@@ -40,42 +29,16 @@ namespace UniversityFinder.Controllers
         }
 
         /// <summary>
-        /// Syncs universities from RVU (NACID) register
+        /// LEGACY: RVU import functionality removed
+        /// Universities should be imported directly into Supabase
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SyncFromRvu()
         {
-            try
-            {
-                _logger.LogInformation("🔄 Starting RVU sync from admin panel...");
-
-                // Fetch universities from RVU
-                var universities = await _rvuImportService.FetchUniversitiesFromRvuAsync();
-
-                if (universities == null || !universities.Any())
-                {
-                    TempData["ErrorMessage"] = "❌ No universities found in RVU register. Please check the RVU website structure.";
-                    _logger.LogWarning("⚠️ No universities returned from RVU import");
-                    return RedirectToAction(nameof(Sync));
-                }
-
-                _logger.LogInformation("✅ Fetched {Count} universities from RVU", universities.Count);
-
-                // Sync to Supabase
-                await _supabaseService.SyncUniversitiesAsync(universities);
-
-                TempData["SuccessMessage"] = $"✅ Successfully synced {universities.Count} universities from RVU (NACID) register.";
-                _logger.LogInformation("✅ RVU sync completed successfully");
-
-                return RedirectToAction(nameof(Sync));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error during RVU sync: {Message}", ex.Message);
-                TempData["ErrorMessage"] = $"❌ Error syncing from RVU: {ex.Message}";
-                return RedirectToAction(nameof(Sync));
-            }
+            TempData["ErrorMessage"] = "❌ RVU import service has been removed. Please import universities directly into Supabase.";
+            _logger.LogWarning("⚠️ RVU sync requested but service is deprecated.");
+            return RedirectToAction(nameof(Sync));
         }
 
         [HttpPost]
@@ -321,21 +284,18 @@ namespace UniversityFinder.Controllers
                 // ✅ SUPABASE REST API: Get university count from Supabase via REST
                 var universities = await _supabaseService.GetUniversitiesAsync();
                 var totalCount = universities.Count;
-                var withHeiApiId = universities.Count(u => !string.IsNullOrWhiteSpace(u.HeiApiId));
-                var withoutHeiApiId = totalCount - withHeiApiId;
+                // Schema simplified - no HeiApiId field
 
                 var result = new
                 {
                     totalUniversities = totalCount,
-                    withHeiApiId = withHeiApiId,
-                    withoutHeiApiId = withoutHeiApiId,
                     timestamp = DateTime.UtcNow,
                     message = totalCount == 0 
                         ? "⚠️ WARNING: Universities table is EMPTY in Supabase. HEI sync may have failed." 
                         : $"✅ Found {totalCount} universities in Supabase (via REST API)"
                 };
 
-                _logger.LogInformation($"🔍 Debug: University count from Supabase REST = {totalCount} (with HeiApiId: {withHeiApiId}, without: {withoutHeiApiId})");
+                _logger.LogInformation($"🔍 Debug: University count from Supabase REST = {totalCount}");
 
                 return Json(result);
             }

@@ -32,8 +32,8 @@ builder.Services.AddHttpClient<SupabaseService>();
 // ✅ SUPABASE AUTHENTICATION: Register Supabase Auth service
 builder.Services.AddSingleton<SupabaseAuthService>();
 
-// ✅ RVU IMPORT: Register RVU (NACID) import service
-builder.Services.AddHttpClient<RvuImportService>();
+// LEGACY: RvuImportService removed - RVU import functionality deprecated
+// builder.Services.AddHttpClient<RvuImportService>();
 
 // Register HttpClient for API services
 builder.Services.AddHttpClient<OpenAiService>();

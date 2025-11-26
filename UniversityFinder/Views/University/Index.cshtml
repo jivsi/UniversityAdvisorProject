@@ -1,4 +1,4 @@
-@model List<UniversityFinder.Models.University>
+@model UniversityFinder.ViewModels.UniversityIndexViewModel
 @{
     ViewData["Title"] = "All Universities";
 }
@@ -48,9 +48,9 @@
                                 <div class="relative">
                                     <input 
                                         type="text" 
-                                        name="searchQuery"
+                                        name="search"
                                         id="searchInput"
-                                        value="@ViewBag.SearchQuery"
+                                        value="@Model.Search"
                                         placeholder="Search universities..."
                                         class="w-full pl-10 pr-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                         autocomplete="off"
@@ -64,14 +64,14 @@
                             <div>
                                 <label class="block text-sm font-medium mb-2">Country</label>
                                 <select 
-                                    name="countryId" 
+                                    name="country" 
                                     id="countryFilter"
                                     class="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                 >
                                     <option value="">All Countries</option>
-                                    @foreach (var country in ViewBag.Countries as List<string> ?? new List<string>())
+                                    @foreach (var country in Model.Countries)
                                     {
-                                        <option value="@country" selected="@(ViewBag.SelectedCountry == country)">@country</option>
+                                        <option value="@country" selected="@(Model.SelectedCountry == country)">@country</option>
                                     }
                                 </select>
                             </div>
@@ -80,88 +80,14 @@
                             <div>
                                 <label class="block text-sm font-medium mb-2">City</label>
                                 <select 
-                                    name="cityId" 
+                                    name="city" 
                                     id="cityFilter"
                                     class="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                 >
                                     <option value="">All Cities</option>
-                                    @foreach (var city in ViewBag.Cities as List<string> ?? new List<string>())
+                                    @foreach (var city in Model.Cities)
                                     {
-                                        <option value="@city" selected="@(ViewBag.SelectedCity == city)">@city</option>
-                                    }
-                                </select>
-                            </div>
-                            
-                            <!-- Tuition Range -->
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Tuition Range (€/year)</label>
-                                <div class="flex gap-2">
-                                    <input 
-                                        type="number" 
-                                        name="minTuition"
-                                        value="@ViewBag.MinTuition"
-                                        placeholder="Min"
-                                        step="100"
-                                        class="w-1/2 px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                                    />
-                                    <input 
-                                        type="number" 
-                                        name="maxTuition"
-                                        value="@ViewBag.MaxTuition"
-                                        placeholder="Max"
-                                        step="100"
-                                        class="w-1/2 px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                                    />
-                                </div>
-                            </div>
-                            
-                            <!-- Ranking Range -->
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Ranking</label>
-                                <div class="flex gap-2">
-                                    <input 
-                                        type="number" 
-                                        name="minRanking"
-                                        value="@ViewBag.MinRanking"
-                                        placeholder="Min"
-                                        class="w-1/2 px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                                    />
-                                    <input 
-                                        type="number" 
-                                        name="maxRanking"
-                                        value="@ViewBag.MaxRanking"
-                                        placeholder="Max"
-                                        class="w-1/2 px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                                    />
-                                </div>
-                            </div>
-                            
-                            <!-- Degree Type -->
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Degree Type</label>
-                                <select 
-                                    name="degreeType"
-                                    class="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                                >
-                                    <option value="">All Types</option>
-                                    @foreach (var degreeType in ViewBag.DegreeTypes as List<string> ?? new List<string>())
-                                    {
-                                        <option value="@degreeType" selected="@(ViewBag.SelectedDegreeType == degreeType)">@degreeType</option>
-                                    }
-                                </select>
-                            </div>
-                            
-                            <!-- Language -->
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Language</label>
-                                <select 
-                                    name="language"
-                                    class="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                                >
-                                    <option value="">All Languages</option>
-                                    @foreach (var language in ViewBag.Languages as List<string> ?? new List<string>())
-                                    {
-                                        <option value="@language" selected="@(ViewBag.SelectedLanguage == language)">@language</option>
+                                        <option value="@city" selected="@(Model.SelectedCity == city)">@city</option>
                                     }
                                 </select>
                             </div>
@@ -186,11 +112,11 @@
             
             <!-- Universities Grid -->
             <div class="flex-1">
-                @if (Model.Any())
+                @if (Model.Universities.Any())
                 {
                     <div class="mb-6 flex items-center justify-between">
                         <p class="text-gray-600 dark:text-gray-400">
-                            Showing <span class="font-semibold text-gray-900 dark:text-white">@Model.Count</span> universities
+                            Showing <span class="font-semibold text-gray-900 dark:text-white">@Model.Universities.Count</span> universities
                         </p>
                         <div class="flex items-center gap-2">
                             <button class="p-2 rounded-lg hover:bg-white/10">
@@ -203,7 +129,7 @@
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        @foreach (var university in Model)
+                        @foreach (var university in Model.Universities)
                         {
                             <div class="glass dark:glass-dark rounded-3xl overflow-hidden card-hover group">
                                 <!-- University Image/Logo Placeholder -->
@@ -225,14 +151,10 @@
                                     <div class="flex items-start justify-between mb-3">
                                         <div class="flex-1">
                                             <h3 class="text-xl font-bold mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                                                <a asp-action="Details" asp-route-id="@university.Id" class="hover:underline">
+                                                <a asp-action="Details" asp-route-name="@university.Name" class="hover:underline">
                                                     @university.Name
                                                 </a>
                                             </h3>
-                                            @if (!string.IsNullOrEmpty(university.Acronym))
-                                            {
-                                                <span class="text-sm text-gray-500 dark:text-gray-400">@university.Acronym</span>
-                                            }
                                         </div>
                                     </div>
                                     
@@ -261,7 +183,7 @@
                                     <!-- Action Button -->
                                     <a 
                                         asp-action="Details" 
-                                        asp-route-id="@university.Id" 
+                                        asp-route-name="@university.Name" 
                                         class="block w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
                                     >
                                         View Details
@@ -353,22 +275,7 @@
             }
         });
         
-        // Load cities when country changes
-        document.getElementById('countryFilter')?.addEventListener('change', function() {
-            const countryId = this.value;
-            const cityFilter = document.getElementById('cityFilter');
-            
-            if (countryId) {
-                fetch(`@Url.Action("GetCities")?countryId=${countryId}`)
-                    .then(response => response.json())
-                    .then(cities => {
-                        cityFilter.innerHTML = '<option value="">All Cities</option>' +
-                            cities.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-                    })
-                    .catch(error => console.error('Error loading cities:', error));
-            } else {
-                cityFilter.innerHTML = '<option value="">All Cities</option>';
-            }
-        });
+        // LEGACY: AJAX city loader removed - cities are now text-based filters
+        // Cities are populated from Model.Cities which is extracted from universities
     </script>
 }
