@@ -9,13 +9,22 @@ namespace UniversityFinder.Controllers
     public class AdminController : Controller
     {
         private readonly SupabaseService _supabaseService;
+        private readonly RvuSyncService _rvuSyncService;
+        private readonly RvuApiService _rvuApiService;
+        private readonly RvuProgramImportService _rvuProgramImportService;
         private readonly ILogger<AdminController> _logger;
 
         public AdminController(
             SupabaseService supabaseService,
+            RvuSyncService rvuSyncService,
+            RvuApiService rvuApiService,
+            RvuProgramImportService rvuProgramImportService,
             ILogger<AdminController> logger)
         {
             _supabaseService = supabaseService;
+            _rvuSyncService = rvuSyncService;
+            _rvuApiService = rvuApiService;
+            _rvuProgramImportService = rvuProgramImportService;
             _logger = logger;
         }
 
@@ -28,17 +37,70 @@ namespace UniversityFinder.Controllers
             return View();
         }
 
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Sync()
+        {
+            try
+            {
+                await _rvuApiService.SyncUniversitiesFromRVUAsync();
+                TempData["SuccessMessage"] = "Universities successfully synced from RVU (NACID).";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "RVU Sync failed: " + ex.Message;
+            }
+
+            return RedirectToAction(nameof(Sync));
+        }
+
         /// <summary>
-        /// LEGACY: RVU import functionality removed
-        /// Universities should be imported directly into Supabase
+        /// Syncs official Bulgarian universities from the RVU (NACID) API using HEI code as unique key
         /// </summary>
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SyncFromRvu()
         {
-            TempData["ErrorMessage"] = "❌ RVU import service has been removed. Please import universities directly into Supabase.";
-            _logger.LogWarning("⚠️ RVU sync requested but service is deprecated.");
-            return RedirectToAction(nameof(Sync));
+            try
+            {
+                _logger.LogInformation("🔄 RVU API sync requested by user {User}", User.Identity?.Name);
+
+                // Fetch universities from RVU official API
+                var universities = await _rvuApiService.FetchAllUniversitiesAsync();
+
+                if (!universities.Any())
+                {
+                    TempData["ErrorMessage"] = "❌ No universities found from RVU API. Please check API endpoints or try again later.";
+                    _logger.LogWarning("⚠️ RVU API sync completed but no universities were found.");
+                    return RedirectToAction(nameof(Sync));
+                }
+
+                // Sync to Supabase using HEI code as unique key (idempotent)
+                await _supabaseService.SyncUniversitiesFromRVUAsync(universities);
+
+                var message = $"✅ RVU API Sync complete: {universities.Count} universities imported/updated using HEI codes.";
+                TempData["SuccessMessage"] = message;
+                _logger.LogInformation("✅ RVU API sync completed successfully. {Count} universities processed.", universities.Count);
+
+                return RedirectToAction(nameof(Sync));
+            }
+            catch (HttpRequestException httpEx)
+            {
+                _logger.LogError(httpEx, "❌ RVU API sync failed (HTTP error): {Message}", httpEx.Message);
+                var errorMessage = httpEx.Message.Contains("404") || httpEx.Message.Contains("NotFound")
+                    ? "❌ RVU API endpoint not found. Please check API configuration or try using HTML sync instead."
+                    : $"❌ RVU API sync failed: {httpEx.Message}. Please check your internet connection and try again.";
+                TempData["ErrorMessage"] = errorMessage;
+                return RedirectToAction(nameof(Sync));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ RVU API sync failed: {Message}", ex.Message);
+                TempData["ErrorMessage"] = $"❌ RVU API sync failed: {ex.Message}. Please check application logs for details.";
+                return RedirectToAction(nameof(Sync));
+            }
         }
 
         [HttpPost]
@@ -78,6 +140,64 @@ namespace UniversityFinder.Controllers
 
             return RedirectToAction(nameof(Sync));
             */
+        }
+
+        /// <summary>
+        /// Syncs official programs from RVU (NACID) API for all universities
+        /// </summary>
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SyncProgramsFromRvu()
+        {
+            try
+            {
+                _logger.LogInformation("🔄 RVU program sync requested by user {User}", User.Identity?.Name);
+
+                // Get all universities from Supabase
+                var universities = await _supabaseService.GetUniversitiesAsync();
+
+                if (!universities.Any())
+                {
+                    TempData["ErrorMessage"] = "❌ No universities found. Please sync universities first using 'Sync Universities from RVU'.";
+                    _logger.LogWarning("⚠️ Program sync skipped - no universities found.");
+                    return RedirectToAction(nameof(Sync));
+                }
+
+                // Fetch all programs from RVU API
+                var programs = await _rvuApiService.FetchAllProgramsAsync(universities);
+
+                if (!programs.Any())
+                {
+                    TempData["ErrorMessage"] = "❌ No programs found from RVU API. Please check API availability or try again later.";
+                    _logger.LogWarning("⚠️ Program sync completed but no programs were found.");
+                    return RedirectToAction(nameof(Sync));
+                }
+
+                // Sync programs to Supabase using HEI code
+                await _supabaseService.SyncProgramsFromRVUAsync(programs);
+
+                var message = $"✅ RVU Program Sync complete: {programs.Count} programs synced for {universities.Count} universities.";
+                TempData["SuccessMessage"] = message;
+                _logger.LogInformation("✅ RVU program sync completed successfully. {Count} programs synced.", programs.Count);
+
+                return RedirectToAction(nameof(Sync));
+            }
+            catch (HttpRequestException httpEx)
+            {
+                _logger.LogError(httpEx, "❌ RVU program sync failed (HTTP error): {Message}", httpEx.Message);
+                var errorMessage = httpEx.Message.Contains("404") || httpEx.Message.Contains("NotFound")
+                    ? "❌ RVU API endpoint not found. Please check API configuration."
+                    : $"❌ RVU program sync failed: {httpEx.Message}. Please check your internet connection and try again.";
+                TempData["ErrorMessage"] = errorMessage;
+                return RedirectToAction(nameof(Sync));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ RVU program sync failed: {Message}", ex.Message);
+                TempData["ErrorMessage"] = $"❌ Program sync failed: {ex.Message}. Please check application logs for details.";
+                return RedirectToAction(nameof(Sync));
+            }
         }
 
         [HttpPost]

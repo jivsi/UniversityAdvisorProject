@@ -111,45 +111,38 @@
                         @if (Model.Programs.Any())
                         {
                             <div class="space-y-4">
-                                @foreach (var program in Model.Programs.OrderBy(p => p.Subject?.Name ?? ""))
+                                @if (Model.Programs != null && Model.Programs.Any())
                                 {
-                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6 hover:shadow-lg transition-all">
-                                        <div class="flex items-start justify-between mb-4">
-                                            <div class="flex-1">
-                                                <h3 class="text-xl font-bold mb-2">@program.Name</h3>
-                                                <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                                    <span class="flex items-center gap-2">
-                                                        <i data-lucide="book-open" class="w-4 h-4"></i>
-                                                        @(program.Subject?.Name ?? "Unknown subject")
-                                                    </span>
-                                                    @if (!string.IsNullOrEmpty(program.DegreeType))
-                                                    {
-                                                        <span class="flex items-center gap-2">
-                                                            <i data-lucide="award" class="w-4 h-4"></i>
-                                                            @program.DegreeType
-                                                        </span>
-                                                    }
-                                                    @if (program.Duration.HasValue)
-                                                    {
-                                                        <span class="flex items-center gap-2">
-                                                            <i data-lucide="clock" class="w-4 h-4"></i>
-                                                            @program.Duration months
-                                                        </span>
-                                                    }
-                                                    @if (!string.IsNullOrEmpty(program.Language))
-                                                    {
-                                                        <span class="flex items-center gap-2">
-                                                            <i data-lucide="languages" class="w-4 h-4"></i>
-                                                            @program.Language
-                                                        </span>
-                                                    }
-                                                </div>
-                                            </div>
-                                        </div>
-                                        @if (!string.IsNullOrEmpty(program.Description))
+                                    <div class="space-y-4">
+                                        @foreach (var program in Model.Programs.OrderBy(p => p))
                                         {
-                                            <p class="text-gray-700 dark:text-gray-300 text-sm">@program.Description</p>
+                                            <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
+                                                <h3 class="text-xl font-bold mb-2">@program</h3>
+                                            </div>
                                         }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-gray-500">No programs available.</p>
+                                }
+
+                                @if (Model.Programs != null && Model.Programs.Any())
+                                {
+                                    <div class="space-y-4">
+                                        @foreach (var program in Model.Programs.OrderBy(p => p))
+                                        {
+                                            <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6">
+                                                <h3 class="text-xl font-bold mb-2">@program</h3>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-gray-500 dark:text-gray-400">No programs available.</p>
+                                }
+
                                     </div>
                                 }
                             </div>

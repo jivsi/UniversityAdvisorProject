@@ -49,7 +49,7 @@
                     </div>
                     <h2 class="text-2xl font-bold mb-3">Sync from RVU (NACID)</h2>
                     <p class="text-gray-600 dark:text-gray-400 mb-6">
-                        Fetch and sync accredited Bulgarian universities from the official RVU (NACID) register. This is the primary data source for Bulgarian universities.
+                        Fetch and sync accredited Bulgarian universities from the official RVU (NACID) API. This is the primary data source for Bulgarian universities.
                     </p>
                     <form asp-action="SyncFromRvu" method="post">
                         @Html.AntiForgeryToken()
@@ -58,7 +58,7 @@
                             class="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center gap-2"
                         >
                             <i data-lucide="download" class="w-5 h-5"></i>
-                            Sync Universities from RVU
+                            <span>🟢 Sync Universities from RVU</span>
                         </button>
                     </form>
                 </div>
@@ -158,21 +158,33 @@
                         </div>
                     </div>
                     
-                    <!-- Sync Button -->
-                    <form asp-action="SyncPrograms" method="post">
-                        @Html.AntiForgeryToken()
-                        <button 
-                            id="syncButton" 
-                            type="submit" 
-                            class="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                            disabled
-                        >
-                            <span id="buttonText">Sync Programs from HEI API</span>
-                            <span id="buttonSpinner" class="hidden">
-                                <i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
-                            </span>
-                        </button>
-                    </form>
+                    <!-- Sync Buttons -->
+                    <div class="space-y-4">
+                        <form asp-action="SyncProgramsFromRvu" method="post">
+                            @Html.AntiForgeryToken()
+                            <button 
+                                type="submit" 
+                                class="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center gap-2"
+                            >
+                                <i data-lucide="download" class="w-5 h-5"></i>
+                                <span>🟣 Sync Programs from RVU</span>
+                            </button>
+                        </form>
+                        <form asp-action="SyncPrograms" method="post">
+                            @Html.AntiForgeryToken()
+                            <button 
+                                id="syncButton" 
+                                type="submit" 
+                                class="w-full px-6 py-4 bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded-xl font-semibold cursor-not-allowed opacity-50"
+                                disabled
+                            >
+                                <span id="buttonText">Sync Programs from HEI API (Deprecated)</span>
+                                <span id="buttonSpinner" class="hidden">
+                                    <i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
+                                </span>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
