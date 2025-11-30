@@ -307,44 +307,226 @@ namespace UniversityFinder.Services
 
         public async Task<bool> IsFavoriteAsync(string userId, int universityId)
         {
-            var response = await _httpClient.GetAsync($"user_favorites?userId=eq.{Uri.EscapeDataString(userId)}&universityId=eq.{universityId}&select=id");
-            var json = await response.Content.ReadAsStringAsync();
-            var list = JsonSerializer.Deserialize<List<UserFavorites>>(json, JsonOptions());
-            return list != null && list.Any();
+            try
+            {
+                var response = await _httpClient.GetAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&universityId=eq.{universityId}&select=id");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("IsFavoriteAsync failed: {Status}", response.StatusCode);
+                    return false;
+                }
+                
+                var json = await response.Content.ReadAsStringAsync();
+                
+                if (string.IsNullOrWhiteSpace(json) || json == "[]")
+                    return false;
+                
+                var list = JsonSerializer.Deserialize<List<UserFavorites>>(json, JsonOptions());
+                return list != null && list.Any();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking if favorite exists for userId: {UserId}, universityId: {UniversityId}", userId, universityId);
+                return false;
+            }
+        }
+
+        public async Task<bool> IsFavoriteByGuidAsync(string userId, Guid universityId)
+        {
+            try
+            {
+                var guidString = universityId.ToString();
+                var response = await _httpClient.GetAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&universityId=eq.{guidString}&select=id");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("IsFavoriteByGuidAsync failed: {Status}", response.StatusCode);
+                    return false;
+                }
+                
+                var json = await response.Content.ReadAsStringAsync();
+                
+                if (string.IsNullOrWhiteSpace(json) || json == "[]")
+                    return false;
+                
+                var list = JsonSerializer.Deserialize<List<UserFavorites>>(json, JsonOptions());
+                return list != null && list.Any();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking if favorite exists for userId: {UserId}, universityId: {UniversityId}", userId, universityId);
+                return false;
+            }
         }
 
         public async Task<bool> ToggleFavoriteAsync(string userId, int universityId)
         {
-            var exists = await IsFavoriteAsync(userId, universityId);
-
-            if (exists)
+            try
             {
-                await _httpClient.DeleteAsync($"user_favorites?userId=eq.{Uri.EscapeDataString(userId)}&universityId=eq.{universityId}");
-                return false;
+                var exists = await IsFavoriteAsync(userId, universityId);
+
+                if (exists)
+                {
+                    var deleteResponse = await _httpClient.DeleteAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&universityId=eq.{universityId}");
+                    if (!deleteResponse.IsSuccessStatusCode)
+                    {
+                        var errorBody = await deleteResponse.Content.ReadAsStringAsync();
+                        _logger.LogWarning("Failed to delete favorite: {Status} - {Body}", deleteResponse.StatusCode, errorBody);
+                        throw new HttpRequestException($"Failed to delete favorite: {deleteResponse.StatusCode}");
+                    }
+                    return false;
+                }
+
+                // Create DTO matching Supabase column names exactly (PascalCase like other tables)
+                // Exclude CreatedAt - database likely has a default timestamp or it doesn't exist
+                var favDto = new
+                {
+                    UserId = userId,
+                    UniversityId = universityId
+                };
+
+                // Use PascalCase to match Supabase column names (like University table)
+                var jsonOptions = new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = null, // PascalCase
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                };
+                
+                var json = JsonSerializer.Serialize(favDto, jsonOptions);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync("UserFavorites", content);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorBody = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Failed to create favorite: {Status} - {Body}", response.StatusCode, errorBody);
+                    throw new HttpRequestException($"Failed to create favorite: {response.StatusCode} - {errorBody}");
+                }
+                
+                return true;
             }
-
-            var fav = new UserFavorites
+            catch (Exception ex)
             {
-                UserId = userId,
-                UniversityId = universityId,
-                CreatedAt = DateTime.UtcNow
-            };
+                _logger.LogError(ex, "Error in ToggleFavoriteAsync for userId: {UserId}, universityId: {UniversityId}", userId, universityId);
+                throw;
+            }
+        }
 
-            var json = JsonSerializer.Serialize(fav, JsonWriteOptions());
-            await _httpClient.PostAsync("user_favorites", new StringContent(json, Encoding.UTF8, "application/json"));
-            return true;
+        public async Task<bool> ToggleFavoriteByGuidAsync(string userId, Guid universityId)
+        {
+            try
+            {
+                // UniversityId in UserFavorites is actually UUID, so use Guid directly
+                var guidString = universityId.ToString();
+                _logger.LogInformation("Toggling favorite for userId: {UserId}, universityId: {UniversityId}", userId, universityId);
+                
+                var exists = await IsFavoriteByGuidAsync(userId, universityId);
+
+                if (exists)
+                {
+                    var deleteResponse = await _httpClient.DeleteAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&universityId=eq.{guidString}");
+                    if (!deleteResponse.IsSuccessStatusCode)
+                    {
+                        var errorBody = await deleteResponse.Content.ReadAsStringAsync();
+                        _logger.LogWarning("Failed to delete favorite: {Status} - {Body}", deleteResponse.StatusCode, errorBody);
+                        throw new HttpRequestException($"Failed to delete favorite: {deleteResponse.StatusCode}");
+                    }
+                    return false;
+                }
+
+                // Create favorite with UUID
+                var favDto = new
+                {
+                    UserId = userId,
+                    UniversityId = guidString // Send as string, Supabase will convert to UUID
+                };
+
+                // Use PascalCase to match Supabase column names
+                var jsonOptions = new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = null, // PascalCase
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                };
+                
+                var json = JsonSerializer.Serialize(favDto, jsonOptions);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync("UserFavorites", content);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorBody = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Failed to create favorite: {Status} - {Body}", response.StatusCode, errorBody);
+                    throw new HttpRequestException($"Failed to create favorite: {response.StatusCode} - {errorBody}");
+                }
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in ToggleFavoriteByGuidAsync for userId: {UserId}, universityId: {UniversityId}", userId, universityId);
+                throw;
+            }
         }
 
         public async Task<List<University>> GetUserFavoritesAsync(string userId)
         {
-            var response = await _httpClient.GetAsync($"user_favorites?userId=eq.{Uri.EscapeDataString(userId)}&select=*,university(*)");
-            var json = await response.Content.ReadAsStringAsync();
-            var list = JsonSerializer.Deserialize<List<UserFavorites>>(json, JsonOptions());
+            try
+            {
+                // Fetch user favorites without nested university to avoid deserialization issues
+                var response = await _httpClient.GetAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&select=universityId");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Failed to fetch user favorites: {Status}", response.StatusCode);
+                    return new List<University>();
+                }
 
-            return list?
-                .Where(f => f.University != null)
-                .Select(f => f.University!)
-                .ToList() ?? new List<University>();
+                var json = await response.Content.ReadAsStringAsync();
+                
+                if (string.IsNullOrWhiteSpace(json) || json == "[]")
+                    return new List<University>();
+
+                // Parse JSON manually to extract universityId values
+                using var doc = JsonDocument.Parse(json);
+                var universityIds = new List<Guid>();
+                
+                foreach (var element in doc.RootElement.EnumerateArray())
+                {
+                    if (element.TryGetProperty("universityId", out var idProp))
+                    {
+                        // Handle both string (Guid) and number (int) formats
+                        if (idProp.ValueKind == System.Text.Json.JsonValueKind.String)
+                        {
+                            if (Guid.TryParse(idProp.GetString(), out var guid))
+                                universityIds.Add(guid);
+                        }
+                        else if (idProp.ValueKind == System.Text.Json.JsonValueKind.Number)
+                        {
+                            // If UniversityId is stored as int but University.Id is Guid,
+                            // we can't directly map them. Log warning and skip.
+                            _logger.LogWarning("UniversityId is stored as int but University.Id is Guid - cannot map directly");
+                            continue;
+                        }
+                    }
+                }
+
+                // Fetch universities by their IDs
+                var universities = new List<University>();
+                foreach (var guid in universityIds)
+                {
+                    var university = await GetUniversityByIdAsync(guid);
+                    if (university != null)
+                        universities.Add(university);
+                }
+
+                return universities;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching user favorites for userId: {UserId}", userId);
+                return new List<University>();
+            }
         }
 
         public async Task<List<Country>> GetCountriesAsync()

@@ -9,16 +9,14 @@ namespace UniversityFinder.Models
     /// </summary>
     public class UserFavorites
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required]
         [MaxLength(255)]
         public string UserId { get; set; } = string.Empty; // Supabase user ID
 
         [Required]
-        public int UniversityId { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public Guid UniversityId { get; set; }
 
         // Navigation properties
         [ForeignKey(nameof(UniversityId))]

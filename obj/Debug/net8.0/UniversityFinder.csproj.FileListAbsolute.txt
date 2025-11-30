@@ -51,3 +51,4 @@ C:\Users\defaultuser0\Desktop\UniversityAdvisorProject-project-b\UniversityAdvis
 C:\Users\defaultuser0\Desktop\UniversityAdvisorProject-project-b\UniversityAdvisorProject-project-b\UniversityFinder\obj\Debug\net8.0\UniversityFinder.pdb
 C:\Users\defaultuser0\Desktop\UniversityAdvisorProject-project-b\UniversityAdvisorProject-project-b\UniversityFinder\obj\Debug\net8.0\UniversityFinder.genruntimeconfig.cache
 C:\Users\defaultuser0\Desktop\UniversityAdvisorProject-project-b\UniversityAdvisorProject-project-b\UniversityFinder\obj\Debug\net8.0\ref\UniversityFinder.dll
+C:\Users\defaultuser0\Desktop\UniversityAdvisorProject-project-b\UniversityAdvisorProject-project-b\UniversityFinder\obj\Debug\net8.0\UniversityFinder.sourcelink.json

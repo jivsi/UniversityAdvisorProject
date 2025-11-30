@@ -23,24 +23,6 @@
                     </h2>
                     
                     <div class="space-y-6">
-                        <!-- Country Filter -->
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Country</label>
-                            <select class="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none">
-                                <option>All Countries</option>
-                                <!-- Add dynamic countries here -->
-                            </select>
-                        </div>
-                        
-                        <!-- City Filter -->
-                        <div>
-                            <label class="block text-sm font-medium mb-2">City</label>
-                            <select class="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none">
-                                <option>All Cities</option>
-                                <!-- Add dynamic cities here -->
-                            </select>
-                        </div>
-                        
                         <!-- Search -->
                         <form method="get" action="@Url.Action("Index")" id="filterForm">
                             <div>
@@ -58,22 +40,6 @@
                                     <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"></i>
                                 </div>
                                 <div id="autocompleteResults" class="hidden mt-2 glass dark:glass-dark rounded-xl p-2 max-h-60 overflow-y-auto"></div>
-                            </div>
-                            
-                            <!-- Country Filter -->
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Country</label>
-                                <select 
-                                    name="country" 
-                                    id="countryFilter"
-                                    class="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                                >
-                                    <option value="">All Countries</option>
-                                    @foreach (var country in Model.Countries)
-                                    {
-                                        <option value="@country" selected="@(Model.SelectedCountry == country)">@country</option>
-                                    }
-                                </select>
                             </div>
                             
                             <!-- City Filter -->
@@ -138,10 +104,18 @@
                                         <i data-lucide="building-2" class="w-20 h-20 text-white/30"></i>
                                     </div>
                                     <!-- Favorite Button -->
-                                    @if (User.Identity?.IsAuthenticated == true)
+                                    @if (User.Identity?.IsAuthenticated == true && university.Id.HasValue)
                                     {
-                                        <button class="absolute top-4 right-4 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all">
-                                            <i data-lucide="heart" class="w-5 h-5 text-white"></i>
+                                        var favoriteIds = ViewBag.FavoriteUniversityIds as HashSet<Guid> ?? new HashSet<Guid>();
+                                        var isFavorited = favoriteIds.Contains(university.Id.Value);
+                                        <button 
+                                            type="button"
+                                            class="favorite-btn absolute top-4 right-4 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all z-10 @(isFavorited ? "favorited" : "")"
+                                            data-university-id="@university.Id.Value"
+                                            title="@(isFavorited ? "Remove from favorites" : "Add to favorites")"
+                                            style="z-index: 10; cursor: pointer;"
+                                        >
+                                            <i data-lucide="heart" class="w-5 h-5 @(isFavorited ? "fill-current text-red-500" : "text-white")"></i>
                                         </button>
                                     }
                                 </div>
@@ -277,5 +251,74 @@
         
         // LEGACY: AJAX city loader removed - cities are now text-based filters
         // Cities are populated from Model.Cities which is extracted from universities
+        
+        // Favorite button functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Use event delegation to handle clicks on favorite buttons
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('.favorite-btn');
+                if (!btn) return;
+                
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const universityId = btn.dataset.universityId;
+                if (!universityId) {
+                    console.error('University ID not found');
+                    alert('Error: University ID not found');
+                    return;
+                }
+                
+                const icon = btn.querySelector('i');
+                if (!icon) {
+                    console.error('Icon element not found');
+                    return;
+                }
+                
+                // Disable button during request
+                btn.disabled = true;
+                
+                fetch('@Url.Action("ToggleFavoriteByGuid", "University")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `universityId=${encodeURIComponent(universityId)}`
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(`HTTP ${response.status}: ${text}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && typeof data.favorited !== 'undefined') {
+                        if (data.favorited) {
+                            icon.classList.add('fill-current', 'text-red-500');
+                            icon.classList.remove('text-white');
+                            btn.title = 'Remove from favorites';
+                            btn.classList.add('favorited');
+                        } else {
+                            icon.classList.remove('fill-current', 'text-red-500');
+                            icon.classList.add('text-white');
+                            btn.title = 'Add to favorites';
+                            btn.classList.remove('favorited');
+                        }
+                        lucide.createIcons();
+                    } else {
+                        throw new Error('Invalid response format');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error toggling favorite:', error);
+                    alert('An error occurred: ' + error.message);
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                });
+            });
+        });
     </script>
 }

@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("UniversityFinder")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7d71e968c2deb9c7e6ffccf073b11981b3f8f01a")]
 [assembly: System.Reflection.AssemblyProductAttribute("UniversityFinder")]
 [assembly: System.Reflection.AssemblyTitleAttribute("UniversityFinder")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -36,16 +36,12 @@ namespace UniversityFinder.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(
             string? search,
-            string? country,
             string? city)
         {
             var filters = new List<string>();
 
             if (!string.IsNullOrWhiteSpace(search))
                 filters.Add($"Name=ilike.*{Uri.EscapeDataString(search)}*");
-
-            if (!string.IsNullOrWhiteSpace(country) && country != "All Countries")
-                filters.Add($"Country=eq.{Uri.EscapeDataString(country)}");
 
             if (!string.IsNullOrWhiteSpace(city) && city != "All Cities")
                 filters.Add($"City=eq.{Uri.EscapeDataString(city)}");
@@ -56,27 +52,37 @@ namespace UniversityFinder.Controllers
 
             var universities = await _supabaseService.GetUniversitiesAsync(filterQuery);
 
-            var countries = universities
-                .Where(u => !string.IsNullOrWhiteSpace(u.Country))
-                .Select(u => u.Country)
-                .Distinct()
+            // Get all cities from the database (not just from filtered universities)
+            var allCities = await _supabaseService.GetCitiesAsync();
+            var cities = allCities
+                .Select(c => c.Name)
                 .OrderBy(c => c)
                 .ToList();
 
-            var cities = universities
-                .Where(u => !string.IsNullOrWhiteSpace(u.City))
-                .Select(u => u.City)
-                .Distinct()
-                .OrderBy(c => c)
-                .ToList();
+            // Get user's favorite university IDs if authenticated
+            var favoriteUniversityIds = new HashSet<Guid>();
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var userId = GetCurrentUserId();
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    var favorites = await _favoriteService.GetUserFavoritesAsync(userId);
+                    favoriteUniversityIds = favorites
+                        .Where(f => f.Id.HasValue)
+                        .Select(f => f.Id!.Value)
+                        .ToHashSet();
+                }
+            }
+
+            ViewBag.FavoriteUniversityIds = favoriteUniversityIds;
 
             var vm = new UniversityIndexViewModel
             {
                 Universities = universities,
-                Countries = countries,
+                Countries = new List<string>(), // Keep for backward compatibility but empty
                 Cities = cities,
                 Search = search,
-                SelectedCountry = country,
+                SelectedCountry = null,
                 SelectedCity = city
             };
 
@@ -136,6 +142,32 @@ namespace UniversityFinder.Controllers
 
             var result = await _favoriteService.ToggleFavoriteAsync(userId, universityId);
             return Json(new { favorited = result });
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> ToggleFavoriteByGuid([FromForm] string universityId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(universityId) || !Guid.TryParse(universityId, out var guid))
+                {
+                    return StatusCode(400, new { error = "Invalid university ID" });
+                }
+
+                var userId = GetCurrentUserId();
+
+                if (string.IsNullOrEmpty(userId))
+                    return StatusCode(401, new { error = "Unauthorized" });
+
+                var result = await _supabaseService.ToggleFavoriteByGuidAsync(userId, guid);
+                return Json(new { favorited = result });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error toggling favorite for university {UniversityId}", universityId);
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         [Authorize]
