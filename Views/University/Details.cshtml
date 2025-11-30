@@ -1,0 +1,326 @@
+@model UniversityFinder.Models.University
+@{
+    ViewData["Title"] = Model.Name;
+    var isFavorited = ViewBag.IsFavorited as bool? ?? false;
+}
+
+<!-- Hero Section with Parallax -->
+<section class="relative h-[60vh] min-h-[500px] overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-purple-600 via-pink-500 to-blue-600"></div>
+    <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+    
+    <div class="absolute inset-0 flex items-end">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 w-full">
+            <div class="flex flex-col md:flex-row items-end justify-between gap-6">
+                <div class="flex-1">
+                    <h1 class="text-4xl md:text-6xl font-bold font-display text-white mb-4">@Model.Name</h1>
+                    <div class="flex items-center gap-4 text-white/90">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="map-pin" class="w-5 h-5"></i>
+                            <span>@Model.City, @Model.Country</span>
+                        </div>
+                    </div>
+                </div>
+                
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <button 
+                        id="favoriteBtn" 
+                        class="px-6 py-3 rounded-2xl font-semibold transition-all transform hover:scale-105 @(isFavorited ? "bg-yellow-500 text-white" : "bg-white/20 backdrop-blur-sm text-white border-2 border-white/30")"
+                        data-university-name="@Model.Name"
+                    >
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="@(isFavorited ? "star" : "star")" class="w-5 h-5 @(isFavorited ? "fill-current" : "")"></i>
+                            <span id="favoriteText">@(isFavorited ? "Favorited" : "Add to Favorites")</span>
+                        </div>
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Floating Info Panel -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10 mb-12">
+    <div class="glass dark:glass-dark rounded-3xl p-8 shadow-2xl">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="text-center">
+                <div class="text-3xl font-bold gradient-text mb-2">@Model.Programs.Count</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Programs</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold gradient-text mb-2">@(Model.Country ?? "Unknown country")</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Country</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold gradient-text mb-2">@(Model.City ?? "Unknown city")</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">City</div>
+            </div>
+            <div class="text-center">
+                <div class="flex items-center justify-center gap-1 mb-2">
+                    @for (int i = 0; i < 5; i++)
+                    {
+                        <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
+                    }
+                </div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Rating</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+    <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Main Content Area -->
+        <div class="flex-1">
+            <!-- Tabs -->
+            <div class="mb-8">
+                <div class="flex space-x-1 glass dark:glass-dark rounded-2xl p-2 inline-flex">
+                    <button class="tab-btn active px-6 py-3 rounded-xl font-semibold transition-all" data-tab="overview">
+                        Overview
+                    </button>
+                    <button class="tab-btn px-6 py-3 rounded-xl font-semibold transition-all" data-tab="programs">
+                        Programs
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Tab Content -->
+            <div id="tab-content">
+                <!-- Overview Tab -->
+                <div id="overview" class="tab-panel active">
+                    <div class="glass dark:glass-dark rounded-3xl p-8 mb-6">
+                        <h2 class="text-3xl font-bold mb-6">About</h2>
+                        <p class="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
+                            @Model.Name is located in @Model.City, @Model.Country.
+                        </p>
+                        
+                        <!-- Contact Information -->
+                        @if (!string.IsNullOrWhiteSpace(Model.Website) || !string.IsNullOrWhiteSpace(Model.Email) || !string.IsNullOrWhiteSpace(Model.Phone) || !string.IsNullOrWhiteSpace(Model.Address))
+                        {
+                            <div class="mt-8 pt-8 border-t border-white/10 dark:border-white/5">
+                                <h3 class="text-xl font-bold mb-4">Contact Information</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    @if (!string.IsNullOrWhiteSpace(Model.Website))
+                                    {
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                                                <i data-lucide="globe" class="w-5 h-5 text-purple-400"></i>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Website</div>
+                                                <a href="@Model.Website" target="_blank" rel="noopener noreferrer" class="text-purple-400 hover:text-purple-300 hover:underline break-all">
+                                                    @Model.Website
+                                                </a>
+                                            </div>
+                                        </div>
+                                    }
+                                    
+                                    @if (!string.IsNullOrWhiteSpace(Model.Email))
+                                    {
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                                                <i data-lucide="mail" class="w-5 h-5 text-blue-400"></i>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Email</div>
+                                                <a href="mailto:@Model.Email" class="text-blue-400 hover:text-blue-300 hover:underline break-all">
+                                                    @Model.Email
+                                                </a>
+                                            </div>
+                                        </div>
+                                    }
+                                    
+                                    @if (!string.IsNullOrWhiteSpace(Model.Phone))
+                                    {
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                                                <i data-lucide="phone" class="w-5 h-5 text-green-400"></i>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Phone</div>
+                                                <a href="tel:@Model.Phone" class="text-green-400 hover:text-green-300 hover:underline">
+                                                    @Model.Phone
+                                                </a>
+                                            </div>
+                                        </div>
+                                    }
+                                    
+                                    @if (!string.IsNullOrWhiteSpace(Model.Address))
+                                    {
+                                        <div class="flex items-start gap-3 md:col-span-2">
+                                            <div class="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                                                <i data-lucide="map-pin" class="w-5 h-5 text-orange-400"></i>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Address</div>
+                                                <p class="text-gray-700 dark:text-gray-300 break-words">
+                                                    @Model.Address
+                                                </p>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                
+                <!-- Programs Tab -->
+                <div id="programs" class="tab-panel hidden">
+                    <div class="glass dark:glass-dark rounded-3xl p-8">
+                        <h2 class="text-3xl font-bold mb-6">Programs Offered</h2>
+                        @if (Model.Programs.Any())
+                        {
+                            <div class="space-y-4">
+                                @foreach (var program in Model.Programs.OrderBy(p => p.Subject?.Name ?? ""))
+                                {
+                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6 hover:shadow-lg transition-all">
+                                        <div class="flex items-start justify-between mb-4">
+                                            <div class="flex-1">
+                                                <h3 class="text-xl font-bold mb-2">@program.Name</h3>
+                                                <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                                    <span class="flex items-center gap-2">
+                                                        <i data-lucide="book-open" class="w-4 h-4"></i>
+                                                        @(program.Subject?.Name ?? "Unknown subject")
+                                                    </span>
+                                                    @if (!string.IsNullOrEmpty(program.DegreeType))
+                                                    {
+                                                        <span class="flex items-center gap-2">
+                                                            <i data-lucide="award" class="w-4 h-4"></i>
+                                                            @program.DegreeType
+                                                        </span>
+                                                    }
+                                                    @if (program.Duration.HasValue)
+                                                    {
+                                                        <span class="flex items-center gap-2">
+                                                            <i data-lucide="clock" class="w-4 h-4"></i>
+                                                            @program.Duration months
+                                                        </span>
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(program.Language))
+                                                    {
+                                                        <span class="flex items-center gap-2">
+                                                            <i data-lucide="languages" class="w-4 h-4"></i>
+                                                            @program.Language
+                                                        </span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(program.Description))
+                                        {
+                                            <p class="text-gray-700 dark:text-gray-300 text-sm">@program.Description</p>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-gray-500 dark:text-gray-400">No programs available.</p>
+                        }
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <aside class="lg:w-80 flex-shrink-0">
+            <div class="glass dark:glass-dark rounded-3xl p-6 sticky top-24">
+                <h3 class="text-xl font-bold mb-6">Quick Info</h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Country</div>
+                        <div class="font-semibold">@(Model.Country ?? "Unknown country")</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">City</div>
+                        <div class="font-semibold">@(Model.City ?? "Unknown city")</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Programs</div>
+                        <div class="font-semibold">@Model.Programs.Count</div>
+                    </div>
+                </div>
+                
+                @if (Model.Country != null)
+                {
+                    <a 
+                        asp-controller="University" 
+                        asp-action="Search" 
+                        asp-route-Query="@(Model.Country ?? "Bulgaria")" 
+                        class="block w-full mt-6 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
+                    >
+                        Find More in @(Model.Country ?? "Bulgaria")
+                    </a>
+                }
+            </div>
+        </aside>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        lucide.createIcons();
+        
+        // Tab functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tabName = this.dataset.tab;
+                
+                // Update active tab button
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('active', 'bg-gradient-to-r', 'from-purple-600', 'to-pink-600', 'text-white');
+                    b.classList.add('text-gray-600', 'dark:text-gray-400');
+                });
+                this.classList.add('active', 'bg-gradient-to-r', 'from-purple-600', 'to-pink-600', 'text-white');
+                this.classList.remove('text-gray-600', 'dark:text-gray-400');
+                
+                // Show/hide tab panels
+                document.querySelectorAll('.tab-panel').forEach(panel => {
+                    panel.classList.add('hidden');
+                    panel.classList.remove('active');
+                });
+                const targetPanel = document.getElementById(tabName);
+                if (targetPanel) {
+                    targetPanel.classList.remove('hidden');
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+        
+        // Favorite toggle
+        $('#favoriteBtn').click(function() {
+            var universityId = $(this).data('university-id');
+            var btn = $(this);
+            var text = $('#favoriteText');
+            var icon = btn.find('i');
+            
+            $.ajax({
+                url: '@Url.Action("ToggleFavorite", "University")',
+                type: 'POST',
+                data: { universityId: universityId },
+                success: function(response) {
+                    if (response.favorited) {
+                        btn.removeClass('bg-white/20 border-white/30').addClass('bg-yellow-500');
+                        text.text('Favorited');
+                        icon.attr('data-lucide', 'star');
+                        icon.addClass('fill-current');
+                    } else {
+                        btn.removeClass('bg-yellow-500').addClass('bg-white/20 border-white/30');
+                        text.text('Add to Favorites');
+                        icon.attr('data-lucide', 'star');
+                        icon.removeClass('fill-current');
+                    }
+                    lucide.createIcons();
+                },
+                error: function() {
+                    alert('An error occurred. Please try again.');
+                }
+            });
+        });
+    </script>
+}

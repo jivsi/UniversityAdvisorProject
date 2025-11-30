@@ -1,0 +1,98 @@
+@model List<UniversityFinder.Models.University>
+@{
+    ViewData["Title"] = "Manage Universities";
+}
+
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8 flex items-center justify-between">
+            <div>
+                <h1 class="text-4xl md:text-5xl font-bold font-display mb-4 gradient-text">Manage Universities</h1>
+                <p class="text-xl text-gray-600 dark:text-gray-400">Create, update, and delete universities</p>
+            </div>
+            <a asp-action="Create" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all flex items-center gap-2">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+                Create New
+            </a>
+        </div>
+
+        <!-- Alert Messages -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="mb-6 glass dark:glass-dark rounded-2xl p-4 border-l-4 border-green-500 bg-green-50/50 dark:bg-green-900/20">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="check-circle" class="w-6 h-6 text-green-500"></i>
+                    <p class="text-green-800 dark:text-green-200">@TempData["SuccessMessage"]</p>
+                </div>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="mb-6 glass dark:glass-dark rounded-2xl p-4 border-l-4 border-red-500 bg-red-50/50 dark:bg-red-900/20">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="alert-circle" class="w-6 h-6 text-red-500"></i>
+                    <p class="text-red-800 dark:text-red-200">@TempData["ErrorMessage"]</p>
+                </div>
+            </div>
+        }
+
+        <!-- Universities Table -->
+        <div class="glass dark:glass-dark rounded-3xl p-8">
+            @if (Model.Any())
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-white/20 dark:border-white/10">
+                                <th class="text-left py-4 px-4 font-semibold">Name</th>
+                                <th class="text-left py-4 px-4 font-semibold">Country</th>
+                                <th class="text-left py-4 px-4 font-semibold">City</th>
+                                <th class="text-right py-4 px-4 font-semibold">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var university in Model)
+                            {
+                                <tr class="border-b border-white/10 dark:border-white/5 hover:bg-white/5 dark:hover:bg-white/5 transition-colors">
+                                    <td class="py-4 px-4">@university.Name</td>
+                                    <td class="py-4 px-4">@university.Country</td>
+                                    <td class="py-4 px-4">@university.City</td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <a asp-action="Edit" asp-route-id="@university.Id" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2">
+                                                <i data-lucide="edit" class="w-4 h-4"></i>
+                                                Edit
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@university.Id" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                Delete
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-12">
+                    <i data-lucide="building-2" class="w-16 h-16 mx-auto mb-4 text-gray-400"></i>
+                    <p class="text-gray-600 dark:text-gray-400 text-lg">No universities found.</p>
+                    <a asp-action="Create" class="mt-4 inline-block px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all">
+                        Create First University
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        lucide.createIcons();
+    </script>
+}
+

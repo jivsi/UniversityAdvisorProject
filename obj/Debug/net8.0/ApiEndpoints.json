@@ -1,0 +1,18 @@
+[
+  {
+    "ContainingType": "UniversityFinder.Controllers.ChatController",
+    "Method": "SendMessage",
+    "RelativePath": "api/Chat/message",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "UniversityFinder.DTOs.ChatRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

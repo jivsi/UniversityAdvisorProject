@@ -1,0 +1,165 @@
+@model List<UniversityFinder.Models.University>
+@{
+    ViewData["Title"] = "My Favorites";
+}
+
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold font-display mb-4 gradient-text">My Favorite Universities</h1>
+            <p class="text-xl text-gray-600 dark:text-gray-400">
+                @if (Model.Any())
+                {
+                    <span>You have <span class="font-bold text-gray-900 dark:text-white">@Model.Count</span> favorite @(Model.Count == 1 ? "university" : "universities")</span>
+                }
+                else
+                {
+                    <span>Start exploring and add universities to your favorites</span>
+                }
+            </p>
+        </div>
+        
+        @if (Model.Any())
+        {
+            <!-- Masonry Grid Layout -->
+            <div class="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+                @foreach (var university in Model)
+                {
+                    <div class="glass dark:glass-dark rounded-3xl overflow-hidden card-hover break-inside-avoid mb-6 group">
+                        <!-- University Image/Logo -->
+                        <div class="h-48 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 relative overflow-hidden">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <i data-lucide="building-2" class="w-20 h-20 text-white/30"></i>
+                            </div>
+                            <!-- Remove Favorite Button -->
+                            <button 
+                                class="absolute top-4 right-4 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-red-500/80 transition-all remove-favorite-btn"
+                                data-university-name="@university.Name"
+                                title="Remove from favorites"
+                            >
+                                <i data-lucide="x" class="w-5 h-5 text-white"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Card Content -->
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                                <a asp-action="Details" asp-route-name="@university.Name" class="hover:underline">
+                                    @university.Name
+                                </a>
+                            </h3>
+                            
+                            <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-4">
+                                <i data-lucide="map-pin" class="w-4 h-4"></i>
+                                <span class="text-sm">@(university.City ?? "Unknown city"), @(university.Country ?? "Unknown country")</span>
+                            </div>
+                            
+                            <!-- Programs Count -->
+                            <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-6">
+                                <i data-lucide="book-open" class="w-4 h-4"></i>
+                                <span>@university.Programs.Count programs</span>
+                            </div>
+                            
+                            <!-- Action Button -->
+                            <a 
+                                asp-action="Details" 
+                                asp-route-name="@university.Name" 
+                                class="block w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
+                            >
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <!-- Empty State -->
+            <div class="glass dark:glass-dark rounded-3xl p-16 text-center max-w-2xl mx-auto">
+                <div class="w-32 h-32 mx-auto mb-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <i data-lucide="heart" class="w-16 h-16 text-white"></i>
+                </div>
+                <h3 class="text-3xl font-bold mb-4">No favorites yet</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-8 text-lg">
+                    Start exploring universities and add them to your favorites to see them here.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a 
+                        asp-controller="University" 
+                        asp-action="Search" 
+                        class="inline-block px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
+                    >
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="search" class="w-5 h-5"></i>
+                            Search Universities
+                        </div>
+                    </a>
+                    <a 
+                        asp-controller="University" 
+                        asp-action="Index" 
+                        class="inline-block px-8 py-4 bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm border-2 border-purple-500/30 text-purple-600 dark:text-purple-400 rounded-xl font-semibold hover:bg-purple-500/10 transition-all"
+                    >
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="building-2" class="w-5 h-5"></i>
+                            Browse All
+                        </div>
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        lucide.createIcons();
+        
+        // Remove favorite functionality
+        document.querySelectorAll('.remove-favorite-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const universityId = this.dataset.universityId;
+                const card = this.closest('.glass');
+                
+                // Animate removal
+                card.style.transition = 'all 0.3s ease';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.9)';
+                
+                setTimeout(() => {
+                    $.ajax({
+                        url: '@Url.Action("ToggleFavorite", "University")',
+                        type: 'POST',
+                        data: { universityId: universityId },
+                        success: function(response) {
+                            // Remove card from DOM
+                            card.remove();
+                            
+                            // Update count if needed
+                            const countElement = document.querySelector('span.font-bold');
+                            if (countElement) {
+                                const currentCount = parseInt(countElement.textContent);
+                                if (currentCount > 1) {
+                                    countElement.textContent = currentCount - 1;
+                                } else {
+                                    // Reload page if no favorites left
+                                    location.reload();
+                                }
+                            }
+                        },
+                        error: function() {
+                            // Restore card on error
+                            card.style.opacity = '1';
+                            card.style.transform = 'scale(1)';
+                            alert('Failed to remove favorite. Please try again.');
+                        }
+                    });
+                }, 300);
+            });
+        });
+    </script>
+}

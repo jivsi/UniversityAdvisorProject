@@ -1,0 +1,175 @@
+@model UniversityFinder.ViewModels.SearchViewModel
+@{
+    ViewData["Title"] = "Search Universities";
+}
+
+<div class="container">
+    <h2 class="mb-4">Search Universities</h2>
+
+    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage as string))
+    {
+        <div class="alert alert-danger">
+            <h5>Database Error</h5>
+            <p>@ViewBag.ErrorMessage</p>
+            <p>Please apply database migrations by clicking the "Apply Migrations" button on the error page, or run <code>dotnet ef database update</code> in the terminal.</p>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(ViewBag.InfoMessage as string))
+    {
+        <div class="alert alert-info">
+            <h5>Information</h5>
+            <p>@ViewBag.InfoMessage</p>
+        </div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form asp-action="Search" method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Subject / Field of Study</label>
+                    <input type="text" asp-for="Query" class="form-control" placeholder="e.g., Psychology, Engineering" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Country</label>
+                    <select asp-for="CountryId" class="form-select" id="countrySelect">
+                        <option value="">All Countries</option>
+                        @foreach (var country in Model.Countries)
+                        {
+                            <option value="@country.Id">@country.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">City</label>
+                    <select asp-for="CityId" class="form-select" id="citySelect">
+                        <option value="">All Cities</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Degree Type</label>
+                    <select asp-for="DegreeType" class="form-select">
+                        <option value="">All</option>
+                        <option value="Bachelor">Bachelor</option>
+                        <option value="Master">Master</option>
+                        <option value="PhD">PhD</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <a asp-action="Search" class="btn btn-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Query))
+    {
+        <div class="mb-3">
+            <p class="text-muted">Found <strong>@Model.TotalResults</strong> universities matching your search.</p>
+        </div>
+
+        @if (Model.Universities.Any())
+        {
+            <div class="row">
+                @foreach (var university in Model.Universities)
+                {
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <a asp-action="Details" asp-route-name="@university.Name" class="text-decoration-none">
+                                        @university.Name
+                                    </a>
+                                </h5>
+                                <p class="card-text">
+                                    <i class="bi bi-geo-alt"></i> @(university.City ?? "Unknown city"), @(university.Country ?? "Unknown country")
+                                </p>
+                                @if (university.Programs.Any())
+                                {
+                                    <div class="mb-2">
+                                        <strong>Programs:</strong>
+                                        <ul class="list-unstyled ms-3">
+                                            @foreach (var program in university.Programs.Take(3))
+                                            {
+                                                <li>• @program.Name (@program.DegreeType)</li>
+                                            }
+                                            @if (university.Programs.Count > 3)
+                                            {
+                                                <li class="text-muted">... and @(university.Programs.Count - 3) more</li>
+                                            }
+                                        </ul>
+                                    </div>
+                                }
+                                <a asp-action="Details" asp-route-name="@university.Name" class="btn btn-sm btn-outline-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (Model.TotalResults > Model.PageSize)
+            {
+                <nav aria-label="Search results pagination">
+                    <ul class="pagination justify-content-center">
+                        @if (Model.Page > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="?Query=@Model.Query&CountryId=@Model.CountryId&CityId=@Model.CityId&DegreeType=@Model.DegreeType&Page=@(Model.Page - 1)">Previous</a>
+                            </li>
+                        }
+                        <li class="page-item active">
+                            <span class="page-link">Page @Model.Page</span>
+                        </li>
+                        @if (Model.Page * Model.PageSize < Model.TotalResults)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="?Query=@Model.Query&CountryId=@Model.CountryId&CityId=@Model.CityId&DegreeType=@Model.DegreeType&Page=@(Model.Page + 1)">Next</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        }
+        else
+        {
+            <div class="alert alert-info">
+                <h5>No universities found</h5>
+                <p>Try adjusting your search criteria or browse all universities.</p>
+                <a asp-action="Index" class="btn btn-primary">Browse All Universities</a>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <h5>Start Your Search</h5>
+            <p>Enter a subject or field of study to find universities that offer programs in that area.</p>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#countrySelect').change(function() {
+                var countryId = $(this).val();
+                var citySelect = $('#citySelect');
+                
+                citySelect.html('<option value="">Loading...</option>');
+                
+                if (countryId) {
+                    $.getJSON('@Url.Action("GetCities", "University")', { countryId: countryId }, function(cities) {
+                        citySelect.html('<option value="">All Cities</option>');
+                        $.each(cities, function(i, city) {
+                            citySelect.append($('<option></option>').val(city.id).text(city.name));
+                        });
+                    });
+                } else {
+                    citySelect.html('<option value="">All Cities</option>');
+                }
+            });
+        });
+    </script>
+}
+

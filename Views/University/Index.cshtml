@@ -1,0 +1,281 @@
+@model UniversityFinder.ViewModels.UniversityIndexViewModel
+@{
+    ViewData["Title"] = "All Universities";
+}
+
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <!-- Header Section -->
+    <div class="bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h1 class="text-4xl md:text-5xl font-bold font-display text-white mb-4">Accredited Universities in Bulgaria</h1>
+            <p class="text-xl text-white/90">Official data from NACID Register of Higher Education Institutions</p>
+        </div>
+    </div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Filters Sidebar -->
+            <aside class="lg:w-80 flex-shrink-0">
+                <div class="glass dark:glass-dark rounded-3xl p-6 sticky top-24">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                        <i data-lucide="filter" class="w-5 h-5"></i>
+                        Filters
+                    </h2>
+                    
+                    <div class="space-y-6">
+                        <!-- Country Filter -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Country</label>
+                            <select class="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                                <option>All Countries</option>
+                                <!-- Add dynamic countries here -->
+                            </select>
+                        </div>
+                        
+                        <!-- City Filter -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2">City</label>
+                            <select class="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                                <option>All Cities</option>
+                                <!-- Add dynamic cities here -->
+                            </select>
+                        </div>
+                        
+                        <!-- Search -->
+                        <form method="get" action="@Url.Action("Index")" id="filterForm">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Search</label>
+                                <div class="relative">
+                                    <input 
+                                        type="text" 
+                                        name="search"
+                                        id="searchInput"
+                                        value="@Model.Search"
+                                        placeholder="Search universities..."
+                                        class="w-full pl-10 pr-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                                        autocomplete="off"
+                                    />
+                                    <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                                </div>
+                                <div id="autocompleteResults" class="hidden mt-2 glass dark:glass-dark rounded-xl p-2 max-h-60 overflow-y-auto"></div>
+                            </div>
+                            
+                            <!-- Country Filter -->
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Country</label>
+                                <select 
+                                    name="country" 
+                                    id="countryFilter"
+                                    class="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                                >
+                                    <option value="">All Countries</option>
+                                    @foreach (var country in Model.Countries)
+                                    {
+                                        <option value="@country" selected="@(Model.SelectedCountry == country)">@country</option>
+                                    }
+                                </select>
+                            </div>
+                            
+                            <!-- City Filter -->
+                            <div>
+                                <label class="block text-sm font-medium mb-2">City</label>
+                                <select 
+                                    name="city" 
+                                    id="cityFilter"
+                                    class="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                                >
+                                    <option value="">All Cities</option>
+                                    @foreach (var city in Model.Cities)
+                                    {
+                                        <option value="@city" selected="@(Model.SelectedCity == city)">@city</option>
+                                    }
+                                </select>
+                            </div>
+                            
+                            <button 
+                                type="submit"
+                                class="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all mt-4"
+                            >
+                                Apply Filters
+                            </button>
+                            
+                            <a 
+                                href="@Url.Action("Index")"
+                                class="block w-full px-4 py-2 text-center text-sm text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors mt-2"
+                            >
+                                Clear Filters
+                            </a>
+                        </form>
+                    </div>
+                </div>
+            </aside>
+            
+            <!-- Universities Grid -->
+            <div class="flex-1">
+                @if (Model.Universities.Any())
+                {
+                    <div class="mb-6 flex items-center justify-between">
+                        <p class="text-gray-600 dark:text-gray-400">
+                            Showing <span class="font-semibold text-gray-900 dark:text-white">@Model.Universities.Count</span> universities
+                        </p>
+                        <div class="flex items-center gap-2">
+                            <button class="p-2 rounded-lg hover:bg-white/10">
+                                <i data-lucide="grid" class="w-5 h-5"></i>
+                            </button>
+                            <button class="p-2 rounded-lg hover:bg-white/10">
+                                <i data-lucide="list" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        @foreach (var university in Model.Universities)
+                        {
+                            <div class="glass dark:glass-dark rounded-3xl overflow-hidden card-hover group">
+                                <!-- University Image/Logo Placeholder -->
+                                <div class="h-48 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 relative overflow-hidden">
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <i data-lucide="building-2" class="w-20 h-20 text-white/30"></i>
+                                    </div>
+                                    <!-- Favorite Button -->
+                                    @if (User.Identity?.IsAuthenticated == true)
+                                    {
+                                        <button class="absolute top-4 right-4 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all">
+                                            <i data-lucide="heart" class="w-5 h-5 text-white"></i>
+                                        </button>
+                                    }
+                                </div>
+                                
+                                <!-- Card Content -->
+                                <div class="p-6">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex-1">
+                                            <h3 class="text-xl font-bold mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                                                <a asp-action="Details" asp-route-name="@university.Name" class="hover:underline">
+                                                    @university.Name
+                                                </a>
+                                            </h3>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-4">
+                                        <i data-lucide="map-pin" class="w-4 h-4"></i>
+                                        <span class="text-sm">@(university.City ?? "Unknown city"), @(university.Country ?? "Unknown country")</span>
+                                    </div>
+                                    
+                                    <!-- Rating Badge -->
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <div class="flex items-center gap-1">
+                                            @for (int i = 0; i < 5; i++)
+                                            {
+                                                <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-current"></i>
+                                            }
+                                        </div>
+                                        <span class="text-sm font-medium">4.5</span>
+                                    </div>
+                                    
+                                    <!-- Programs Count -->
+                                    <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                        <i data-lucide="book-open" class="w-4 h-4"></i>
+                                        <span>@university.Programs.Count programs</span>
+                                    </div>
+                                    
+                                    <!-- Action Button -->
+                                    <a 
+                                        asp-action="Details" 
+                                        asp-route-name="@university.Name" 
+                                        class="block w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
+                                    >
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="glass dark:glass-dark rounded-3xl p-12 text-center">
+                        <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                            <i data-lucide="building-2" class="w-12 h-12 text-white"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3">No universities found</h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-6">
+                            Universities will appear here once they are synced from the HEI API.
+                        </p>
+                        <a 
+                            asp-controller="Home" 
+                            asp-action="Index" 
+                            class="inline-block px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
+                        >
+                            Go to Home
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        lucide.createIcons();
+        
+        // Autocomplete functionality
+        const searchInput = document.getElementById('searchInput');
+        const autocompleteResults = document.getElementById('autocompleteResults');
+        let autocompleteTimeout;
+        
+        searchInput?.addEventListener('input', function(e) {
+            const query = e.target.value.trim();
+            
+            clearTimeout(autocompleteTimeout);
+            
+            if (query.length < 2) {
+                autocompleteResults.classList.add('hidden');
+                return;
+            }
+            
+            autocompleteTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`@Url.Action("Autocomplete")?query=${encodeURIComponent(query)}`);
+                    const suggestions = await response.json();
+                    
+                    if (suggestions.length > 0) {
+                        autocompleteResults.innerHTML = suggestions.map(s => `
+                            <div class="p-2 hover:bg-white/10 dark:hover:bg-white/5 rounded-lg cursor-pointer autocomplete-item" data-name="${s.name}">
+                                <div class="font-medium">${s.name}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">${s.country || ''}</div>
+                            </div>
+                        `).join('');
+                        autocompleteResults.classList.remove('hidden');
+                        
+                        // Add click handlers
+                        document.querySelectorAll('.autocomplete-item').forEach(item => {
+                            item.addEventListener('click', function() {
+                                searchInput.value = this.dataset.name;
+                                autocompleteResults.classList.add('hidden');
+                                document.getElementById('filterForm')?.submit();
+                            });
+                        });
+                    } else {
+                        autocompleteResults.classList.add('hidden');
+                    }
+                } catch (error) {
+                    console.error('Autocomplete error:', error);
+                    autocompleteResults.classList.add('hidden');
+                }
+            }, 300);
+        });
+        
+        // Hide autocomplete when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput?.contains(e.target) && !autocompleteResults?.contains(e.target)) {
+                autocompleteResults?.classList.add('hidden');
+            }
+        });
+        
+        // LEGACY: AJAX city loader removed - cities are now text-based filters
+        // Cities are populated from Model.Cities which is extracted from universities
+    </script>
+}
