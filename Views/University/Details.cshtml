@@ -6,7 +6,7 @@
 
 <!-- Hero Section with Parallax -->
 <section class="relative h-[60vh] min-h-[500px] overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-br from-purple-600 via-pink-500 to-blue-600"></div>
+    <div class="absolute inset-0 bg-gradient-to-br from-green-600 via-emerald-500 to-green-500"></div>
     <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
     
     <div class="absolute inset-0 flex items-end">
@@ -77,10 +77,10 @@
             <!-- Tabs -->
             <div class="mb-8">
                 <div class="flex space-x-1 glass dark:glass-dark rounded-2xl p-2 inline-flex">
-                    <button class="tab-btn active px-6 py-3 rounded-xl font-semibold transition-all" data-tab="overview">
+                    <button class="tab-btn active px-6 py-3 rounded-xl font-semibold transition-all bg-gradient-to-r from-green-600 to-emerald-600 text-white" data-tab="overview">
                         Преглед
                     </button>
-                    <button class="tab-btn px-6 py-3 rounded-xl font-semibold transition-all" data-tab="programs">
+                    <button class="tab-btn px-6 py-3 rounded-xl font-semibold transition-all text-gray-600 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-gray-800" data-tab="programs">
                         Програми
                     </button>
                 </div>
@@ -105,12 +105,12 @@
                                     @if (!string.IsNullOrWhiteSpace(Model.Website))
                                     {
                                         <div class="flex items-start gap-3">
-                                            <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
-                                                <i data-lucide="globe" class="w-5 h-5 text-purple-400"></i>
+                                            <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                                                <i data-lucide="globe" class="w-5 h-5 text-green-400"></i>
                                             </div>
                                             <div class="flex-1 min-w-0">
                                                 <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Уебсайт</div>
-                                                <a href="@Model.Website" target="_blank" rel="noopener noreferrer" class="text-purple-400 hover:text-purple-300 hover:underline break-all">
+                                                <a href="@Model.Website" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:text-green-300 hover:underline break-all">
                                                     @Model.Website
                                                 </a>
                                             </div>
@@ -252,7 +252,7 @@
                         asp-controller="University" 
                         asp-action="Search" 
                         asp-route-Query="@(Model.Country ?? "Bulgaria")" 
-                        class="block w-full mt-6 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
+                        class="block w-full mt-6 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-center rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
                     >
                         Намери Още в @(Model.Country ?? "България")
                     </a>
@@ -273,10 +273,10 @@
                 
                 // Update active tab button
                 document.querySelectorAll('.tab-btn').forEach(b => {
-                    b.classList.remove('active', 'bg-gradient-to-r', 'from-purple-600', 'to-pink-600', 'text-white');
+                    b.classList.remove('active', 'bg-gradient-to-r', 'from-green-600', 'to-emerald-600', 'text-white');
                     b.classList.add('text-gray-600', 'dark:text-gray-400');
                 });
-                this.classList.add('active', 'bg-gradient-to-r', 'from-purple-600', 'to-pink-600', 'text-white');
+                this.classList.add('active', 'bg-gradient-to-r', 'from-green-600', 'to-emerald-600', 'text-white');
                 this.classList.remove('text-gray-600', 'dark:text-gray-400');
                 
                 // Show/hide tab panels

@@ -2,24 +2,140 @@
     ViewData["Title"] = "Намерете Акредитирани Университети в България";
 }
 
-<!-- Hero Section -->
-<section class="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-    <!-- Animated Gradient Background -->
-    <div class="absolute inset-0 bg-gradient-to-br from-purple-600 via-pink-500 to-blue-600 animate-gradient opacity-90"></div>
-    <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
-    
-    <!-- Hero Content -->
-    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center fade-in">
-        <h1 class="text-5xl md:text-7xl font-bold font-display text-white mb-6 leading-tight">
-            Открийте Акредитирани<br/>
-            <span class="bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">Университети в България</span>
-        </h1>
-        <p class="text-xl md:text-2xl text-white/90 mb-12 max-w-3xl mx-auto font-light">
-            Официална Българска Платформа за Висше Образование - Разгледайте акредитирани университети и национална образователна статистика от НАЦИД и НСИ
-        </p>
-        
-        <!-- Search Bar with Autocomplete -->
-        <div class="max-w-3xl mx-auto mb-12 slide-up">
+<!-- Hero Section with City Selection -->
+<section class="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-900 dark:to-gray-800">
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+        <!-- Main Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 md:p-12 relative overflow-hidden">
+            <!-- Decorative Background -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-full -mr-32 -mt-32 opacity-50"></div>
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-full -ml-24 -mb-24 opacity-50"></div>
+            
+            <div class="relative z-10">
+                <!-- Title Section -->
+                <div class="text-center mb-8">
+                    <h1 class="text-4xl md:text-6xl font-bold font-display mb-4 text-gray-900 dark:text-white">
+                        Къде?
+                    </h1>
+                    <p class="text-xl md:text-2xl text-gray-600 dark:text-gray-400">
+                        Изберете вашата мечтана дестинация?
+                    </p>
+                </div>
+
+                <!-- City Selector -->
+                <div class="mb-8 max-w-md mx-auto">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Изберете Град...</label>
+                    <div class="relative">
+                        <select id="citySelector" class="w-full px-4 py-4 rounded-2xl bg-white dark:bg-gray-700 border-2 border-green-200 dark:border-green-800 text-gray-900 dark:text-white text-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all appearance-none cursor-pointer">
+                            <option value="">Изберете град...</option>
+                            @if (ViewBag.Cities != null)
+                            {
+                                @foreach (var city in ViewBag.Cities as List<string>)
+                                {
+                                    <option value="@city">@city</option>
+                                }
+                            }
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                            <i data-lucide="chevron-down" class="w-6 h-6 text-green-600 dark:text-green-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cities Grid -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+                        Намерете Университети в Топ Градове
+                    </h2>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="citiesGrid">
+                        @if (ViewBag.Cities != null)
+                        {
+                            @foreach (var city in ViewBag.Cities as List<string>)
+                            {
+                                <a 
+                                    asp-controller="University" 
+                                    asp-action="Index" 
+                                    asp-route-city="@city"
+                                    class="city-card group relative bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-700 dark:to-gray-800 rounded-2xl p-4 border-2 border-green-200 dark:border-green-800 hover:border-green-500 dark:hover:border-green-500 hover:shadow-lg transition-all duration-300 transform hover:scale-105 cursor-pointer"
+                                    data-city="@city"
+                                >
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                                            <i data-lucide="map-pin" class="w-6 h-6 text-white"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <h3 class="font-bold text-gray-900 dark:text-white text-sm md:text-base truncate">@city</h3>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Floating Action Buttons (shown on hover) -->
+                                    <div class="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <a 
+                                            asp-controller="University" 
+                                            asp-action="Index" 
+                                            asp-route-city="@city"
+                                            class="w-10 h-10 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center shadow-lg transform hover:scale-110 transition-all"
+                                            title="Виж Университетите"
+                                        >
+                                            <i data-lucide="building-2" class="w-5 h-5"></i>
+                                        </a>
+                                        <a 
+                                            asp-controller="University" 
+                                            asp-action="Search" 
+                                            asp-route-City="@city"
+                                            class="w-10 h-10 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg transform hover:scale-110 transition-all"
+                                            title="Търси в @city"
+                                        >
+                                            <i data-lucide="search" class="w-5 h-5"></i>
+                                        </a>
+                                    </div>
+                                </a>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <!-- Next Button -->
+                <div class="text-center">
+                    <a 
+                        asp-controller="University" 
+                        asp-action="Index" 
+                        class="inline-block px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2 mx-auto"
+                    >
+                        <span>Напред</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Action Buttons (Fixed Position) -->
+        <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-4">
+            <a 
+                asp-controller="University" 
+                asp-action="Index" 
+                class="w-14 h-14 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center shadow-2xl transform hover:scale-110 transition-all"
+                title="Всички Университети"
+            >
+                <i data-lucide="building-2" class="w-7 h-7"></i>
+            </a>
+            <a 
+                asp-controller="University" 
+                asp-action="Search" 
+                class="w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-2xl transform hover:scale-110 transition-all"
+                title="Търсене"
+            >
+                <i data-lucide="search" class="w-7 h-7"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Search Section -->
+<section class="py-20 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-900 dark:to-gray-800">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8">
+            <h2 class="text-3xl font-bold text-center mb-6 text-gray-900 dark:text-white">Търсене по Предмет</h2>
             <form asp-controller="University" asp-action="Search" method="get" class="flex flex-col sm:flex-row gap-4 relative">
                 <div class="flex-1 relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
@@ -29,56 +145,31 @@
                         type="text" 
                         name="Query" 
                         id="homeSearchInput"
-                        class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-0 text-lg shadow-xl focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all"
+                        class="w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-50 dark:bg-gray-700 border-2 border-green-200 dark:border-green-800 text-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
                         placeholder="Търсене по предмет (напр. Психология, Инженерство, Медицина)"
-                        required
                         autocomplete="off"
                     />
-                    <div id="homeAutocompleteResults" class="absolute top-full left-0 right-0 mt-2 glass dark:glass-dark rounded-2xl p-2 max-h-60 overflow-y-auto hidden z-20 shadow-2xl"></div>
+                    <div id="homeAutocompleteResults" class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-2xl p-2 max-h-60 overflow-y-auto hidden z-20 shadow-2xl border-2 border-green-200 dark:border-green-800"></div>
                 </div>
                 <button 
                     type="submit" 
-                    class="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
+                    class="px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
                 >
                     <i data-lucide="search" class="w-5 h-5"></i>
                     Търсене
                 </button>
             </form>
         </div>
-        
-        <!-- CTA Buttons -->
-        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center slide-up">
-            <a 
-                asp-controller="University" 
-                asp-action="Index" 
-                class="px-8 py-4 bg-white/20 backdrop-blur-sm text-white rounded-2xl font-semibold border-2 border-white/30 hover:bg-white/30 transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
-            >
-                <i data-lucide="building-2" class="w-5 h-5"></i>
-                Разгледайте Университетите
-            </a>
-            <a 
-                href="#stats" 
-                class="px-8 py-4 bg-white text-purple-600 rounded-2xl font-semibold shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
-            >
-                <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
-                Сравнете Сега
-            </a>
-        </div>
-    </div>
-    
-    <!-- Scroll Indicator -->
-    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-        <i data-lucide="chevron-down" class="w-6 h-6 text-white/60"></i>
     </div>
 </section>
 
 <!-- Stats Section -->
-<section id="stats" class="py-20 bg-gray-50 dark:bg-gray-800/50">
+<section id="stats" class="py-20 bg-gradient-to-br from-green-50 to-emerald-50 dark:bg-gray-800/50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <!-- Stat Card 1 -->
             <div class="glass dark:glass-dark rounded-3xl p-8 card-hover text-center">
-                <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
                     <i data-lucide="building-2" class="w-8 h-8 text-white"></i>
                 </div>
                 <h3 class="text-4xl font-bold mb-2 gradient-text">5,000+</h3>
@@ -87,7 +178,7 @@
             
             <!-- Stat Card 2 -->
             <div class="glass dark:glass-dark rounded-3xl p-8 card-hover text-center">
-                <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-400 flex items-center justify-center">
                     <i data-lucide="globe" class="w-8 h-8 text-white"></i>
                 </div>
                 <h3 class="text-4xl font-bold mb-2 gradient-text">28</h3>
@@ -107,7 +198,7 @@
 </section>
 
 <!-- Features Section -->
-<section class="py-20 bg-white dark:bg-gray-900">
+<section class="py-20 bg-gradient-to-br from-green-50 to-emerald-50 dark:bg-gray-900">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-4xl md:text-5xl font-bold font-display mb-4">Защо да изберете UniversityFinder?</h2>
@@ -119,7 +210,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <!-- Feature 1 -->
             <div class="glass dark:glass-dark rounded-3xl p-8 card-hover">
-                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6">
+                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-6">
                     <i data-lucide="search" class="w-7 h-7 text-white"></i>
                 </div>
                 <h3 class="text-2xl font-bold mb-3">Търсене по Предмет</h3>
@@ -130,7 +221,7 @@
             
             <!-- Feature 2 -->
             <div class="glass dark:glass-dark rounded-3xl p-8 card-hover">
-                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-6">
+                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-green-400 to-emerald-400 flex items-center justify-center mb-6">
                     <i data-lucide="map-pin" class="w-7 h-7 text-white"></i>
                 </div>
                 <h3 class="text-2xl font-bold mb-3">Филтриране по Регион</h3>
@@ -181,9 +272,9 @@
                     
                     if (suggestions.length > 0) {
                         homeAutocompleteResults.innerHTML = suggestions.slice(0, 5).map(s => `
-                            <div class="p-3 hover:bg-white/10 dark:hover:bg-white/5 rounded-lg cursor-pointer autocomplete-item" data-name="${s.name}">
-                                <div class="font-medium text-white">${s.name}</div>
-                                <div class="text-xs text-white/70">${s.country || ''}</div>
+                            <div class="p-3 hover:bg-green-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer autocomplete-item transition-colors" data-name="${s.name}">
+                                <div class="font-medium text-gray-900 dark:text-white">${s.name}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">${s.city || s.country || ''}</div>
                             </div>
                         `).join('');
                         homeAutocompleteResults.classList.remove('hidden');
@@ -223,5 +314,53 @@
                 }
             });
         });
+
+        // City selector change handler
+        const citySelector = document.getElementById('citySelector');
+        citySelector?.addEventListener('change', function() {
+            const selectedCity = this.value;
+            if (selectedCity) {
+                window.location.href = `@Url.Action("Index", "University")?city=${encodeURIComponent(selectedCity)}`;
+            }
+        });
+
+        // Add hover effects to city cards
+        document.querySelectorAll('.city-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.05)';
+            });
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
     </script>
+    
+    <style>
+        .city-card {
+            position: relative;
+        }
+        
+        .city-card:hover {
+            z-index: 10;
+        }
+        
+        /* Custom scrollbar for autocomplete */
+        #homeAutocompleteResults::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #homeAutocompleteResults::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        #homeAutocompleteResults::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 10px;
+        }
+        
+        #homeAutocompleteResults::-webkit-scrollbar-thumb:hover {
+            background: #059669;
+        }
+    </style>
 }

@@ -43,10 +43,13 @@ namespace UniversityFinder.Services
 
             try
             {
+                // Note: CountryId removed - site is only for Bulgarian universities
+                // CityId changed to City (string) - using text-based city filtering
+                // Repository method is legacy and returns empty, but keeping signature for compatibility
                 var universities = await _universityRepository.SearchBySubjectAsync(
                     searchViewModel.Query,
-                    searchViewModel.CountryId,
-                    searchViewModel.CityId,
+                    countryId: null, // CountryId removed from SearchViewModel
+                    cityId: null,   // Using City (string) instead of CityId (int)
                     searchViewModel.DegreeType
                 );
 

@@ -189,6 +189,7 @@ namespace UniversityFinder.Controllers
         {
             var universities = await _supabaseService.GetUniversitiesAsync();
 
+            // Filter by query
             if (!string.IsNullOrWhiteSpace(model.Query))
             {
                 universities = universities
@@ -196,11 +197,36 @@ namespace UniversityFinder.Controllers
                         (!string.IsNullOrWhiteSpace(u.Name) &&
                          u.Name.Contains(model.Query, StringComparison.OrdinalIgnoreCase)) ||
                         (!string.IsNullOrWhiteSpace(u.City) &&
-                         u.City.Contains(model.Query, StringComparison.OrdinalIgnoreCase)) ||
-                        (!string.IsNullOrWhiteSpace(u.Country) &&
-                         u.Country.Contains(model.Query, StringComparison.OrdinalIgnoreCase)))
+                         u.City.Contains(model.Query, StringComparison.OrdinalIgnoreCase)))
                     .ToList();
             }
+
+            // Filter by city
+            if (!string.IsNullOrWhiteSpace(model.City) && model.City != "Всички Градове")
+            {
+                universities = universities
+                    .Where(u => !string.IsNullOrWhiteSpace(u.City) && 
+                               u.City.Equals(model.City, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            // Filter by degree type
+            if (!string.IsNullOrWhiteSpace(model.DegreeType))
+            {
+                universities = universities
+                    .Where(u => u.Programs.Any(p => 
+                        !string.IsNullOrWhiteSpace(p.DegreeType) && 
+                        p.DegreeType.Equals(model.DegreeType, StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+            }
+
+            // Get all cities from database for dropdown
+            var allCities = await _supabaseService.GetCitiesAsync();
+            model.Cities = allCities
+                .Select(c => c.Name)
+                .OrderBy(c => c)
+                .Distinct()
+                .ToList();
 
             model.TotalResults = universities.Count;
             model.Universities = universities;

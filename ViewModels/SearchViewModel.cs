@@ -6,12 +6,11 @@ namespace UniversityFinder.ViewModels
     {
         public string? Query { get; set; }
         public int? SubjectId { get; set; }
-        public int? CountryId { get; set; }
-        public int? CityId { get; set; }
+        public string? City { get; set; }
         public string? DegreeType { get; set; }
         public List<University> Universities { get; set; } = new();
         public List<Subject> Subjects { get; set; } = new();
-        public List<Country> Countries { get; set; } = new();
+        public List<string> Cities { get; set; } = new();
         public int TotalResults { get; set; }
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 10;
