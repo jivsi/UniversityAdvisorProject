@@ -371,7 +371,7 @@ namespace UniversityFinder.Controllers
 
             if (string.IsNullOrWhiteSpace(university.Name))
             {
-                ModelState.AddModelError("Name", "University name is required.");
+                ModelState.AddModelError("Name", "Името на университета е задължително.");
                 return View(university);
             }
 
@@ -380,19 +380,19 @@ namespace UniversityFinder.Controllers
                 var existing = await _supabaseService.GetUniversityByNameAsync(university.Name);
                 if (existing != null)
                 {
-                    ModelState.AddModelError("Name", "A university with this name already exists.");
+                    ModelState.AddModelError("Name", "Университет с това име вече съществува.");
                     return View(university);
                 }
 
                 await _supabaseService.InsertUniversityAsync(university);
-                TempData["SuccessMessage"] = $"✅ University '{university.Name}' created successfully.";
+                TempData["SuccessMessage"] = $"✅ Университет '{university.Name}' е създаден успешно.";
                 _logger.LogInformation("✅ Admin {User} created university: {Name}", User.Identity?.Name, university.Name);
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error creating university: {Message}", ex.Message);
-                ModelState.AddModelError("", $"Error creating university: {ex.Message}");
+                ModelState.AddModelError("", $"Грешка при създаване на университета: {ex.Message}");
                 return View(university);
             }
         }
@@ -428,7 +428,7 @@ namespace UniversityFinder.Controllers
 
             if (string.IsNullOrWhiteSpace(university.Name))
             {
-                ModelState.AddModelError("Name", "University name is required.");
+                ModelState.AddModelError("Name", "Името на университета е задължително.");
                 return View(university);
             }
 
@@ -437,7 +437,7 @@ namespace UniversityFinder.Controllers
                 var existing = await _supabaseService.GetUniversityByIdAsync(id);
                 if (existing == null)
                 {
-                    TempData["ErrorMessage"] = "University not found.";
+                    TempData["ErrorMessage"] = "Университетът не е намерен.";
                     return RedirectToAction(nameof(Index));
                 }
 
@@ -447,7 +447,7 @@ namespace UniversityFinder.Controllers
                     var nameExists = await _supabaseService.GetUniversityByNameAsync(university.Name);
                     if (nameExists != null && nameExists.Id != id)
                     {
-                        ModelState.AddModelError("Name", "A university with this name already exists.");
+                        ModelState.AddModelError("Name", "Университет с това име вече съществува.");
                         return View(university);
                     }
                 }
@@ -457,18 +457,18 @@ namespace UniversityFinder.Controllers
                 
                 if (updated == null)
                 {
-                    ModelState.AddModelError("", "Error updating university.");
+                    ModelState.AddModelError("", "Грешка при актуализиране на университета.");
                     return View(university);
                 }
 
-                TempData["SuccessMessage"] = $"✅ University '{university.Name}' updated successfully.";
+                TempData["SuccessMessage"] = $"✅ Университет '{university.Name}' е актуализиран успешно.";
                 _logger.LogInformation("✅ Admin {User} updated university: {Id} - {Name}", User.Identity?.Name, id, university.Name);
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error updating university: {Message}", ex.Message);
-                ModelState.AddModelError("", $"Error updating university: {ex.Message}");
+                ModelState.AddModelError("", $"Грешка при актуализиране на университета: {ex.Message}");
                 return View(university);
             }
         }
@@ -482,7 +482,7 @@ namespace UniversityFinder.Controllers
             var university = await _supabaseService.GetUniversityByIdAsync(id);
             if (university == null)
             {
-                TempData["ErrorMessage"] = "University not found.";
+                TempData["ErrorMessage"] = "Университетът не е намерен.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -502,7 +502,7 @@ namespace UniversityFinder.Controllers
                 var university = await _supabaseService.GetUniversityByIdAsync(id);
                 if (university == null)
                 {
-                    TempData["ErrorMessage"] = "University not found.";
+                    TempData["ErrorMessage"] = "Университетът не е намерен.";
                     return RedirectToAction(nameof(Index));
                 }
 
@@ -510,18 +510,18 @@ namespace UniversityFinder.Controllers
                 
                 if (!deleted)
                 {
-                    TempData["ErrorMessage"] = "Error deleting university.";
+                    TempData["ErrorMessage"] = "Грешка при изтриване на университета.";
                     return RedirectToAction(nameof(Index));
                 }
 
-                TempData["SuccessMessage"] = $"✅ University '{university.Name}' deleted successfully.";
+                TempData["SuccessMessage"] = $"✅ Университет '{university.Name}' е изтрит успешно.";
                 _logger.LogInformation("✅ Admin {User} deleted university: {Id} - {Name}", User.Identity?.Name, id, university.Name);
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error deleting university: {Message}", ex.Message);
-                TempData["ErrorMessage"] = $"Error deleting university: {ex.Message}";
+                TempData["ErrorMessage"] = $"Грешка при изтриване на университета: {ex.Message}";
                 return RedirectToAction(nameof(Index));
             }
         }

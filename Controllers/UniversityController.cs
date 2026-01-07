@@ -152,13 +152,13 @@ namespace UniversityFinder.Controllers
             {
                 if (string.IsNullOrEmpty(universityId) || !Guid.TryParse(universityId, out var guid))
                 {
-                    return StatusCode(400, new { error = "Invalid university ID" });
+                    return StatusCode(400, new { error = "Невалидно ID на университет" });
                 }
 
                 var userId = GetCurrentUserId();
 
                 if (string.IsNullOrEmpty(userId))
-                    return StatusCode(401, new { error = "Unauthorized" });
+                    return StatusCode(401, new { error = "Неоторизиран" });
 
                 var result = await _supabaseService.ToggleFavoriteByGuidAsync(userId, guid);
                 return Json(new { favorited = result });

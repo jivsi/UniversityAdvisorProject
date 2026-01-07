@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="bg" class="h-full">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -132,15 +132,15 @@
                     </a>
                     
                     <div class="hidden md:flex items-center space-x-6">
-                        <a asp-controller="Home" asp-action="Index" class="nav-link text-sm font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Home</a>
-                        <a asp-controller="University" asp-action="Index" class="nav-link text-sm font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Universities</a>
+                        <a asp-controller="Home" asp-action="Index" class="nav-link text-sm font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Начало</a>
+                        <a asp-controller="University" asp-action="Index" class="nav-link text-sm font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Университети</a>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <a asp-controller="University" asp-action="Favorites" class="nav-link text-sm font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors">My Favorites</a>
+                            <a asp-controller="University" asp-action="Favorites" class="nav-link text-sm font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Моите Любими</a>
                         }
                         @if (User.IsInRole("Admin"))
                         {
-                            <a asp-controller="Admin" asp-action="Index" class="nav-link text-sm font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Admin</a>
+                            <a asp-controller="Admin" asp-action="Index" class="nav-link text-sm font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Админ</a>
                         }
                     </div>
                 </div>
@@ -166,15 +166,15 @@
         <!-- Mobile Menu -->
         <div id="mobileMenu" class="hidden md:hidden border-t border-white/20 dark:border-white/10">
             <div class="px-4 py-4 space-y-3">
-                <a asp-controller="Home" asp-action="Index" class="block nav-link text-sm font-medium">Home</a>
-                <a asp-controller="University" asp-action="Index" class="block nav-link text-sm font-medium">Universities</a>
+                <a asp-controller="Home" asp-action="Index" class="block nav-link text-sm font-medium">Начало</a>
+                <a asp-controller="University" asp-action="Index" class="block nav-link text-sm font-medium">Университети</a>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
-                    <a asp-controller="University" asp-action="Favorites" class="block nav-link text-sm font-medium">My Favorites</a>
+                    <a asp-controller="University" asp-action="Favorites" class="block nav-link text-sm font-medium">Моите Любими</a>
                 }
                 @if (User.IsInRole("Admin"))
                 {
-                    <a asp-controller="Admin" asp-action="Index" class="block nav-link text-sm font-medium">Admin</a>
+                    <a asp-controller="Admin" asp-action="Index" class="block nav-link text-sm font-medium">Админ</a>
                 }
             </div>
         </div>
@@ -189,8 +189,8 @@
     <footer class="border-t border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="text-center text-sm text-gray-600 dark:text-gray-400">
-                <p>&copy; 2025 UniversityFinder. All rights reserved.</p>
-                <a asp-controller="Home" asp-action="Privacy" class="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Privacy Policy</a>
+                <p>&copy; 2025 UniversityFinder. Всички права запазени.</p>
+                <a asp-controller="Home" asp-action="Privacy" class="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Политика за Поверителност</a>
             </div>
         </div>
     </footer>

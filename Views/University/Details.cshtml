@@ -31,7 +31,7 @@
                     >
                         <div class="flex items-center gap-2">
                             <i data-lucide="@(isFavorited ? "star" : "star")" class="w-5 h-5 @(isFavorited ? "fill-current" : "")"></i>
-                            <span id="favoriteText">@(isFavorited ? "Favorited" : "Add to Favorites")</span>
+                            <span id="favoriteText">@(isFavorited ? "В Любими" : "Добави в Любими")</span>
                         </div>
                     </button>
                 }
@@ -46,15 +46,15 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div class="text-center">
                 <div class="text-3xl font-bold gradient-text mb-2">@Model.Programs.Count</div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">Programs</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Програми</div>
             </div>
             <div class="text-center">
-                <div class="text-3xl font-bold gradient-text mb-2">@(Model.Country ?? "Unknown country")</div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">Country</div>
+                <div class="text-3xl font-bold gradient-text mb-2">@(Model.Country ?? "Неизвестна държава")</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Държава</div>
             </div>
             <div class="text-center">
-                <div class="text-3xl font-bold gradient-text mb-2">@(Model.City ?? "Unknown city")</div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">City</div>
+                <div class="text-3xl font-bold gradient-text mb-2">@(Model.City ?? "Неизвестен град")</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Град</div>
             </div>
             <div class="text-center">
                 <div class="flex items-center justify-center gap-1 mb-2">
@@ -63,7 +63,7 @@
                         <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
                     }
                 </div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">Rating</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Рейтинг</div>
             </div>
         </div>
     </div>
@@ -78,10 +78,10 @@
             <div class="mb-8">
                 <div class="flex space-x-1 glass dark:glass-dark rounded-2xl p-2 inline-flex">
                     <button class="tab-btn active px-6 py-3 rounded-xl font-semibold transition-all" data-tab="overview">
-                        Overview
+                        Преглед
                     </button>
                     <button class="tab-btn px-6 py-3 rounded-xl font-semibold transition-all" data-tab="programs">
-                        Programs
+                        Програми
                     </button>
                 </div>
             </div>
@@ -91,16 +91,16 @@
                 <!-- Overview Tab -->
                 <div id="overview" class="tab-panel active">
                     <div class="glass dark:glass-dark rounded-3xl p-8 mb-6">
-                        <h2 class="text-3xl font-bold mb-6">About</h2>
+                        <h2 class="text-3xl font-bold mb-6">За</h2>
                         <p class="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
-                            @Model.Name is located in @Model.City, @Model.Country.
+                            @Model.Name се намира в @Model.City, @Model.Country.
                         </p>
                         
                         <!-- Contact Information -->
                         @if (!string.IsNullOrWhiteSpace(Model.Website) || !string.IsNullOrWhiteSpace(Model.Email) || !string.IsNullOrWhiteSpace(Model.Phone) || !string.IsNullOrWhiteSpace(Model.Address))
                         {
                             <div class="mt-8 pt-8 border-t border-white/10 dark:border-white/5">
-                                <h3 class="text-xl font-bold mb-4">Contact Information</h3>
+                                <h3 class="text-xl font-bold mb-4">Контактна Информация</h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     @if (!string.IsNullOrWhiteSpace(Model.Website))
                                     {
@@ -109,7 +109,7 @@
                                                 <i data-lucide="globe" class="w-5 h-5 text-purple-400"></i>
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Website</div>
+                                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Уебсайт</div>
                                                 <a href="@Model.Website" target="_blank" rel="noopener noreferrer" class="text-purple-400 hover:text-purple-300 hover:underline break-all">
                                                     @Model.Website
                                                 </a>
@@ -124,7 +124,7 @@
                                                 <i data-lucide="mail" class="w-5 h-5 text-blue-400"></i>
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Email</div>
+                                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Имейл</div>
                                                 <a href="mailto:@Model.Email" class="text-blue-400 hover:text-blue-300 hover:underline break-all">
                                                     @Model.Email
                                                 </a>
@@ -139,7 +139,7 @@
                                                 <i data-lucide="phone" class="w-5 h-5 text-green-400"></i>
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Phone</div>
+                                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Телефон</div>
                                                 <a href="tel:@Model.Phone" class="text-green-400 hover:text-green-300 hover:underline">
                                                     @Model.Phone
                                                 </a>
@@ -154,7 +154,7 @@
                                                 <i data-lucide="map-pin" class="w-5 h-5 text-orange-400"></i>
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Address</div>
+                                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Адрес</div>
                                                 <p class="text-gray-700 dark:text-gray-300 break-words">
                                                     @Model.Address
                                                 </p>
@@ -170,7 +170,7 @@
                 <!-- Programs Tab -->
                 <div id="programs" class="tab-panel hidden">
                     <div class="glass dark:glass-dark rounded-3xl p-8">
-                        <h2 class="text-3xl font-bold mb-6">Programs Offered</h2>
+                        <h2 class="text-3xl font-bold mb-6">Предлагани Програми</h2>
                         @if (Model.Programs.Any())
                         {
                             <div class="space-y-4">
@@ -183,7 +183,7 @@
                                                 <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                                                     <span class="flex items-center gap-2">
                                                         <i data-lucide="book-open" class="w-4 h-4"></i>
-                                                        @(program.Subject?.Name ?? "Unknown subject")
+                                                        @(program.Subject?.Name ?? "Неизвестен предмет")
                                                     </span>
                                                     @if (!string.IsNullOrEmpty(program.DegreeType))
                                                     {
@@ -196,7 +196,7 @@
                                                     {
                                                         <span class="flex items-center gap-2">
                                                             <i data-lucide="clock" class="w-4 h-4"></i>
-                                                            @program.Duration months
+                                                            @program.Duration месеца
                                                         </span>
                                                     }
                                                     @if (!string.IsNullOrEmpty(program.Language))
@@ -219,7 +219,7 @@
                         }
                         else
                         {
-                            <p class="text-gray-500 dark:text-gray-400">No programs available.</p>
+                            <p class="text-gray-500 dark:text-gray-400">Няма налични програми.</p>
                         }
                     </div>
                 </div>
@@ -230,18 +230,18 @@
         <!-- Sidebar -->
         <aside class="lg:w-80 flex-shrink-0">
             <div class="glass dark:glass-dark rounded-3xl p-6 sticky top-24">
-                <h3 class="text-xl font-bold mb-6">Quick Info</h3>
+                <h3 class="text-xl font-bold mb-6">Бърза Информация</h3>
                 <div class="space-y-4">
                     <div>
-                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Country</div>
-                        <div class="font-semibold">@(Model.Country ?? "Unknown country")</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Държава</div>
+                        <div class="font-semibold">@(Model.Country ?? "Неизвестна държава")</div>
                     </div>
                     <div>
-                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">City</div>
-                        <div class="font-semibold">@(Model.City ?? "Unknown city")</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Град</div>
+                        <div class="font-semibold">@(Model.City ?? "Неизвестен град")</div>
                     </div>
                     <div>
-                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Programs</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Програми</div>
                         <div class="font-semibold">@Model.Programs.Count</div>
                     </div>
                 </div>
@@ -254,7 +254,7 @@
                         asp-route-Query="@(Model.Country ?? "Bulgaria")" 
                         class="block w-full mt-6 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
                     >
-                        Find More in @(Model.Country ?? "Bulgaria")
+                        Намери Още в @(Model.Country ?? "България")
                     </a>
                 }
             </div>
@@ -306,19 +306,19 @@
                 success: function(response) {
                     if (response.favorited) {
                         btn.removeClass('bg-white/20 border-white/30').addClass('bg-yellow-500');
-                        text.text('Favorited');
+                        text.text('В Любими');
                         icon.attr('data-lucide', 'star');
                         icon.addClass('fill-current');
                     } else {
                         btn.removeClass('bg-yellow-500').addClass('bg-white/20 border-white/30');
-                        text.text('Add to Favorites');
+                        text.text('Добави в Любими');
                         icon.attr('data-lucide', 'star');
                         icon.removeClass('fill-current');
                     }
                     lucide.createIcons();
                 },
                 error: function() {
-                    alert('An error occurred. Please try again.');
+                    alert('Възникна грешка. Моля, опитайте отново.');
                 }
             });
         });

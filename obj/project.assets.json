@@ -877,11 +877,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\defaultuser0\\Desktop\\UniversityAdvisorProject-project-b\\UniversityAdvisorProject-project-b\\UniversityFinder\\UniversityFinder.csproj",
+      "projectUniqueName": "C:\\Users\\defaultuser0\\source\\repos\\UniversityAdvisorProject\\UniversityFinder.csproj",
       "projectName": "UniversityFinder",
-      "projectPath": "C:\\Users\\defaultuser0\\Desktop\\UniversityAdvisorProject-project-b\\UniversityAdvisorProject-project-b\\UniversityFinder\\UniversityFinder.csproj",
+      "projectPath": "C:\\Users\\defaultuser0\\source\\repos\\UniversityAdvisorProject\\UniversityFinder.csproj",
       "packagesPath": "C:\\Users\\defaultuser0\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\defaultuser0\\Desktop\\UniversityAdvisorProject-project-b\\UniversityAdvisorProject-project-b\\UniversityFinder\\obj\\",
+      "outputPath": "C:\\Users\\defaultuser0\\source\\repos\\UniversityAdvisorProject\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -1,24 +1,24 @@
 @model UniversityFinder.ViewModels.SearchViewModel
 @{
-    ViewData["Title"] = "Search Universities";
+    ViewData["Title"] = "Търсене на Университети";
 }
 
 <div class="container">
-    <h2 class="mb-4">Search Universities</h2>
+    <h2 class="mb-4">Търсене на Университети</h2>
 
     @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage as string))
     {
         <div class="alert alert-danger">
-            <h5>Database Error</h5>
+            <h5>Грешка в Базата Данни</h5>
             <p>@ViewBag.ErrorMessage</p>
-            <p>Please apply database migrations by clicking the "Apply Migrations" button on the error page, or run <code>dotnet ef database update</code> in the terminal.</p>
+            <p>Моля, приложете миграциите на базата данни, като кликнете върху бутона "Приложи Миграции" на страницата за грешка, или изпълнете <code>dotnet ef database update</code> в терминала.</p>
         </div>
     }
 
     @if (!string.IsNullOrEmpty(ViewBag.InfoMessage as string))
     {
         <div class="alert alert-info">
-            <h5>Information</h5>
+            <h5>Информация</h5>
             <p>@ViewBag.InfoMessage</p>
         </div>
     }
@@ -27,13 +27,13 @@
         <div class="card-body">
             <form asp-action="Search" method="get" class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">Subject / Field of Study</label>
-                    <input type="text" asp-for="Query" class="form-control" placeholder="e.g., Psychology, Engineering" />
+                    <label class="form-label">Предмет / Специалност</label>
+                    <input type="text" asp-for="Query" class="form-control" placeholder="напр. Психология, Инженерство" />
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Country</label>
+                    <label class="form-label">Държава</label>
                     <select asp-for="CountryId" class="form-select" id="countrySelect">
-                        <option value="">All Countries</option>
+                        <option value="">Всички Държави</option>
                         @foreach (var country in Model.Countries)
                         {
                             <option value="@country.Id">@country.Name</option>
@@ -41,23 +41,23 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">City</label>
+                    <label class="form-label">Град</label>
                     <select asp-for="CityId" class="form-select" id="citySelect">
-                        <option value="">All Cities</option>
+                        <option value="">Всички Градове</option>
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Degree Type</label>
+                    <label class="form-label">Степен</label>
                     <select asp-for="DegreeType" class="form-select">
-                        <option value="">All</option>
-                        <option value="Bachelor">Bachelor</option>
-                        <option value="Master">Master</option>
-                        <option value="PhD">PhD</option>
+                        <option value="">Всички</option>
+                        <option value="Bachelor">Бакалавър</option>
+                        <option value="Master">Магистър</option>
+                        <option value="PhD">Доктор</option>
                     </select>
                 </div>
                 <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Search</button>
-                    <a asp-action="Search" class="btn btn-secondary">Clear</a>
+                    <button type="submit" class="btn btn-primary">Търсене</button>
+                    <a asp-action="Search" class="btn btn-secondary">Изчисти</a>
                 </div>
             </form>
         </div>
@@ -66,7 +66,7 @@
     @if (!string.IsNullOrWhiteSpace(Model.Query))
     {
         <div class="mb-3">
-            <p class="text-muted">Found <strong>@Model.TotalResults</strong> universities matching your search.</p>
+            <p class="text-muted">Намерени <strong>@Model.TotalResults</strong> университета, отговарящи на вашето търсене.</p>
         </div>
 
         @if (Model.Universities.Any())
@@ -83,12 +83,12 @@
                                     </a>
                                 </h5>
                                 <p class="card-text">
-                                    <i class="bi bi-geo-alt"></i> @(university.City ?? "Unknown city"), @(university.Country ?? "Unknown country")
+                                    <i class="bi bi-geo-alt"></i> @(university.City ?? "Неизвестен град"), @(university.Country ?? "Неизвестна държава")
                                 </p>
                                 @if (university.Programs.Any())
                                 {
                                     <div class="mb-2">
-                                        <strong>Programs:</strong>
+                                        <strong>Програми:</strong>
                                         <ul class="list-unstyled ms-3">
                                             @foreach (var program in university.Programs.Take(3))
                                             {
@@ -96,12 +96,12 @@
                                             }
                                             @if (university.Programs.Count > 3)
                                             {
-                                                <li class="text-muted">... and @(university.Programs.Count - 3) more</li>
+                                                <li class="text-muted">... и още @(university.Programs.Count - 3)</li>
                                             }
                                         </ul>
                                     </div>
                                 }
-                                <a asp-action="Details" asp-route-name="@university.Name" class="btn btn-sm btn-outline-primary">View Details</a>
+                                <a asp-action="Details" asp-route-name="@university.Name" class="btn btn-sm btn-outline-primary">Виж Детайли</a>
                             </div>
                         </div>
                     </div>
@@ -110,21 +110,21 @@
 
             @if (Model.TotalResults > Model.PageSize)
             {
-                <nav aria-label="Search results pagination">
+                <nav aria-label="Странициране на резултатите от търсенето">
                     <ul class="pagination justify-content-center">
                         @if (Model.Page > 1)
                         {
                             <li class="page-item">
-                                <a class="page-link" href="?Query=@Model.Query&CountryId=@Model.CountryId&CityId=@Model.CityId&DegreeType=@Model.DegreeType&Page=@(Model.Page - 1)">Previous</a>
+                                <a class="page-link" href="?Query=@Model.Query&CountryId=@Model.CountryId&CityId=@Model.CityId&DegreeType=@Model.DegreeType&Page=@(Model.Page - 1)">Предишна</a>
                             </li>
                         }
                         <li class="page-item active">
-                            <span class="page-link">Page @Model.Page</span>
+                            <span class="page-link">Страница @Model.Page</span>
                         </li>
                         @if (Model.Page * Model.PageSize < Model.TotalResults)
                         {
                             <li class="page-item">
-                                <a class="page-link" href="?Query=@Model.Query&CountryId=@Model.CountryId&CityId=@Model.CityId&DegreeType=@Model.DegreeType&Page=@(Model.Page + 1)">Next</a>
+                                <a class="page-link" href="?Query=@Model.Query&CountryId=@Model.CountryId&CityId=@Model.CityId&DegreeType=@Model.DegreeType&Page=@(Model.Page + 1)">Следваща</a>
                             </li>
                         }
                     </ul>
@@ -134,17 +134,17 @@
         else
         {
             <div class="alert alert-info">
-                <h5>No universities found</h5>
-                <p>Try adjusting your search criteria or browse all universities.</p>
-                <a asp-action="Index" class="btn btn-primary">Browse All Universities</a>
+                <h5>Не са намерени университети</h5>
+                <p>Опитайте се да промените критериите за търсене или разгледайте всички университети.</p>
+                <a asp-action="Index" class="btn btn-primary">Разгледай Всички Университети</a>
             </div>
         }
     }
     else
     {
         <div class="alert alert-info">
-            <h5>Start Your Search</h5>
-            <p>Enter a subject or field of study to find universities that offer programs in that area.</p>
+            <h5>Започнете Търсенето</h5>
+            <p>Въведете предмет или специалност, за да намерите университети, които предлагат програми в тази област.</p>
         </div>
     }
 </div>
@@ -156,17 +156,17 @@
                 var countryId = $(this).val();
                 var citySelect = $('#citySelect');
                 
-                citySelect.html('<option value="">Loading...</option>');
+                citySelect.html('<option value="">Зареждане...</option>');
                 
                 if (countryId) {
                     $.getJSON('@Url.Action("GetCities", "University")', { countryId: countryId }, function(cities) {
-                        citySelect.html('<option value="">All Cities</option>');
+                        citySelect.html('<option value="">Всички Градове</option>');
                         $.each(cities, function(i, city) {
                             citySelect.append($('<option></option>').val(city.id).text(city.name));
                         });
                     });
                 } else {
-                    citySelect.html('<option value="">All Cities</option>');
+                    citySelect.html('<option value="">Всички Градове</option>');
                 }
             });
         });

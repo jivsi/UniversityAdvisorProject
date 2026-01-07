@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "HEI Sync Dashboard";
+    ViewData["Title"] = "Табло за Синхронизация на HEI";
     var programsStatus = ViewBag.ProgramsStatus as UniversityFinder.Models.SyncStatus;
 }
 
@@ -7,8 +7,8 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
         <div class="mb-12">
-            <h1 class="text-4xl md:text-5xl font-bold font-display mb-4 gradient-text">HEI API Synchronization</h1>
-            <p class="text-xl text-gray-600 dark:text-gray-400">Manage university data synchronization</p>
+            <h1 class="text-4xl md:text-5xl font-bold font-display mb-4 gradient-text">Синхронизация на HEI API</h1>
+            <p class="text-xl text-gray-600 dark:text-gray-400">Управление на синхронизацията на данни за университети</p>
         </div>
         
         <!-- Alert Messages -->
@@ -47,9 +47,9 @@
                     <div class="w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
                         <i data-lucide="building-2" class="w-8 h-8 text-white"></i>
                     </div>
-                    <h2 class="text-2xl font-bold mb-3">Sync from RVU (NACID)</h2>
+                    <h2 class="text-2xl font-bold mb-3">Синхронизация от РВУ (НАЦИД)</h2>
                     <p class="text-gray-600 dark:text-gray-400 mb-6">
-                        Fetch and sync accredited Bulgarian universities from the official RVU (NACID) register. This is the primary data source for Bulgarian universities.
+                        Изтегляне и синхронизиране на акредитирани български университети от официалния регистър на РВУ (НАЦИД). Това е основният източник на данни за българските университети.
                     </p>
                     <form asp-action="SyncFromRvu" method="post">
                         @Html.AntiForgeryToken()
@@ -58,7 +58,7 @@
                             class="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center gap-2"
                         >
                             <i data-lucide="download" class="w-5 h-5"></i>
-                            Sync Universities from RVU
+                            Синхронизирай Университети от РВУ
                         </button>
                     </form>
                 </div>
@@ -70,9 +70,9 @@
                     <div class="w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
                         <i data-lucide="building-2" class="w-8 h-8 text-white"></i>
                     </div>
-                    <h2 class="text-2xl font-bold mb-3">Sync Universities (Legacy)</h2>
+                    <h2 class="text-2xl font-bold mb-3">Синхронизация на Университети (Остаряло)</h2>
                     <p class="text-gray-600 dark:text-gray-400 mb-6">
-                        <span class="text-red-500 font-semibold">DEPRECATED:</span> HEI API sync is no longer available. Please use RVU (NACID) data source instead.
+                        <span class="text-red-500 font-semibold">ОСТАРЯЛО:</span> Синхронизацията на HEI API вече не е налична. Моля, използвайте източника на данни РВУ (НАЦИД) вместо това.
                     </p>
                     <form asp-action="SyncUniversities" method="post">
                         @Html.AntiForgeryToken()
@@ -82,7 +82,7 @@
                             disabled
                         >
                             <i data-lucide="x-circle" class="w-5 h-5"></i>
-                            Deprecated
+                            Остаряло
                         </button>
                     </form>
                 </div>
@@ -93,9 +93,9 @@
                 <div class="glass dark:glass-dark rounded-3xl p-8">
                     <div class="flex items-center justify-between mb-6">
                         <div>
-                            <h2 class="text-2xl font-bold mb-2">Sync Programs & Subjects</h2>
+                            <h2 class="text-2xl font-bold mb-2">Синхронизация на Програми и Предмети</h2>
                             <p class="text-gray-600 dark:text-gray-400">
-                                Fetch and sync programs and subjects for all universities
+                                Изтегляне и синхронизиране на програми и предмети за всички университети
                             </p>
                         </div>
                         <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
@@ -107,21 +107,21 @@
                     <div id="syncStatusCard" class="mb-6 glass dark:glass-dark rounded-2xl p-6">
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center gap-3">
-                                <span class="text-lg font-semibold">Sync Status:</span>
+                                <span class="text-lg font-semibold">Статус на Синхронизация:</span>
                                 <span id="statusBadge" class="px-4 py-1 rounded-full text-sm font-semibold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-                                    Loading...
+                                    Зареждане...
                                 </span>
                             </div>
                         </div>
                         
                         <div id="statusMessage" class="text-gray-600 dark:text-gray-400 mb-4 text-sm">
-                            Loading status...
+                            Зареждане на статус...
                         </div>
                         
                         <!-- Progress Bar -->
                         <div id="statusProgress" class="mb-4" style="display: none;">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-medium">Progress</span>
+                                <span class="text-sm font-medium">Напредък</span>
                                 <span id="progressText" class="text-sm font-bold">0%</span>
                             </div>
                             <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
@@ -136,25 +136,25 @@
                         <!-- Stats Grid -->
                         <div id="statusDetails" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
-                                <div class="text-gray-500 dark:text-gray-400 mb-1">Total</div>
+                                <div class="text-gray-500 dark:text-gray-400 mb-1">Общо</div>
                                 <div id="totalItems" class="text-2xl font-bold gradient-text">-</div>
                             </div>
                             <div>
-                                <div class="text-gray-500 dark:text-gray-400 mb-1">Processed</div>
+                                <div class="text-gray-500 dark:text-gray-400 mb-1">Обработени</div>
                                 <div id="processedItems" class="text-2xl font-bold gradient-text">-</div>
                             </div>
                             <div>
-                                <div class="text-green-600 dark:text-green-400 mb-1">Success</div>
+                                <div class="text-green-600 dark:text-green-400 mb-1">Успешни</div>
                                 <div id="successCount" class="text-2xl font-bold text-green-600 dark:text-green-400">-</div>
                             </div>
                             <div>
-                                <div class="text-red-600 dark:text-red-400 mb-1">Errors</div>
+                                <div class="text-red-600 dark:text-red-400 mb-1">Грешки</div>
                                 <div id="errorCount" class="text-2xl font-bold text-red-600 dark:text-red-400">-</div>
                             </div>
                         </div>
                         
                         <div class="mt-4 text-xs text-gray-500 dark:text-gray-400">
-                            Last sync: <span id="syncTime">Never</span>
+                            Последна синхронизация: <span id="syncTime">Никога</span>
                         </div>
                     </div>
                     
@@ -167,7 +167,7 @@
                             class="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                             disabled
                         >
-                            <span id="buttonText">Sync Programs from HEI API</span>
+                            <span id="buttonText">Синхронизирай Програми от HEI API</span>
                             <span id="buttonSpinner" class="hidden">
                                 <i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
                             </span>
@@ -198,14 +198,14 @@
                     
                     // Update badge
                     if (data.isRunning) {
-                        statusBadge.textContent = 'Running';
+                        statusBadge.textContent = 'В Изпълнение';
                         statusBadge.className = 'px-4 py-1 rounded-full text-sm font-semibold bg-blue-500 text-white animate-pulse';
                         syncButton.disabled = true;
-                        buttonText.textContent = 'Sync in Progress...';
+                        buttonText.textContent = 'Синхронизацията е в процес...';
                         buttonSpinner.classList.remove('hidden');
                         statusProgress.style.display = 'block';
                     } else {
-                        statusBadge.textContent = data.status;
+                        statusBadge.textContent = data.status === 'Completed' ? 'Завършена' : data.status === 'Failed' ? 'Неуспешна' : data.status === 'Idle' ? 'Неактивна' : data.status;
                         if (data.status === 'Completed') {
                             statusBadge.className = 'px-4 py-1 rounded-full text-sm font-semibold bg-green-500 text-white';
                         } else if (data.status === 'Failed') {
@@ -214,7 +214,7 @@
                             statusBadge.className = 'px-4 py-1 rounded-full text-sm font-semibold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
                         }
                         syncButton.disabled = false;
-                        buttonText.textContent = 'Sync Programs from HEI API';
+                        buttonText.textContent = 'Синхронизирай Програми от HEI API';
                         buttonSpinner.classList.add('hidden');
                         statusProgress.style.display = 'block';
                         
@@ -225,7 +225,7 @@
                     }
                     
                     // Update message
-                    statusMessage.textContent = data.message || 'No message available';
+                    statusMessage.textContent = data.message || 'Няма налично съобщение';
                     
                     // Update progress
                     const progress = Math.min(100, data.progressPercent || 0);
@@ -243,7 +243,7 @@
                         const syncTime = new Date(data.lastSyncTime);
                         document.getElementById('syncTime').textContent = syncTime.toLocaleString();
                     } else {
-                        document.getElementById('syncTime').textContent = 'Never';
+                        document.getElementById('syncTime').textContent = 'Никога';
                     }
                     
                     // Stop checking if not running
@@ -253,7 +253,7 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching sync status:', error);
+                    console.error('Грешка при извличане на статуса на синхронизация:', error);
                 });
         }
         

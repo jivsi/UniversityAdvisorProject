@@ -65,7 +65,7 @@ namespace UniversityFinder.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            ModelState.AddModelError("", errorMessage ?? "Invalid email or password.");
+            ModelState.AddModelError("", errorMessage ?? "Невалиден имейл или парола.");
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
@@ -83,21 +83,21 @@ namespace UniversityFinder.Controllers
         {
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
-                ModelState.AddModelError("", "Email and password are required.");
+                ModelState.AddModelError("", "Имейл и парола са задължителни.");
                 ViewData["ReturnUrl"] = returnUrl;
                 return View();
             }
 
             if (password != confirmPassword)
             {
-                ModelState.AddModelError("", "Passwords do not match.");
+                ModelState.AddModelError("", "Паролите не съвпадат.");
                 ViewData["ReturnUrl"] = returnUrl;
                 return View();
             }
 
             if (password.Length < 6)
             {
-                ModelState.AddModelError("", "Password must be at least 6 characters long.");
+                ModelState.AddModelError("", "Паролата трябва да бъде поне 6 символа.");
                 ViewData["ReturnUrl"] = returnUrl;
                 return View();
             }
@@ -107,11 +107,11 @@ namespace UniversityFinder.Controllers
             if (success && user != null)
             {
                 _logger.LogInformation("✅ User registered: {Email}", email);
-                TempData["SuccessMessage"] = "Registration successful! Please log in.";
+                TempData["SuccessMessage"] = "Регистрацията е успешна! Моля, влезте в системата.";
                 return RedirectToAction("Login", new { returnUrl });
             }
 
-            ModelState.AddModelError("", errorMessage ?? "Registration failed. Please try again.");
+            ModelState.AddModelError("", errorMessage ?? "Регистрацията е неуспешна. Моля, опитайте отново.");
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }

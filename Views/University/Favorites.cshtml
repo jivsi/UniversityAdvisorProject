@@ -1,21 +1,21 @@
 @model List<UniversityFinder.Models.University>
 @{
-    ViewData["Title"] = "My Favorites";
+    ViewData["Title"] = "Моите Любими";
 }
 
 <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
         <div class="mb-12">
-            <h1 class="text-4xl md:text-5xl font-bold font-display mb-4 gradient-text">My Favorite Universities</h1>
+            <h1 class="text-4xl md:text-5xl font-bold font-display mb-4 gradient-text">Моите Любими Университети</h1>
             <p class="text-xl text-gray-600 dark:text-gray-400">
                 @if (Model.Any())
                 {
-                    <span>You have <span class="font-bold text-gray-900 dark:text-white">@Model.Count</span> favorite @(Model.Count == 1 ? "university" : "universities")</span>
+                    <span>Имате <span class="font-bold text-gray-900 dark:text-white">@Model.Count</span> любим @(Model.Count == 1 ? "университет" : "университета")</span>
                 }
                 else
                 {
-                    <span>Start exploring and add universities to your favorites</span>
+                    <span>Започнете да разглеждате и добавяйте университети в любими</span>
                 }
             </p>
         </div>
@@ -36,7 +36,7 @@
                             <button 
                                 class="absolute top-4 right-4 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-red-500/80 transition-all remove-favorite-btn"
                                 data-university-name="@university.Name"
-                                title="Remove from favorites"
+                                title="Премахни от любими"
                             >
                                 <i data-lucide="x" class="w-5 h-5 text-white"></i>
                             </button>
@@ -52,13 +52,13 @@
                             
                             <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-4">
                                 <i data-lucide="map-pin" class="w-4 h-4"></i>
-                                <span class="text-sm">@(university.City ?? "Unknown city"), @(university.Country ?? "Unknown country")</span>
+                                <span class="text-sm">@(university.City ?? "Неизвестен град"), @(university.Country ?? "Неизвестна държава")</span>
                             </div>
                             
                             <!-- Programs Count -->
                             <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-6">
                                 <i data-lucide="book-open" class="w-4 h-4"></i>
-                                <span>@university.Programs.Count programs</span>
+                                <span>@university.Programs.Count програми</span>
                             </div>
                             
                             <!-- Action Button -->
@@ -67,7 +67,7 @@
                                 asp-route-name="@university.Name" 
                                 class="block w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
                             >
-                                View Details
+                                Виж Детайли
                             </a>
                         </div>
                     </div>
@@ -81,9 +81,9 @@
                 <div class="w-32 h-32 mx-auto mb-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                     <i data-lucide="heart" class="w-16 h-16 text-white"></i>
                 </div>
-                <h3 class="text-3xl font-bold mb-4">No favorites yet</h3>
+                <h3 class="text-3xl font-bold mb-4">Все още няма любими</h3>
                 <p class="text-gray-600 dark:text-gray-400 mb-8 text-lg">
-                    Start exploring universities and add them to your favorites to see them here.
+                    Започнете да разглеждате университети и ги добавете в любими, за да ги видите тук.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <a 
@@ -93,7 +93,7 @@
                     >
                         <div class="flex items-center gap-2">
                             <i data-lucide="search" class="w-5 h-5"></i>
-                            Search Universities
+                            Търсене на Университети
                         </div>
                     </a>
                     <a 
@@ -103,7 +103,7 @@
                     >
                         <div class="flex items-center gap-2">
                             <i data-lucide="building-2" class="w-5 h-5"></i>
-                            Browse All
+                            Разгледай Всички
                         </div>
                     </a>
                 </div>
@@ -155,7 +155,7 @@
                             // Restore card on error
                             card.style.opacity = '1';
                             card.style.transform = 'scale(1)';
-                            alert('Failed to remove favorite. Please try again.');
+                            alert('Неуспешно премахване от любими. Моля, опитайте отново.');
                         }
                     });
                 }, 300);

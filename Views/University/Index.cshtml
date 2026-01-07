@@ -1,14 +1,14 @@
 @model UniversityFinder.ViewModels.UniversityIndexViewModel
 @{
-    ViewData["Title"] = "All Universities";
+    ViewData["Title"] = "Всички Университети";
 }
 
 <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
     <!-- Header Section -->
     <div class="bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 py-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h1 class="text-4xl md:text-5xl font-bold font-display text-white mb-4">Accredited Universities in Bulgaria</h1>
-            <p class="text-xl text-white/90">Official data from NACID Register of Higher Education Institutions</p>
+            <h1 class="text-4xl md:text-5xl font-bold font-display text-white mb-4">Акредитирани Университети в България</h1>
+            <p class="text-xl text-white/90">Официални данни от Регистъра на Висшите Учебни Заведения на НАЦИД</p>
         </div>
     </div>
     
@@ -19,21 +19,21 @@
                 <div class="glass dark:glass-dark rounded-3xl p-6 sticky top-24">
                     <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
                         <i data-lucide="filter" class="w-5 h-5"></i>
-                        Filters
+                        Филтри
                     </h2>
                     
                     <div class="space-y-6">
                         <!-- Search -->
                         <form method="get" action="@Url.Action("Index")" id="filterForm">
                             <div>
-                                <label class="block text-sm font-medium mb-2">Search</label>
+                                <label class="block text-sm font-medium mb-2">Търсене</label>
                                 <div class="relative">
                                     <input 
                                         type="text" 
                                         name="search"
                                         id="searchInput"
                                         value="@Model.Search"
-                                        placeholder="Search universities..."
+                                        placeholder="Търсене на университети..."
                                         class="w-full pl-10 pr-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                         autocomplete="off"
                                     />
@@ -44,13 +44,13 @@
                             
                             <!-- City Filter -->
                             <div>
-                                <label class="block text-sm font-medium mb-2">City</label>
+                                <label class="block text-sm font-medium mb-2">Град</label>
                                 <select 
                                     name="city" 
                                     id="cityFilter"
                                     class="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                 >
-                                    <option value="">All Cities</option>
+                                    <option value="">Всички Градове</option>
                                     @foreach (var city in Model.Cities)
                                     {
                                         <option value="@city" selected="@(Model.SelectedCity == city)">@city</option>
@@ -62,14 +62,14 @@
                                 type="submit"
                                 class="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all mt-4"
                             >
-                                Apply Filters
+                                Приложи Филтри
                             </button>
                             
                             <a 
                                 href="@Url.Action("Index")"
                                 class="block w-full px-4 py-2 text-center text-sm text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors mt-2"
                             >
-                                Clear Filters
+                                Изчисти Филтри
                             </a>
                         </form>
                     </div>
@@ -82,7 +82,7 @@
                 {
                     <div class="mb-6 flex items-center justify-between">
                         <p class="text-gray-600 dark:text-gray-400">
-                            Showing <span class="font-semibold text-gray-900 dark:text-white">@Model.Universities.Count</span> universities
+                            Показване на <span class="font-semibold text-gray-900 dark:text-white">@Model.Universities.Count</span> университета
                         </p>
                         <div class="flex items-center gap-2">
                             <button class="p-2 rounded-lg hover:bg-white/10">
@@ -112,7 +112,7 @@
                                             type="button"
                                             class="favorite-btn absolute top-4 right-4 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all z-10 @(isFavorited ? "favorited" : "")"
                                             data-university-id="@university.Id.Value"
-                                            title="@(isFavorited ? "Remove from favorites" : "Add to favorites")"
+                                            title="@(isFavorited ? "Премахни от любими" : "Добави в любими")"
                                             style="z-index: 10; cursor: pointer;"
                                         >
                                             <i data-lucide="heart" class="w-5 h-5 @(isFavorited ? "fill-current text-red-500" : "text-white")"></i>
@@ -134,7 +134,7 @@
                                     
                                     <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-4">
                                         <i data-lucide="map-pin" class="w-4 h-4"></i>
-                                        <span class="text-sm">@(university.City ?? "Unknown city"), @(university.Country ?? "Unknown country")</span>
+                                        <span class="text-sm">@(university.City ?? "Неизвестен град"), @(university.Country ?? "Неизвестна държава")</span>
                                     </div>
                                     
                                     <!-- Rating Badge -->
@@ -151,7 +151,7 @@
                                     <!-- Programs Count -->
                                     <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
                                         <i data-lucide="book-open" class="w-4 h-4"></i>
-                                        <span>@university.Programs.Count programs</span>
+                                        <span>@university.Programs.Count програми</span>
                                     </div>
                                     
                                     <!-- Action Button -->
@@ -160,7 +160,7 @@
                                         asp-route-name="@university.Name" 
                                         class="block w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
                                     >
-                                        View Details
+                                        Виж Детайли
                                     </a>
                                 </div>
                             </div>
@@ -173,16 +173,16 @@
                         <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                             <i data-lucide="building-2" class="w-12 h-12 text-white"></i>
                         </div>
-                        <h3 class="text-2xl font-bold mb-3">No universities found</h3>
+                        <h3 class="text-2xl font-bold mb-3">Не са намерени университети</h3>
                         <p class="text-gray-600 dark:text-gray-400 mb-6">
-                            Universities will appear here once they are synced from the HEI API.
+                            Университетите ще се появят тук, след като бъдат синхронизирани от API-то.
                         </p>
                         <a 
                             asp-controller="Home" 
                             asp-action="Index" 
                             class="inline-block px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
                         >
-                            Go to Home
+                            Към Началото
                         </a>
                     </div>
                 }
@@ -236,7 +236,7 @@
                         autocompleteResults.classList.add('hidden');
                     }
                 } catch (error) {
-                    console.error('Autocomplete error:', error);
+                    console.error('Грешка при автодопълване:', error);
                     autocompleteResults.classList.add('hidden');
                 }
             }, 300);
@@ -264,19 +264,25 @@
                 
                 const universityId = btn.dataset.universityId;
                 if (!universityId) {
-                    console.error('University ID not found');
-                    alert('Error: University ID not found');
+                    console.error('ID на университета не е намерено');
+                    alert('Грешка: ID на университета не е намерено');
                     return;
                 }
                 
                 const icon = btn.querySelector('i');
                 if (!icon) {
-                    console.error('Icon element not found');
+                    console.error('Елементът икона не е намерен');
                     return;
                 }
                 
                 // Disable button during request
                 btn.disabled = true;
+                
+                // Add pulse animation
+                btn.style.animation = 'none';
+                setTimeout(() => {
+                    btn.style.animation = 'heartbeat 0.6s ease-in-out';
+                }, 10);
                 
                 fetch('@Url.Action("ToggleFavoriteByGuid", "University")', {
                     method: 'POST',
@@ -296,14 +302,21 @@
                 .then(data => {
                     if (data && typeof data.favorited !== 'undefined') {
                         if (data.favorited) {
+                            // Animate favorite add
+                            btn.classList.add('favorite-added');
                             icon.classList.add('fill-current', 'text-red-500');
                             icon.classList.remove('text-white');
-                            btn.title = 'Remove from favorites';
+                            btn.title = 'Премахни от любими';
                             btn.classList.add('favorited');
+                            
+                            // Add sparkle effect
+                            createSparkles(btn);
                         } else {
+                            // Animate favorite remove
+                            btn.classList.remove('favorite-added');
                             icon.classList.remove('fill-current', 'text-red-500');
                             icon.classList.add('text-white');
-                            btn.title = 'Add to favorites';
+                            btn.title = 'Добави в любими';
                             btn.classList.remove('favorited');
                         }
                         lucide.createIcons();
@@ -312,13 +325,39 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error toggling favorite:', error);
-                    alert('An error occurred: ' + error.message);
+                    console.error('Грешка при промяна на любими:', error);
+                    alert('Възникна грешка: ' + error.message);
                 })
                 .finally(() => {
                     btn.disabled = false;
                 });
             });
+            
+            // Sparkle animation function
+            function createSparkles(button) {
+                const sparkles = 12;
+                const rect = button.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                for (let i = 0; i < sparkles; i++) {
+                    const sparkle = document.createElement('div');
+                    sparkle.className = 'sparkle';
+                    sparkle.style.left = centerX + 'px';
+                    sparkle.style.top = centerY + 'px';
+                    document.body.appendChild(sparkle);
+                    
+                    const angle = (i / sparkles) * Math.PI * 2;
+                    const distance = 50 + Math.random() * 30;
+                    const x = Math.cos(angle) * distance;
+                    const y = Math.sin(angle) * distance;
+                    
+                    sparkle.style.setProperty('--end-x', x + 'px');
+                    sparkle.style.setProperty('--end-y', y + 'px');
+                    
+                    setTimeout(() => sparkle.remove(), 800);
+                }
+            }
         });
     </script>
 }

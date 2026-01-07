@@ -1,21 +1,21 @@
 <div class="chatbot-container">
-    <button id="chatbotToggle" class="btn btn-primary chatbot-toggle" title="Open AI Assistant">
+    <button id="chatbotToggle" class="btn btn-primary chatbot-toggle" title="Отвори AI Асистент">
         <i class="bi bi-chat-dots"></i>
     </button>
 
     <div id="chatbotPanel" class="chatbot-panel" style="display: none;">
         <div class="chatbot-header">
-            <h5>AI Assistant - Cost of Living</h5>
+            <h5>AI Асистент - Разходи за Живот</h5>
             <button id="chatbotClose" class="btn btn-sm btn-close"></button>
         </div>
         <div id="chatbotMessages" class="chatbot-messages">
             <div class="message bot-message">
-                <p>Hello! I can help you with information about living costs and expenses in European cities. What would you like to know?</p>
+                <p>Здравейте! Мога да ви помогна с информация за разходите за живот в европейски градове. Какво бихте искали да знаете?</p>
             </div>
         </div>
         <div class="chatbot-input">
-            <input type="text" id="chatbotInput" class="form-control" placeholder="Ask about living costs..." />
-            <button id="chatbotSend" class="btn btn-primary">Send</button>
+            <input type="text" id="chatbotInput" class="form-control" placeholder="Попитайте за разходите за живот..." />
+            <button id="chatbotSend" class="btn btn-primary">Изпрати</button>
         </div>
     </div>
 </div>
@@ -160,7 +160,7 @@
 
             addMessage(message, true);
             $input.val('');
-            $send.prop('disabled', true).text('Sending...');
+            $send.prop('disabled', true).text('Изпращане...');
 
             $.ajax({
                 url: '/api/chat/message',
@@ -171,23 +171,23 @@
                     if (response && response.response) {
                         addMessage(response.response, false);
                     } else {
-                        addMessage('I received your message, but got an unexpected response format.', false);
+                        addMessage('Получих вашето съобщение, но получих неочакван формат на отговор.', false);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Chatbot error:', status, error);
-                    var errorMsg = 'Sorry, I encountered an error. ';
+                    console.error('Грешка в чатбота:', status, error);
+                    var errorMsg = 'Съжалявам, възникна грешка. ';
                     if (xhr.status === 401) {
-                        errorMsg += 'Please make sure you are logged in.';
+                        errorMsg += 'Моля, уверете се, че сте влезли в системата.';
                     } else if (xhr.status === 500) {
-                        errorMsg += 'The server encountered an error. Please check if the AI API key is configured.';
+                        errorMsg += 'Сървърът срещна грешка. Моля, проверете дали API ключът на AI е конфигуриран.';
                     } else {
-                        errorMsg += 'Please try again later.';
+                        errorMsg += 'Моля, опитайте отново по-късно.';
                     }
                     addMessage(errorMsg, false);
                 },
                 complete: function() {
-                    $send.prop('disabled', false).text('Send');
+                    $send.prop('disabled', false).text('Изпрати');
                     $input.focus();
                 }
             });

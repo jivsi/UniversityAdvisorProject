@@ -309,7 +309,7 @@ namespace UniversityFinder.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&universityId=eq.{universityId}&select=id");
+                var response = await _httpClient.GetAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&UniversityId=eq.{universityId}&select=Id");
                 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -337,7 +337,7 @@ namespace UniversityFinder.Services
             try
             {
                 var guidString = universityId.ToString();
-                var response = await _httpClient.GetAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&universityId=eq.{guidString}&select=id");
+                var response = await _httpClient.GetAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&UniversityId=eq.{guidString}&select=Id");
                 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -368,7 +368,7 @@ namespace UniversityFinder.Services
 
                 if (exists)
                 {
-                    var deleteResponse = await _httpClient.DeleteAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&universityId=eq.{universityId}");
+                    var deleteResponse = await _httpClient.DeleteAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&UniversityId=eq.{universityId}");
                     if (!deleteResponse.IsSuccessStatusCode)
                     {
                         var errorBody = await deleteResponse.Content.ReadAsStringAsync();
@@ -425,7 +425,7 @@ namespace UniversityFinder.Services
 
                 if (exists)
                 {
-                    var deleteResponse = await _httpClient.DeleteAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&universityId=eq.{guidString}");
+                    var deleteResponse = await _httpClient.DeleteAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&UniversityId=eq.{guidString}");
                     if (!deleteResponse.IsSuccessStatusCode)
                     {
                         var errorBody = await deleteResponse.Content.ReadAsStringAsync();
@@ -473,12 +473,84 @@ namespace UniversityFinder.Services
         {
             try
             {
-                // Fetch user favorites without nested university to avoid deserialization issues
-                var response = await _httpClient.GetAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&select=universityId");
+                // Use foreign key relationship to join University data directly
+                // PostgREST syntax: select=universities(*) uses the foreign key relationship
+                // The relationship name matches the table name (lowercase plural)
+                var response = await _httpClient.GetAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&select=universities(*)");
                 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("Failed to fetch user favorites: {Status}", response.StatusCode);
+                    var errorBody = await response.Content.ReadAsStringAsync();
+                    _logger.LogWarning("Foreign key relationship join failed (Status: {Status}), falling back to manual fetch. Error: {Body}", response.StatusCode, errorBody);
+                    return await GetUserFavoritesFallbackAsync(userId);
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                
+                if (string.IsNullOrWhiteSpace(json) || json == "[]")
+                    return new List<University>();
+
+                // Parse nested JSON structure: [{ "universities": {...} }, ...]
+                using var doc = JsonDocument.Parse(json);
+                var universities = new List<University>();
+                
+                foreach (var element in doc.RootElement.EnumerateArray())
+                {
+                    // Extract the nested universities object from each UserFavorites record
+                    // PostgREST returns the relationship name matching the table name (lowercase plural)
+                    JsonElement? universityElement = null;
+                    foreach (var prop in element.EnumerateObject())
+                    {
+                        if (string.Equals(prop.Name, "universities", StringComparison.OrdinalIgnoreCase))
+                        {
+                            universityElement = prop.Value;
+                            break;
+                        }
+                    }
+
+                    if (universityElement.HasValue && universityElement.Value.ValueKind != System.Text.Json.JsonValueKind.Null)
+                    {
+                        try
+                        {
+                            var universityJson = universityElement.Value.GetRawText();
+                            var university = JsonSerializer.Deserialize<University>(universityJson, JsonOptions());
+                            if (university != null && university.Id.HasValue)
+                                universities.Add(university);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Failed to deserialize University from favorite");
+                        }
+                    }
+                }
+
+                if (universities.Count == 0)
+                {
+                    _logger.LogWarning("Foreign key relationship returned empty results, falling back to manual fetch");
+                    return await GetUserFavoritesFallbackAsync(userId);
+                }
+
+                _logger.LogInformation("✅ Loaded {Count} favorite universities for user {UserId} using foreign key relationship", universities.Count, userId);
+                return universities;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching user favorites for userId: {UserId}, falling back to manual fetch", userId);
+                return await GetUserFavoritesFallbackAsync(userId);
+            }
+        }
+
+        private async Task<List<University>> GetUserFavoritesFallbackAsync(string userId)
+        {
+            try
+            {
+                // Fallback: fetch university IDs first, then fetch each university
+                // PostgREST requires exact column name matching - try with * and parse all fields
+                var response = await _httpClient.GetAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&select=*");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Failed to fetch user favorite IDs: {Status}", response.StatusCode);
                     return new List<University>();
                 }
 
@@ -487,29 +559,12 @@ namespace UniversityFinder.Services
                 if (string.IsNullOrWhiteSpace(json) || json == "[]")
                     return new List<University>();
 
-                // Parse JSON manually to extract universityId values
-                using var doc = JsonDocument.Parse(json);
-                var universityIds = new List<Guid>();
-                
-                foreach (var element in doc.RootElement.EnumerateArray())
-                {
-                    if (element.TryGetProperty("universityId", out var idProp))
-                    {
-                        // Handle both string (Guid) and number (int) formats
-                        if (idProp.ValueKind == System.Text.Json.JsonValueKind.String)
-                        {
-                            if (Guid.TryParse(idProp.GetString(), out var guid))
-                                universityIds.Add(guid);
-                        }
-                        else if (idProp.ValueKind == System.Text.Json.JsonValueKind.Number)
-                        {
-                            // If UniversityId is stored as int but University.Id is Guid,
-                            // we can't directly map them. Log warning and skip.
-                            _logger.LogWarning("UniversityId is stored as int but University.Id is Guid - cannot map directly");
-                            continue;
-                        }
-                    }
-                }
+                // Deserialize to UserFavorites model (case-insensitive matching enabled)
+                var favorites = JsonSerializer.Deserialize<List<UserFavorites>>(json, JsonOptions()) ?? new List<UserFavorites>();
+                var universityIds = favorites
+                    .Where(f => f.UniversityId != Guid.Empty)
+                    .Select(f => f.UniversityId)
+                    .ToList();
 
                 // Fetch universities by their IDs
                 var universities = new List<University>();
@@ -520,11 +575,12 @@ namespace UniversityFinder.Services
                         universities.Add(university);
                 }
 
+                _logger.LogInformation("✅ Loaded {Count} favorite universities (fallback method) for user {UserId}", universities.Count, userId);
                 return universities;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error fetching user favorites for userId: {UserId}", userId);
+                _logger.LogError(ex, "Error in fallback method for fetching user favorites for userId: {UserId}", userId);
                 return new List<University>();
             }
         }
@@ -568,3 +624,4 @@ namespace UniversityFinder.Services
         }
     }
 }
+
