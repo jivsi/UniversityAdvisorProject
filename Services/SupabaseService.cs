@@ -79,6 +79,50 @@ namespace UniversityFinder.Services
             return universities;
         }
 
+        public async Task<List<University>> GetUniversitiesBySpecialtyAsync(string specialtyName)
+        {
+            if (string.IsNullOrWhiteSpace(specialtyName))
+                return new List<University>();
+
+            // Query UniversityPrograms where Subject Name matches the query
+            // Use !inner on Subject to filter rows
+            // Select the related University data
+            var url = $"UniversityPrograms?select=University:universities(*)&Subject:Subjects!inner(Name)&Subject.Name=ilike.*{Uri.EscapeDataString(specialtyName)}*";
+
+            _logger.LogInformation("Searching universities by specialty: {Url}", url);
+
+            var response = await _httpClient.GetAsync(url);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Search by Specialty Failed: {Status} - {Body}", response.StatusCode, body);
+                return new List<University>();
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            
+            // The response is a list of UniversityPrograms, each containing a University object
+            // We need to deserialize this structure and extract the universities
+            using var doc = JsonDocument.Parse(json);
+            var universities = new List<University>();
+            var uniqueIds = new HashSet<Guid>();
+
+            foreach (var element in doc.RootElement.EnumerateArray())
+            {
+                if (element.TryGetProperty("University", out var uniElement))
+                {
+                    var uni = JsonSerializer.Deserialize<University>(uniElement.GetRawText(), JsonOptions());
+                    if (uni != null && uni.Id.HasValue && uniqueIds.Add(uni.Id.Value))
+                    {
+                        universities.Add(uni);
+                    }
+                }
+            }
+
+            return universities;
+        }
+
         // ================= SINGLE UNIVERSITY =================
 
         public async Task<University?> GetUniversityByNameAsync(string name)
@@ -621,6 +665,112 @@ namespace UniversityFinder.Services
         public Task<City> GetOrCreateCityAsync(string name, int countryId)
         {
             return Task.FromResult(new City { Name = name, CountryId = countryId });
+        }
+        // ================= PROGRAMS =================
+
+        public async Task<List<UniversityProgram>> GetProgramsAsync(Guid? universityId = null)
+        {
+            // Changed UniversityProgram -> UniversityPrograms and Subject -> Subjects
+            var url = "UniversityPrograms?select=*,University:universities(Name),Subject:Subjects(Name)";
+            
+            if (universityId.HasValue)
+            {
+                url += $"&UniversityId=eq.{universityId}";
+            }
+
+            var response = await _httpClient.GetAsync(url);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Get Programs failed: {Status} - {Body}", response.StatusCode, body);
+                return new List<UniversityProgram>();
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<List<UniversityProgram>>(json, JsonOptions()) ?? new();
+        }
+
+        public async Task<UniversityProgram?> InsertProgramAsync(UniversityProgram program)
+        {
+            var dto = new
+            {
+                UniversityId = program.UniversityId,
+                SubjectId = program.SubjectId,
+                Name = program.Name,
+                DegreeType = program.DegreeType,
+                Duration = program.Duration,
+                Language = program.Language,
+                TuitionFee = program.TuitionFee,
+                Description = program.Description,
+                IsInferred = program.IsInferred
+            };
+
+            var json = JsonSerializer.Serialize(dto, JsonWriteOptions());
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Changed UniversityProgram -> UniversityPrograms
+            var response = await _httpClient.PostAsync("UniversityPrograms", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Insert Program failed: {Status} - {Body}", response.StatusCode, body);
+                throw new HttpRequestException($"Insert Program failed: {response.StatusCode} - {body}");
+            }
+
+            var resultJson = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<List<UniversityProgram>>(resultJson, JsonOptions())?.FirstOrDefault();
+        }
+
+        // ================= SUBJECTS =================
+
+        public async Task<Subject?> InsertSubjectAsync(Subject subject)
+        {
+            var dto = new
+            {
+                Name = subject.Name
+                // Category and Description removed as they don't exist in Supabase table
+            };
+
+            var json = JsonSerializer.Serialize(dto, JsonWriteOptions());
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Changed Subject -> Subjects
+            var response = await _httpClient.PostAsync("Subjects", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Insert Subject failed: {Status} - {Body}", response.StatusCode, body);
+                throw new HttpRequestException($"Insert Subject failed: {response.StatusCode} - {body}");
+            }
+
+            var resultJson = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<List<Subject>>(resultJson, JsonOptions())?.FirstOrDefault();
+        }
+
+        public async Task<List<Subject>> GetSubjectsAsync(string? name = null)
+        {
+            // Changed Subject -> Subjects
+            var url = "Subjects?select=*";
+            
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                url += $"&Name=eq.{Uri.EscapeDataString(name)}";
+            }
+
+            var response = await _httpClient.GetAsync(url);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Get Subjects failed: {Status} - {Body}", response.StatusCode, body);
+                return new List<Subject>();
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<List<Subject>>(json, JsonOptions()) ?? new();
         }
     }
 }

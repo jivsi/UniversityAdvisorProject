@@ -8,10 +8,10 @@ namespace UniversityFinder.Models
         public int Id { get; set; }
 
         [Required]
-        public int UniversityId { get; set; }
+        public Guid UniversityId { get; set; }
 
         [Required]
-        public int SubjectId { get; set; }
+        public Guid SubjectId { get; set; }
 
         [Required]
         [MaxLength(200)]

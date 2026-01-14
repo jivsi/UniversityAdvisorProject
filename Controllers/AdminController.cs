@@ -9,13 +9,16 @@ namespace UniversityFinder.Controllers
     public class AdminController : Controller
     {
         private readonly SupabaseService _supabaseService;
+        private readonly NacidScraperService _nacidScraperService;
         private readonly ILogger<AdminController> _logger;
 
         public AdminController(
             SupabaseService supabaseService,
+            NacidScraperService nacidScraperService,
             ILogger<AdminController> logger)
         {
             _supabaseService = supabaseService;
+            _nacidScraperService = nacidScraperService;
             _logger = logger;
         }
 
@@ -38,6 +41,24 @@ namespace UniversityFinder.Controllers
         {
             TempData["ErrorMessage"] = "❌ RVU import service has been removed. Please import universities directly into Supabase.";
             _logger.LogWarning("⚠️ RVU sync requested but service is deprecated.");
+            return RedirectToAction(nameof(Sync));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SyncFromNacid()
+        {
+            try
+            {
+                var (universities, specialties) = await _nacidScraperService.ImportDataAsync();
+                TempData["SuccessMessage"] = $"✅ NACID sync complete. Imported {universities} universities and {specialties} specialties (as subjects).";
+                _logger.LogInformation("✅ NACID sync complete. Universities: {UniCount}, Specialties: {SpecCount}", universities, specialties);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ NACID sync failed");
+                TempData["ErrorMessage"] = $"❌ NACID sync failed: {ex.Message}";
+            }
             return RedirectToAction(nameof(Sync));
         }
 

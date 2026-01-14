@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
-using UniversityFinder.Repositories;
 using UniversityFinder.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,6 +37,10 @@ builder.Services.AddHttpClient<SupabaseService>();
 // ✅ SUPABASE AUTHENTICATION: Register Supabase Auth service
 builder.Services.AddSingleton<SupabaseAuthService>();
 
+// NACID Scraper Service
+builder.Services.AddScoped<NacidScraperService>();
+builder.Services.AddHttpClient<NacidScraperService>();
+
 // LEGACY: RvuImportService removed - RVU import functionality deprecated
 // builder.Services.AddHttpClient<RvuImportService>();
 
@@ -52,10 +55,6 @@ builder.Services.AddHttpClient<OpenAiService>();
 // LEGACY: Repositories use EF Core which has been removed
 // TODO: Update repositories to use SupabaseService or remove them
 // Register Repositories
-builder.Services.AddScoped<IUniversityRepository, UniversityRepository>();
-builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
-builder.Services.AddScoped<ICountryRepository, CountryRepository>();
-builder.Services.AddScoped<ICostOfLivingRepository, CostOfLivingRepository>();
 
 // Register Services
 builder.Services.AddScoped<OpenAiService>();
@@ -66,11 +65,8 @@ builder.Services.AddScoped<OpenAiService>();
 builder.Services.AddMemoryCache();
 
 // Register Application Services
-builder.Services.AddScoped<IUniversitySearchService, UniversitySearchService>();
 builder.Services.AddScoped<IUserFavoriteService, UserFavoriteService>();
 builder.Services.AddScoped<IUserSearchHistoryService, UserSearchHistoryService>();
-builder.Services.AddScoped<ISubjectNormalizationService, SubjectNormalizationService>();
-builder.Services.AddScoped<ISubjectInferenceService, SubjectInferenceService>();
 
 var app = builder.Build();
 

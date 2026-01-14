@@ -2,26 +2,22 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using UniversityFinder.DTOs;
-using UniversityFinder.Repositories;
 
 namespace UniversityFinder.Services
 {
     public class OpenAiService
     {
         private readonly HttpClient _httpClient;
-        private readonly ICostOfLivingRepository _costOfLivingRepository;
         private readonly ILogger<OpenAiService> _logger;
         private readonly string _apiKey;
         private const string ApiUrl = "https://api.openai.com/v1/chat/completions";
 
         public OpenAiService(
             HttpClient httpClient,
-            ICostOfLivingRepository costOfLivingRepository,
             IConfiguration configuration,
             ILogger<OpenAiService> logger)
         {
             _httpClient = httpClient;
-            _costOfLivingRepository = costOfLivingRepository;
             _logger = logger;
             _apiKey = configuration["OpenAI:ApiKey"] ?? string.Empty;
             
@@ -44,27 +40,6 @@ namespace UniversityFinder.Services
 
             try
             {
-                // Get cost of living data if city is specified
-                string contextData = "";
-                if (cityId.HasValue)
-                {
-                    var costData = await _costOfLivingRepository.GetByCityIdAsync(cityId.Value);
-                    if (costData != null)
-                    {
-                        contextData = $@"
-City: {costData.City.Name}, {costData.City.Country.Name}
-Monthly Costs (in {costData.Currency}):
-- Accommodation: {costData.AccommodationMonthly:F2}
-- Food: {costData.FoodMonthly:F2}
-- Transportation: {costData.TransportationMonthly:F2}
-- Utilities: {costData.UtilitiesMonthly:F2}
-- Entertainment: {costData.EntertainmentMonthly:F2}
-- Total Estimated: {costData.TotalMonthly:F2}
-Last Updated: {costData.LastUpdated:yyyy-MM-dd}
-";
-                    }
-                }
-
                 var systemMessage = @"You are a helpful assistant that provides information about living costs and expenses for students in European cities. 
 Use the provided cost of living data when available. Be friendly, concise, and provide practical advice. 
 If specific data is not available, provide general guidance based on your knowledge of European cities.";
@@ -73,11 +48,6 @@ If specific data is not available, provide general guidance based on your knowle
                 {
                     new { role = "system", content = systemMessage }
                 };
-
-                if (!string.IsNullOrEmpty(contextData))
-                {
-                    messages.Add(new { role = "system", content = $"Current cost of living data:\n{contextData}" });
-                }
 
                 messages.Add(new { role = "user", content = userMessage });
 

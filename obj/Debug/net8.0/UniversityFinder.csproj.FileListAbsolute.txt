@@ -99,10 +99,10 @@ C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\sta
 C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\staticwebassets.build.json.cache
 C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\staticwebassets.development.json
 C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\Universi.8F05D9FB.Up2Date
 C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\UniversityFinder.dll
 C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\refint\UniversityFinder.dll
 C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\UniversityFinder.pdb
 C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\UniversityFinder.genruntimeconfig.cache
 C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\ref\UniversityFinder.dll
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

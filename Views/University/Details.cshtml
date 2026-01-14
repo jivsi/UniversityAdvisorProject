@@ -46,7 +46,7 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div class="text-center">
                 <div class="text-3xl font-bold gradient-text mb-2">@Model.Programs.Count</div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">Програми</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Специалности</div>
             </div>
             <div class="text-center">
                 <div class="text-3xl font-bold gradient-text mb-2">@(Model.Country ?? "Неизвестна държава")</div>
@@ -81,7 +81,7 @@
                         Преглед
                     </button>
                     <button class="tab-btn px-6 py-3 rounded-xl font-semibold transition-all text-gray-600 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-gray-800" data-tab="programs">
-                        Програми
+                        Специалности
                     </button>
                 </div>
             </div>
@@ -91,7 +91,7 @@
                 <!-- Overview Tab -->
                 <div id="overview" class="tab-panel active">
                     <div class="glass dark:glass-dark rounded-3xl p-8 mb-6">
-                        <h2 class="text-3xl font-bold mb-6">За</h2>
+                        <h2 class="text-3xl font-bold mb-6">Информация</h2>
                         <p class="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
                             @Model.Name се намира в @Model.City, @Model.Country.
                         </p>
@@ -167,11 +167,39 @@
                     </div>
                 </div>
                 
-                <!-- Programs Tab -->
+                <!-- Specialties Tab (Renamed from Programs) -->
                 <div id="programs" class="tab-panel hidden">
                     <div class="glass dark:glass-dark rounded-3xl p-8">
-                        <h2 class="text-3xl font-bold mb-6">Предлагани Програми</h2>
-                        @if (Model.Programs.Any())
+                        <h2 class="text-3xl font-bold mb-6">Специалности</h2>
+                        
+                        @{
+                            var allSubjects = ViewBag.AllSubjects as List<UniversityFinder.Models.Subject>;
+                        }
+
+                        @if (allSubjects != null && allSubjects.Any())
+                        {
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                @foreach (var subject in allSubjects.OrderBy(s => s.Name))
+                                {
+                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6 hover:shadow-lg transition-all border border-white/20 dark:border-white/10">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <h3 class="text-lg font-bold">@subject.Name</h3>
+                                            @if (!string.IsNullOrEmpty(subject.Category))
+                                            {
+                                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                                                    @subject.Category
+                                                </span>
+                                            }
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(subject.Description))
+                                        {
+                                            <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">@subject.Description</p>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else if (Model.Programs.Any())
                         {
                             <div class="space-y-4">
                                 @foreach (var program in Model.Programs.OrderBy(p => p.Subject?.Name ?? ""))
@@ -185,41 +213,16 @@
                                                         <i data-lucide="book-open" class="w-4 h-4"></i>
                                                         @(program.Subject?.Name ?? "Неизвестен предмет")
                                                     </span>
-                                                    @if (!string.IsNullOrEmpty(program.DegreeType))
-                                                    {
-                                                        <span class="flex items-center gap-2">
-                                                            <i data-lucide="award" class="w-4 h-4"></i>
-                                                            @program.DegreeType
-                                                        </span>
-                                                    }
-                                                    @if (program.Duration.HasValue)
-                                                    {
-                                                        <span class="flex items-center gap-2">
-                                                            <i data-lucide="clock" class="w-4 h-4"></i>
-                                                            @program.Duration месеца
-                                                        </span>
-                                                    }
-                                                    @if (!string.IsNullOrEmpty(program.Language))
-                                                    {
-                                                        <span class="flex items-center gap-2">
-                                                            <i data-lucide="languages" class="w-4 h-4"></i>
-                                                            @program.Language
-                                                        </span>
-                                                    }
                                                 </div>
                                             </div>
                                         </div>
-                                        @if (!string.IsNullOrEmpty(program.Description))
-                                        {
-                                            <p class="text-gray-700 dark:text-gray-300 text-sm">@program.Description</p>
-                                        }
                                     </div>
                                 }
                             </div>
                         }
                         else
                         {
-                            <p class="text-gray-500 dark:text-gray-400">Няма налични програми.</p>
+                            <p class="text-gray-500 dark:text-gray-400">Няма налични специалности.</p>
                         }
                     </div>
                 </div>

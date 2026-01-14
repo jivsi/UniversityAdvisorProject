@@ -52,6 +52,21 @@ namespace UniversityFinder.Controllers
 
             var universities = await _supabaseService.GetUniversitiesAsync(filterQuery);
 
+            // If a search term is provided, also search by specialty (Subject Name)
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var specialtyUniversities = await _supabaseService.GetUniversitiesBySpecialtyAsync(search);
+                
+                // Merge results, avoiding duplicates
+                foreach (var u in specialtyUniversities)
+                {
+                    if (!universities.Any(existing => existing.Id == u.Id))
+                    {
+                        universities.Add(u);
+                    }
+                }
+            }
+
             // Get all cities from the database (not just from filtered universities)
             var allCities = await _supabaseService.GetCitiesAsync();
             var cities = allCities
@@ -100,6 +115,11 @@ namespace UniversityFinder.Controllers
                 return NotFound();
 
             ViewBag.IsFavorited = false;
+            
+            // Fetch all subjects to display in the "Specialties" tab
+            var allSubjects = await _supabaseService.GetSubjectsAsync();
+            ViewBag.AllSubjects = allSubjects;
+
             return View(university);
         }
 

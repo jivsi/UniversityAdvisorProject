@@ -4,7 +4,7 @@ namespace UniversityFinder.Models
 {
     public class Subject
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required]
         [MaxLength(100)]
