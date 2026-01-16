@@ -13,6 +13,28 @@
     </div>
     
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        @if (Model.RecentlyVisited.Any())
+        {
+            <div class="mb-12">
+                <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                    <i data-lucide="history" class="w-6 h-6 text-green-600"></i>
+                    Последно разгледани
+                </h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    @foreach (var uni in Model.RecentlyVisited)
+                    {
+                        <a asp-action="Details" asp-route-name="@uni.Name" class="glass dark:glass-dark rounded-2xl p-4 card-hover block group">
+                            <div class="w-full aspect-square rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-3">
+                                <i data-lucide="building-2" class="w-8 h-8 text-white/50"></i>
+                            </div>
+                            <div class="text-sm font-bold truncate group-hover:text-green-600 dark:group-hover:text-green-400">@uni.Name</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 capitalize">@uni.City</div>
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+
         <div class="flex flex-col lg:flex-row gap-8">
             <!-- Filters Sidebar -->
             <aside class="lg:w-80 flex-shrink-0">

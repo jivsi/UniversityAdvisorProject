@@ -11,17 +11,20 @@ namespace UniversityFinder.Controllers
     {
         private readonly IUserFavoriteService _favoriteService;
         private readonly IUserSearchHistoryService _searchHistoryService;
+        private readonly IUserUniversityHistoryService _universityHistoryService;
         private readonly SupabaseService _supabaseService;
         private readonly ILogger<UniversityController> _logger;
 
         public UniversityController(
             IUserFavoriteService favoriteService,
             IUserSearchHistoryService searchHistoryService,
+            IUserUniversityHistoryService universityHistoryService,
             SupabaseService supabaseService,
             ILogger<UniversityController> logger)
         {
             _favoriteService = favoriteService;
             _searchHistoryService = searchHistoryService;
+            _universityHistoryService = universityHistoryService;
             _supabaseService = supabaseService;
             _logger = logger;
         }
@@ -74,8 +77,8 @@ namespace UniversityFinder.Controllers
                 .OrderBy(c => c)
                 .ToList();
 
-            // Get user's favorite university IDs if authenticated
             var favoriteUniversityIds = new HashSet<Guid>();
+            var recentlyVisited = new List<University>();
             if (User.Identity?.IsAuthenticated == true)
             {
                 var userId = GetCurrentUserId();
@@ -86,6 +89,8 @@ namespace UniversityFinder.Controllers
                         .Where(f => f.Id.HasValue)
                         .Select(f => f.Id!.Value)
                         .ToHashSet();
+
+                    recentlyVisited = await _universityHistoryService.GetRecentVisitsAsync(userId, 6);
                 }
             }
 
@@ -98,7 +103,8 @@ namespace UniversityFinder.Controllers
                 Cities = cities,
                 Search = search,
                 SelectedCountry = null,
-                SelectedCity = city
+                SelectedCity = city,
+                RecentlyVisited = recentlyVisited
             };
 
             return View(vm);
@@ -116,6 +122,16 @@ namespace UniversityFinder.Controllers
 
             ViewBag.IsFavorited = false;
             
+            // Track visit if authenticated
+            if (User.Identity?.IsAuthenticated == true && university.Id.HasValue)
+            {
+                var userId = GetCurrentUserId();
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    await _universityHistoryService.TrackVisitAsync(userId, university.Id.Value);
+                }
+            }
+
             // Fetch all subjects to display in the "Specialties" tab
             var allSubjects = await _supabaseService.GetSubjectsAsync();
             ViewBag.AllSubjects = allSubjects;
@@ -200,6 +216,18 @@ namespace UniversityFinder.Controllers
 
             var favorites = await _favoriteService.GetUserFavoritesAsync(userId);
             return View(favorites);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> History()
+        {
+            var userId = GetCurrentUserId();
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var history = await _universityHistoryService.GetRecentVisitsAsync(userId);
+            return View(history);
         }
 
         // ===================== SEARCH PAGE (LEGACY SUPPORT) =====================

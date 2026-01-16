@@ -772,6 +772,103 @@ namespace UniversityFinder.Services
             var json = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<List<Subject>>(json, JsonOptions()) ?? new();
         }
+
+        // ================= UNIVERSITY VISIT HISTORY =================
+
+        public async Task TrackUniversityVisitAsync(string userId, Guid universityId)
+        {
+            try
+            {
+                // We'll use a table named UniversityVisitHistory in Supabase
+                // We upsert based on (userId, universityId) to avoid duplicates and update the timestamp
+                var dto = new
+                {
+                    UserId = userId,
+                    UniversityId = universityId.ToString(),
+                    VisitedAt = DateTime.UtcNow
+                };
+
+                // Use PascalCase naming to match other tables in Supabase
+                var jsonOptions = new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = null,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                };
+
+                var json = JsonSerializer.Serialize(dto, jsonOptions);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                // PostgREST "on_conflict" to handle upsert if unique constraint exists
+                var response = await _httpClient.PostAsync("UniversityVisitHistory", content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    _logger.LogWarning("Failed to track university visit: {Status} - {Body}", response.StatusCode, body);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in TrackUniversityVisitAsync");
+            }
+        }
+
+        public async Task<List<University>> GetRecentUniversityVisitsAsync(string userId, int limit = 20)
+        {
+            try
+            {
+                // Join with universities table to get details
+                // Try both UserId and userId to be safe, but UserId is more consistent with our DTO
+                var url = $"UniversityVisitHistory?UserId=eq.{Uri.EscapeDataString(userId)}&select=universities(*)&order=VisitedAt.desc&limit={limit}";
+                
+                var response = await _httpClient.GetAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    // Fallback to lowercase userId if PascalCase fails
+                    url = $"UniversityVisitHistory?userId=eq.{Uri.EscapeDataString(userId)}&select=universities(*)&order=VisitedAt.desc&limit={limit}";
+                    response = await _httpClient.GetAsync(url);
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Failed to fetch recent university visits: {Status} - {Body}", response.StatusCode, body);
+                    return new List<University>();
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                
+                if (string.IsNullOrWhiteSpace(json) || json == "[]")
+                    return new List<University>();
+
+                using var doc = JsonDocument.Parse(json);
+                var universities = new List<University>();
+                
+                foreach (var element in doc.RootElement.EnumerateArray())
+                {
+                    if (element.TryGetProperty("universities", out var uniElement) && uniElement.ValueKind != JsonValueKind.Null)
+                    {
+                        var uni = JsonSerializer.Deserialize<University>(uniElement.GetRawText(), JsonOptions());
+                        if (uni != null && uni.Id.HasValue)
+                        {
+                            // Avoid duplicates in the list if the user visited the same uni multiple times
+                            if (!universities.Any(u => u.Id == uni.Id))
+                            {
+                                universities.Add(uni);
+                            }
+                        }
+                    }
+                }
+
+                return universities;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetRecentUniversityVisitsAsync");
+                return new List<University>();
+            }
+        }
     }
 }
 

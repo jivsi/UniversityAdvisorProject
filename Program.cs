@@ -67,6 +67,7 @@ builder.Services.AddMemoryCache();
 // Register Application Services
 builder.Services.AddScoped<IUserFavoriteService, UserFavoriteService>();
 builder.Services.AddScoped<IUserSearchHistoryService, UserSearchHistoryService>();
+builder.Services.AddScoped<IUserUniversityHistoryService, UserUniversityHistoryService>();
 
 var app = builder.Build();
 

@@ -11,6 +11,8 @@ namespace UniversityFinder.ViewModels
         public string? Search { get; set; }
         public string? SelectedCountry { get; set; } // Kept for backward compatibility
         public string? SelectedCity { get; set; }
+
+        public List<University> RecentlyVisited { get; set; } = new();
     }
 }
 
