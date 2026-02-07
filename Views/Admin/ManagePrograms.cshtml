@@ -1,0 +1,206 @@
+@model List<UniversityFinder.Models.UniversityProgram>
+@{
+    var university = ViewBag.University as UniversityFinder.Models.University;
+    var categories = ViewBag.Categories as List<UniversityFinder.Models.SubjectCategory>;
+    var subjects = ViewBag.Subjects as List<UniversityFinder.Models.Subject>;
+    ViewData["Title"] = $"Управление на специалности - {university?.Name}";
+}
+
+<div class="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-900 dark:to-gray-800 py-12">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8 flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-bold font-display mb-2 gradient-text">Специалности на @university?.Name</h1>
+                <p class="text-lg text-gray-600 dark:text-gray-400">Добавяне и премахване на специалности за този университет</p>
+            </div>
+            <a asp-action="Edit" asp-route-id="@university?.Id" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                Назад към Редакция
+            </a>
+        </div>
+
+        <!-- Alert Messages -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="mb-6 glass dark:glass-dark rounded-2xl p-4 border-l-4 border-green-500 bg-green-50/50 dark:bg-green-900/20">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="check-circle" class="w-6 h-6 text-green-500"></i>
+                    <p class="text-green-800 dark:text-green-200">@TempData["SuccessMessage"]</p>
+                </div>
+            </div>
+        }
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column: Add New Specialty -->
+            <div class="lg:col-span-1">
+                <div class="glass dark:glass-dark rounded-3xl p-6 sticky top-8">
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-5 h-5 text-green-500"></i>
+                        Добави Специалност
+                    </h2>
+                    
+                    <form asp-action="AddProgram" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="universityId" value="@university?.Id" />
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-semibold mb-2">Категория</label>
+                            <select id="categorySelect" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">Изберете категория...</option>
+                                @foreach (var cat in categories!)
+                                {
+                                    <option value="@cat.Id">@cat.Name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-semibold mb-2">Специалност</label>
+                            <select id="subjectSelect" name="subjectId" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500" required disabled>
+                                <option value="">Първо изберете категория...</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-semibold mb-2">Спенен (Бакалавър, Магистър...)</label>
+                            <input name="degreeType" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="напр. Бакалавър" />
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-semibold mb-2">Такса</label>
+                            <input name="tuitionFee" type="number" step="0.01" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="0.00" />
+                        </div>
+
+                        <button type="submit" class="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="plus" class="w-5 h-5"></i>
+                            Добави към Списъка
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: Current Specialties -->
+            <div class="lg:col-span-2">
+                <div class="glass dark:glass-dark rounded-3xl p-6">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                        <i data-lucide="list" class="w-5 h-5 text-blue-500"></i>
+                        Текущи Специалности (@Model.Count)
+                    </h2>
+
+                    @if (Model.Any())
+                    {
+                        <div class="space-y-4">
+                            @foreach (var program in Model.OrderBy(p => p.Subject?.Name))
+                            {
+                                <div class="flex items-center justify-between p-4 rounded-2xl bg-white/40 dark:bg-gray-800/40 border border-white/20 dark:border-white/10 hover:shadow-md transition-shadow">
+                                    <div>
+                                        <h3 class="font-bold text-lg">@program.Name</h3>
+                                        <div class="flex items-center gap-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                            @if (!string.IsNullOrEmpty(program.DegreeType))
+                                            {
+                                                <span class="flex items-center gap-1">
+                                                    <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                                                    @program.DegreeType
+                                                </span>
+                                            }
+                                            @if (program.TuitionFee.HasValue)
+                                            {
+                                                <span class="flex items-center gap-1">
+                                                    <i data-lucide="banknote" class="w-4 h-4"></i>
+                                                    @program.TuitionFee.Value.ToString("F2") лв.
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <form asp-action="RemoveProgram" method="post" onsubmit="return confirm('Сигурни ли сте, че искате да премахнете тази специалност?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@program.Id" />
+                                        <input type="hidden" name="universityId" value="@university?.Id" />
+                                        <button type="submit" class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Премахни">
+                                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-12">
+                            <i data-lucide="book-x" class="w-16 h-16 mx-auto mb-4 text-gray-300"></i>
+                            <p class="text-gray-500 dark:text-gray-400">Няма добавени специалности за този университет.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        lucide.createIcons();
+
+        // Serialized with explicit lowercase property names to match JS logic
+        const subjects = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(subjects.Select(s => new { 
+            id = s.Id, 
+            name = s.Name, 
+            categoryId = s.CategoryId 
+        })));
+        
+        const categorySelect = document.getElementById('categorySelect');
+        const subjectSelect = document.getElementById('subjectSelect');
+
+        // Add "Uncategorized" option if there are subjects without a category
+        if (subjects.some(s => !s.categoryId)) {
+            const uncatOption = document.createElement('option');
+            uncatOption.value = "none";
+            uncatOption.textContent = "Без категория (други)";
+            categorySelect.appendChild(uncatOption);
+        }
+
+        categorySelect.addEventListener('change', function() {
+            const categoryId = this.value;
+            console.log('Category changed to:', categoryId);
+            
+            // Clear current options
+            subjectSelect.innerHTML = '<option value="">Изберете специалност...</option>';
+            
+            if (!categoryId) {
+                subjectSelect.disabled = true;
+                return;
+            }
+
+            // Filter subjects by category
+            let filteredSubjects;
+            if (categoryId === "none") {
+                filteredSubjects = subjects.filter(s => !s.categoryId);
+            } else {
+                // Use case-insensitive comparison for GUIDs
+                filteredSubjects = subjects.filter(s => s.categoryId && s.categoryId.toLowerCase() === categoryId.toLowerCase());
+            }
+            
+            console.log('Filtered subjects count:', filteredSubjects.length);
+
+            if (filteredSubjects.length > 0) {
+                // Sort by name
+                filteredSubjects.sort((a, b) => a.name.localeCompare(b.name));
+                
+                filteredSubjects.forEach(s => {
+                    const option = document.createElement('option');
+                    option.value = s.id;
+                    option.textContent = s.name;
+                    subjectSelect.appendChild(option);
+                });
+                subjectSelect.disabled = false;
+            } else {
+                const option = document.createElement('option');
+                option.value = "";
+                option.textContent = "Няма специалности в тази категория";
+                subjectSelect.appendChild(option);
+                subjectSelect.disabled = true;
+            }
+        });
+    </script>
+}

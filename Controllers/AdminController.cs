@@ -28,7 +28,51 @@ namespace UniversityFinder.Controllers
             // TODO: Implement sync status tracking using Supabase
             // For now, return empty status
             ViewBag.ProgramsStatus = null;
+
+            // Seed categories if needed (internal use or manual trigger)
+            // await SeedCategories();
+
             return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SeedCategories()
+        {
+            var categories = new[]
+            {
+                "Педагогически науки",
+                "Хуманитарни науки",
+                "Социални, стопански и правни науки",
+                "Природни науки, математика и информатика",
+                "Технически науки",
+                "Аграрни науки и ветеринарна медицина",
+                "Здравеопазване и спорт",
+                "Изкуства",
+                "Сигурност и отбрана"
+            };
+
+            var existing = await _supabaseService.GetSubjectCategoriesAsync();
+            _logger.LogInformation("Seeding categories. Existing count: {Count}", existing.Count);
+            int count = 0;
+            foreach (var catName in categories)
+            {
+                if (!existing.Any(c => c.Name == catName))
+                {
+                    var result = await _supabaseService.InsertSubjectCategoryAsync(new SubjectCategory { Name = catName });
+                    if (result != null)
+                    {
+                        count++;
+                        _logger.LogInformation("Inserted category: {Name}", catName);
+                    }
+                    else
+                    {
+                        _logger.LogError("Failed to insert category: {Name}", catName);
+                    }
+                }
+            }
+
+            TempData["SuccessMessage"] = $"✅ Seeded {count} categories.";
+            return RedirectToAction(nameof(Sync));
         }
 
         /// <summary>
@@ -545,6 +589,65 @@ namespace UniversityFinder.Controllers
                 TempData["ErrorMessage"] = $"Грешка при изтриване на университета: {ex.Message}";
                 return RedirectToAction(nameof(Index));
             }
+        }
+
+        // ===================== PROGRAM MANAGEMENT =====================
+
+        [HttpGet]
+        public async Task<IActionResult> ManagePrograms(Guid id)
+        {
+            var university = await _supabaseService.GetUniversityByIdAsync(id);
+            if (university == null) return NotFound();
+
+            var programs = await _supabaseService.GetProgramsAsync(id);
+            var categories = await _supabaseService.GetSubjectCategoriesAsync();
+            var subjects = await _supabaseService.GetSubjectsAsync();
+
+            ViewBag.University = university;
+            ViewBag.Categories = categories;
+            ViewBag.Subjects = subjects;
+
+            return View(programs);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddProgram(Guid universityId, Guid subjectId, string? degreeType, int? duration, decimal? tuitionFee)
+        {
+            var subjects = await _supabaseService.GetSubjectsAsync();
+            var subject = subjects.FirstOrDefault(s => s.Id == subjectId);
+            if (subject == null) return BadRequest("Subject not found");
+
+            var program = new UniversityProgram
+            {
+                UniversityId = universityId,
+                SubjectId = subjectId,
+                Name = subject.Name,
+                DegreeType = degreeType,
+                Duration = duration,
+                TuitionFee = tuitionFee,
+                IsInferred = false
+            };
+
+            await _supabaseService.InsertProgramAsync(program);
+            TempData["SuccessMessage"] = $"✅ Предметът '{subject.Name}' беше добавен към университета.";
+            return RedirectToAction(nameof(ManagePrograms), new { id = universityId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveProgram(int id, Guid universityId)
+        {
+            var success = await _supabaseService.DeleteUniversityProgramAsync(id);
+            if (success)
+            {
+                TempData["SuccessMessage"] = "✅ Предметът беше премахнат.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "❌ Грешка при премахване на предмета.";
+            }
+            return RedirectToAction(nameof(ManagePrograms), new { id = universityId });
         }
     }
 }

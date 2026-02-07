@@ -27,6 +27,12 @@ namespace UniversityFinder.Controllers
                 .ToList();
             
             ViewBag.Cities = cities;
+
+            // Fetch statistics for the homepage
+            ViewBag.UniversityCount = await _supabaseService.GetUniversityCountAsync();
+            ViewBag.RegionCount = await _supabaseService.GetRegionCountAsync();
+            ViewBag.ProgramCount = await _supabaseService.GetProgramCountAsync();
+
             return View();
         }
 

@@ -47,6 +47,12 @@ namespace UniversityFinder.Services
             DefaultIgnoreCondition = JsonIgnoreCondition.Never
         };
 
+        private static JsonSerializerOptions JsonPascalWriteOptions() => new()
+        {
+            PropertyNamingPolicy = null, // Use PascalCase
+            DefaultIgnoreCondition = JsonIgnoreCondition.Never
+        };
+
         // ================= UNIVERSITIES =================
 
         public async Task<List<University>> GetUniversitiesAsync(string? filter = null)
@@ -296,12 +302,32 @@ namespace UniversityFinder.Services
 
         public async Task<int> GetUniversityCountAsync()
         {
-            var response = await _httpClient.GetAsync("universities?select=id");
+            var response = await _httpClient.GetAsync("universities?select=Id");
 
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
             return (JsonSerializer.Deserialize<List<University>>(json, JsonOptions()) ?? new()).Count;
+        }
+
+        public async Task<int> GetProgramCountAsync()
+        {
+            var response = await _httpClient.GetAsync("UniversityPrograms?select=Id");
+            if (!response.IsSuccessStatusCode) return 0;
+            var json = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(json);
+            return doc.RootElement.GetArrayLength();
+        }
+
+        public async Task<int> GetRegionCountAsync()
+        {
+            // Regions are distinct cities in Bulgaria
+            var universities = await GetUniversitiesAsync();
+            return universities
+                .Where(u => !string.IsNullOrEmpty(u.City))
+                .Select(u => u.City!.Trim())
+                .Distinct()
+                .Count();
         }
 
         // ================= SAFE SYNC (RVU IMPORT) =================
@@ -702,11 +728,11 @@ namespace UniversityFinder.Services
                 Duration = program.Duration,
                 Language = program.Language,
                 TuitionFee = program.TuitionFee,
-                Description = program.Description,
+                description = program.Description,
                 IsInferred = program.IsInferred
             };
 
-            var json = JsonSerializer.Serialize(dto, JsonWriteOptions());
+            var json = JsonSerializer.Serialize(dto, JsonPascalWriteOptions());
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             // Changed UniversityProgram -> UniversityPrograms
@@ -723,17 +749,24 @@ namespace UniversityFinder.Services
             return JsonSerializer.Deserialize<List<UniversityProgram>>(resultJson, JsonOptions())?.FirstOrDefault();
         }
 
+        public async Task<bool> DeleteUniversityProgramAsync(int id)
+        {
+            var response = await _httpClient.DeleteAsync($"UniversityPrograms?Id=eq.{id}");
+            return response.IsSuccessStatusCode;
+        }
+
         // ================= SUBJECTS =================
 
         public async Task<Subject?> InsertSubjectAsync(Subject subject)
         {
             var dto = new
             {
-                Name = subject.Name
-                // Category and Description removed as they don't exist in Supabase table
+                Name = subject.Name,
+                CategoryId = subject.CategoryId,
+                description = subject.Description
             };
 
-            var json = JsonSerializer.Serialize(dto, JsonWriteOptions());
+            var json = JsonSerializer.Serialize(dto, JsonPascalWriteOptions());
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             // Changed Subject -> Subjects
@@ -753,7 +786,9 @@ namespace UniversityFinder.Services
         public async Task<List<Subject>> GetSubjectsAsync(string? name = null)
         {
             // Changed Subject -> Subjects
-            var url = "Subjects?select=*";
+            // Including CategoryId and using SubjectCategories for name
+            // Ensure PascalCase for SubjectCategories columns
+            var url = "Subjects?select=*,SubjectCategory:SubjectCategories(Name)";
             
             if (!string.IsNullOrWhiteSpace(name))
             {
@@ -771,6 +806,67 @@ namespace UniversityFinder.Services
 
             var json = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<List<Subject>>(json, JsonOptions()) ?? new();
+        }
+
+        public async Task<List<Subject>> GetSubjectsByCategoryIdAsync(Guid categoryId)
+        {
+            var url = $"Subjects?CategoryId=eq.{categoryId}&select=*";
+            var response = await _httpClient.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogError("GetSubjectsByCategoryId failed: {Status} - {Body}", response.StatusCode, body);
+                return new List<Subject>();
+            }
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<List<Subject>>(json, JsonOptions()) ?? new();
+        }
+
+        // ================= SUBJECT CATEGORIES =================
+
+        public async Task<List<SubjectCategory>> GetSubjectCategoriesAsync()
+        {
+            var response = await _httpClient.GetAsync("SubjectCategories?select=*&order=Name.asc");
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Get SubjectCategories failed: {Status} - {Body}", response.StatusCode, body);
+                return new List<SubjectCategory>();
+            }
+            var json = await response.Content.ReadAsStringAsync();
+            var categories = JsonSerializer.Deserialize<List<SubjectCategory>>(json, JsonOptions()) ?? new();
+            _logger.LogInformation("Loaded {Count} categories", categories.Count);
+            return categories;
+        }
+
+        public async Task<SubjectCategory?> GetSubjectCategoryByIdAsync(Guid id)
+        {
+            var response = await _httpClient.GetAsync($"SubjectCategories?Id=eq.{id}&select=*");
+            if (!response.IsSuccessStatusCode) return null;
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<List<SubjectCategory>>(json, JsonOptions())?.FirstOrDefault();
+        }
+
+        public async Task<SubjectCategory?> InsertSubjectCategoryAsync(SubjectCategory category)
+        {
+            var dto = new
+            {
+                Name = category.Name,
+                Description = category.Description
+            };
+            
+            var json = JsonSerializer.Serialize(dto, JsonPascalWriteOptions());
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            
+            var response = await _httpClient.PostAsync("SubjectCategories", content);
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogError("InsertSubjectCategory failed: {Status} - {Body}", response.StatusCode, body);
+                return null;
+            }
+            var resultJson = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<List<SubjectCategory>>(resultJson, JsonOptions())?.FirstOrDefault();
         }
 
         // ================= UNIVERSITY VISIT HISTORY =================
