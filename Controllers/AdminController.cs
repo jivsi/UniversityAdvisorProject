@@ -636,7 +636,7 @@ namespace UniversityFinder.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RemoveProgram(int id, Guid universityId)
+        public async Task<IActionResult> RemoveProgram(Guid id, Guid universityId)
         {
             var success = await _supabaseService.DeleteUniversityProgramAsync(id);
             if (success)

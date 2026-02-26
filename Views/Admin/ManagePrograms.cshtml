@@ -63,8 +63,13 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="block text-sm font-semibold mb-2">Спенен (Бакалавър, Магистър...)</label>
+                            <label class="block text-sm font-semibold mb-2">Степен (Бакалавър, Магистър...)</label>
                             <input name="degreeType" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="напр. Бакалавър" />
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-semibold mb-2">Продължителност (семестри/години)</label>
+                            <input name="duration" type="number" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="напр. 8" />
                         </div>
 
                         <div class="mb-6">
@@ -102,6 +107,13 @@
                                                 <span class="flex items-center gap-1">
                                                     <i data-lucide="graduation-cap" class="w-4 h-4"></i>
                                                     @program.DegreeType
+                                                </span>
+                                            }
+                                            @if (program.Duration.HasValue)
+                                            {
+                                                <span class="flex items-center gap-1">
+                                                    <i data-lucide="clock" class="w-4 h-4"></i>
+                                                    @program.Duration.Value месеца/год.
                                                 </span>
                                             }
                                             @if (program.TuitionFee.HasValue)

@@ -1,0 +1,15 @@
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\TempExplore\bin\Debug\net8.0\TempExplore.exe
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\TempExplore\bin\Debug\net8.0\TempExplore.deps.json
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\TempExplore\bin\Debug\net8.0\TempExplore.runtimeconfig.json
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\TempExplore\bin\Debug\net8.0\TempExplore.dll
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\TempExplore\bin\Debug\net8.0\TempExplore.pdb
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\TempExplore\obj\Debug\net8.0\TempExplore.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\TempExplore\obj\Debug\net8.0\TempExplore.AssemblyInfoInputs.cache
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\TempExplore\obj\Debug\net8.0\TempExplore.AssemblyInfo.cs
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\TempExplore\obj\Debug\net8.0\TempExplore.csproj.CoreCompileInputs.cache
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\TempExplore\obj\Debug\net8.0\TempExplore.sourcelink.json
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\TempExplore\obj\Debug\net8.0\TempExplore.dll
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\TempExplore\obj\Debug\net8.0\refint\TempExplore.dll
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\TempExplore\obj\Debug\net8.0\TempExplore.pdb
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\TempExplore\obj\Debug\net8.0\TempExplore.genruntimeconfig.cache
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\TempExplore\obj\Debug\net8.0\ref\TempExplore.dll

@@ -105,4 +105,6 @@ C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\ref
 C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\UniversityFinder.pdb
 C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\UniversityFinder.genruntimeconfig.cache
 C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\ref\UniversityFinder.dll
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\bin\Debug\net8.0\temp_lots.json
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\bin\Debug\net8.0\schema.json
 C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

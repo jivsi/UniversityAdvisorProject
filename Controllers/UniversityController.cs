@@ -54,6 +54,12 @@ namespace UniversityFinder.Controllers
             _logger.LogInformation("[SMART FILTER QUERY] {Query}", filterQuery);
 
             var universities = await _supabaseService.GetUniversitiesAsync(filterQuery);
+            _logger.LogInformation("✅ Fetched {Count} universities from Supabase", universities.Count);
+
+            if (universities.Count == 0)
+            {
+                _logger.LogWarning("⚠️ No universities returned from Supabase for query: {Query}", filterQuery);
+            }
 
             // If a search term is provided, also search by specialty (Subject Name)
             if (!string.IsNullOrWhiteSpace(search))
@@ -132,9 +138,9 @@ namespace UniversityFinder.Controllers
                 }
             }
 
-            // Fetch all subjects to display in the "Specialties" tab
-            var allSubjects = await _supabaseService.GetSubjectsAsync();
-            ViewBag.AllSubjects = allSubjects;
+            // Fetch only programs associated with this university (will be done in service)
+            // var allSubjects = await _supabaseService.GetSubjectsAsync();
+            // ViewBag.AllSubjects = allSubjects;
 
             return View(university);
         }

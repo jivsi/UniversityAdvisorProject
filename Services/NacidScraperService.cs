@@ -38,20 +38,21 @@ namespace UniversityFinder.Services
             }
         }
 
-        public async Task<List<NacidSpecialty>> GetSpecialtiesAsync()
+        public async Task<List<NacidDetailedSpecialty>> GetDetailedSpecialtiesAsync()
         {
             try
             {
-                var response = await _httpClient.GetAsync("api/RuPublic/Nomenclatures/Speciality/Names");
+                // This endpoint provides specialties mapped to professional fields and research areas
+                var response = await _httpClient.GetAsync("api/RuPublic/Nomenclatures/Speciality/ProfessionalFields");
                 response.EnsureSuccessStatusCode();
                 var json = await response.Content.ReadAsStringAsync();
-                var data = JsonSerializer.Deserialize<NacidSpecialtyResponse>(json);
-                return data?.Result ?? new List<NacidSpecialty>();
+                var data = JsonSerializer.Deserialize<NacidDetailedSpecialtyResponse>(json);
+                return data?.Result ?? new List<NacidDetailedSpecialty>();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error fetching specialties from NACID");
-                return new List<NacidSpecialty>();
+                _logger.LogError(ex, "Error fetching detailed specialties from NACID");
+                return new List<NacidDetailedSpecialty>();
             }
         }
 
@@ -80,20 +81,56 @@ namespace UniversityFinder.Services
                 }
             }
 
-            // 2. Import Specialties as Subjects
-            var nacidSpecialties = await GetSpecialtiesAsync();
+            // 2. Fetch all categories once for mapping
+            var categories = await _supabaseService.GetSubjectCategoriesAsync();
+            var categoryMap = categories.ToDictionary(c => c.Name, c => c.Id);
+
+            // Mapping strings to main category names
+            string[] mainCategoryNames = new[]
+            {
+                "Педагогически науки",
+                "Хуманитарни науки",
+                "Социални, стопански и правни науки",
+                "Природни науки, математика и информатика",
+                "Технически науки",
+                "Аграрни науки и ветеринарна медицина",
+                "Здравеопазване и спорт",
+                "Изкуства",
+                "Сигурност и отбрана"
+            };
+
+            // 3. Import Specialties as Subjects with Categorization
+            var nacidSpecialties = await GetDetailedSpecialtiesAsync();
             foreach (var nacidSpec in nacidSpecialties)
             {
-                // NACID "Specialties" are essentially Majors/Subjects
+                if (!nacidSpec.IsActive) continue;
+
                 var existingSubjects = await _supabaseService.GetSubjectsAsync(nacidSpec.Name);
                 if (!existingSubjects.Any())
                 {
                     try
                     {
+                        Guid? categoryId = null;
+
+                        // Identify category from researchArea code (e.g., "5.1." -> Category 5)
+                        var areaCode = nacidSpec.ResearchArea?.Code;
+                        if (!string.IsNullOrEmpty(areaCode) && char.IsDigit(areaCode[0]))
+                        {
+                            int areaIndex = areaCode[0] - '1'; // '1' -> 0, '2' -> 1, etc.
+                            if (areaIndex >= 0 && areaIndex < mainCategoryNames.Length)
+                            {
+                                var catName = mainCategoryNames[areaIndex];
+                                if (categoryMap.TryGetValue(catName, out var id))
+                                {
+                                    categoryId = id;
+                                }
+                            }
+                        }
+
                         var newSubject = new Subject
                         {
-                            Name = nacidSpec.Name.Trim(), // Trim whitespace
-                            // Category removed to match schema
+                            Name = nacidSpec.Name.Trim(),
+                            CategoryId = categoryId
                         };
                         await _supabaseService.InsertSubjectAsync(newSubject);
                         newSpecialties++;

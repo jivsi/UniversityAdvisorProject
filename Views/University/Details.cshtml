@@ -167,54 +167,39 @@
                     </div>
                 </div>
                 
-                <!-- Specialties Tab (Renamed from Programs) -->
+                <!-- Specialties Tab -->
                 <div id="programs" class="tab-panel hidden">
                     <div class="glass dark:glass-dark rounded-3xl p-8">
                         <h2 class="text-3xl font-bold mb-6">Специалности</h2>
                         
-                        @{
-                            var allSubjects = ViewBag.AllSubjects as List<UniversityFinder.Models.Subject>;
-                        }
-
-                        @if (allSubjects != null && allSubjects.Any())
+                        @if (Model.Programs != null && Model.Programs.Any())
                         {
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                @foreach (var subject in allSubjects.OrderBy(s => s.Name))
+                                @foreach (var program in Model.Programs.OrderBy(p => p.Subject?.Name ?? p.Name))
                                 {
                                     <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6 hover:shadow-lg transition-all border border-white/20 dark:border-white/10">
                                         <div class="flex items-start justify-between mb-2">
-                                            <h3 class="text-lg font-bold">@subject.Name</h3>
-                                            @if (!string.IsNullOrEmpty(subject.Category))
+                                            <h3 class="text-lg font-bold">@(string.IsNullOrEmpty(program.Name) ? program.Subject?.Name : program.Name)</h3>
+                                            @if (!string.IsNullOrEmpty(program.DegreeType))
                                             {
                                                 <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                                                    @subject.Category
+                                                    @program.DegreeType
                                                 </span>
                                             }
                                         </div>
-                                        @if (!string.IsNullOrEmpty(subject.Description))
-                                        {
-                                            <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">@subject.Description</p>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        }
-                        else if (Model.Programs.Any())
-                        {
-                            <div class="space-y-4">
-                                @foreach (var program in Model.Programs.OrderBy(p => p.Subject?.Name ?? ""))
-                                {
-                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6 hover:shadow-lg transition-all">
-                                        <div class="flex items-start justify-between mb-4">
-                                            <div class="flex-1">
-                                                <h3 class="text-xl font-bold mb-2">@program.Name</h3>
-                                                <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                                    <span class="flex items-center gap-2">
-                                                        <i data-lucide="book-open" class="w-4 h-4"></i>
-                                                        @(program.Subject?.Name ?? "Неизвестен предмет")
-                                                    </span>
-                                                </div>
-                                            </div>
+                                        
+                                        <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mt-4">
+                                            <span class="flex items-center gap-2">
+                                                <i data-lucide="book-open" class="w-4 h-4"></i>
+                                                @(program.Subject?.Name ?? "Обща специалност")
+                                            </span>
+                                            @if (program.TuitionFee > 0)
+                                            {
+                                                <span class="flex items-center gap-2">
+                                                    <i data-lucide="banknote" class="w-4 h-4"></i>
+                                                    @program.TuitionFee лв.
+                                                </span>
+                                            }
                                         </div>
                                     </div>
                                 }
@@ -222,7 +207,13 @@
                         }
                         else
                         {
-                            <p class="text-gray-500 dark:text-gray-400">Няма налични специалности.</p>
+                            <div class="text-center py-12">
+                                <div class="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i data-lucide="book-x" class="w-10 h-10 text-gray-400"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Няма налични специалности</h3>
+                                <p class="text-gray-500 dark:text-gray-400">Все още няма добавени специалности за този университет.</p>
+                            </div>
                         }
                     </div>
                 </div>

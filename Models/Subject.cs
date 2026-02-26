@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace UniversityFinder.Models
 {
@@ -8,6 +9,7 @@ namespace UniversityFinder.Models
 
         [Required]
         [MaxLength(100)]
+        [JsonPropertyName("name")]
         public string Name { get; set; } = string.Empty;
 
         [MaxLength(50)]

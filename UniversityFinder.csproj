@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>aspnet-UniversityFinder-a2cb5505-02bf-468d-b5db-daad959f800e</UserSecretsId>
+    <DefaultItemExcludes>$(DefaultItemExcludes);TempExplore\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>

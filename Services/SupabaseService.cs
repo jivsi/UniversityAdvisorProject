@@ -57,11 +57,9 @@ namespace UniversityFinder.Services
 
         public async Task<List<University>> GetUniversitiesAsync(string? filter = null)
         {
-            const string endpoint = "GET universities";
+            // Include Programs join to get the count
+            var url = "universities?select=*,Programs:UniversityPrograms(Id)";
 
-            var url = "universities?select=Id,Name,Country,City,website,email,phone,address";
-
-            // ✅ ONLY append a filter if it's valid
             if (!string.IsNullOrWhiteSpace(filter))
             {
                 url += $"&{filter}";
@@ -85,51 +83,30 @@ namespace UniversityFinder.Services
             return universities;
         }
 
-        public async Task<List<University>> GetUniversitiesBySpecialtyAsync(string specialtyName)
+        public async Task<List<University>> GetUniversitiesBySpecialtyAsync(string search)
         {
-            if (string.IsNullOrWhiteSpace(specialtyName))
+            if (string.IsNullOrWhiteSpace(search))
                 return new List<University>();
 
-            // Query UniversityPrograms where Subject Name matches the query
-            // Use !inner on Subject to filter rows
-            // Select the related University data
-            var url = $"UniversityPrograms?select=University:universities(*)&Subject:Subjects!inner(Name)&Subject.Name=ilike.*{Uri.EscapeDataString(specialtyName)}*";
-
-            _logger.LogInformation("Searching universities by specialty: {Url}", url);
+            var escapedSearch = Uri.EscapeDataString(search);
+            // ✅ CORRECT PostgREST Syntax for deep inner join filtering:
+            // 1. Use !inner in the select string to filter the main table by the joined records
+            // 2. Use dot notation for filtering nested columns
+            var url = $"universities?select=*,UniversityPrograms!inner(Subjects!inner(name))&UniversityPrograms.Subjects.name=ilike.*{escapedSearch}*";
 
             var response = await _httpClient.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Search by Specialty Failed: {Status} - {Body}", response.StatusCode, body);
+                _logger.LogError("GetUniversitiesBySpecialtyAsync failed: {Status} - {Body}", response.StatusCode, body);
                 return new List<University>();
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            
-            // The response is a list of UniversityPrograms, each containing a University object
-            // We need to deserialize this structure and extract the universities
-            using var doc = JsonDocument.Parse(json);
-            var universities = new List<University>();
-            var uniqueIds = new HashSet<Guid>();
-
-            foreach (var element in doc.RootElement.EnumerateArray())
-            {
-                if (element.TryGetProperty("University", out var uniElement))
-                {
-                    var uni = JsonSerializer.Deserialize<University>(uniElement.GetRawText(), JsonOptions());
-                    if (uni != null && uni.Id.HasValue && uniqueIds.Add(uni.Id.Value))
-                    {
-                        universities.Add(uni);
-                    }
-                }
-            }
-
-            return universities;
+            return JsonSerializer.Deserialize<List<University>>(json, JsonOptions()) ?? new();
         }
 
-        // ================= SINGLE UNIVERSITY =================
 
         public async Task<University?> GetUniversityByNameAsync(string name)
         {
@@ -141,37 +118,47 @@ namespace UniversityFinder.Services
 
             var trimmedName = name.Trim();
             
-            // Try exact match first
-            var filter = $"Name=eq.{Uri.EscapeDataString(trimmedName)}";
-            var universities = await GetUniversitiesAsync(filter);
+            // Detailed select to get programs and subjects
+            var detailedSelect = "*,Programs:UniversityPrograms(*,Subject:Subjects(name))";
             
-            _logger.LogInformation("GetUniversityByNameAsync - Name: {Name}, Found: {Count}", trimmedName, universities.Count);
+            // Try ilike first as it is more resilient to special characters and casing
+            // Encode name and wrap in wildcards for robustness
+            var url = $"universities?Name=ilike.{Uri.EscapeDataString(trimmedName)}&select={detailedSelect}";
             
-            // Return exact match (case-sensitive)
-            var exactMatch = universities.FirstOrDefault(u => u.Name == trimmedName);
-            if (exactMatch != null)
+            _logger.LogInformation("Fetching university details by name: {Name}", trimmedName);
+            var response = await _httpClient.GetAsync(url);
+            
+            if (response.IsSuccessStatusCode)
             {
-                return exactMatch;
+                var json = await response.Content.ReadAsStringAsync();
+                var matches = JsonSerializer.Deserialize<List<University>>(json, JsonOptions());
+                
+                // Try to find the best match (exact if possible)
+                var bestMatch = matches?.FirstOrDefault(u => u.Name == trimmedName) 
+                                ?? matches?.FirstOrDefault(u => string.Equals(u.Name, trimmedName, StringComparison.OrdinalIgnoreCase))
+                                ?? matches?.FirstOrDefault();
+                                
+                if (bestMatch != null) return bestMatch;
+            }
+            else
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogError("GetUniversityByNameAsync failed: {Status} - {Body}", response.StatusCode, body);
             }
             
-            // If no exact match, try case-insensitive match
-            var caseInsensitiveMatch = universities.FirstOrDefault(u => 
-                string.Equals(u.Name, trimmedName, StringComparison.OrdinalIgnoreCase));
-            if (caseInsensitiveMatch != null)
+            // Fallback for names with internal quotes: try partial match
+            if (trimmedName.Contains("\""))
             {
-                return caseInsensitiveMatch;
-            }
-            
-            // If still no match, try with ilike filter (case-insensitive SQL match)
-            var ilikeFilter = $"Name=ilike.{Uri.EscapeDataString(trimmedName)}";
-            var ilikeUniversities = await GetUniversitiesAsync(ilikeFilter);
-            
-            if (ilikeUniversities.Any())
-            {
-                // Find the best match
-                var bestMatch = ilikeUniversities.FirstOrDefault(u => 
-                    string.Equals(u.Name, trimmedName, StringComparison.OrdinalIgnoreCase));
-                return bestMatch ?? ilikeUniversities.FirstOrDefault();
+                var partialName = trimmedName.Replace("\"", "").Trim();
+                var fallbackUrl = $"universities?Name=ilike.*{Uri.EscapeDataString(partialName)}*&select={detailedSelect}";
+                var fallbackResponse = await _httpClient.GetAsync(fallbackUrl);
+                
+                if (fallbackResponse.IsSuccessStatusCode)
+                {
+                    var json = await fallbackResponse.Content.ReadAsStringAsync();
+                    var matches = JsonSerializer.Deserialize<List<University>>(json, JsonOptions());
+                    return matches?.FirstOrDefault();
+                }
             }
             
             _logger.LogWarning("No university found matching name: {Name}", trimmedName);
@@ -546,7 +533,7 @@ namespace UniversityFinder.Services
                 // Use foreign key relationship to join University data directly
                 // PostgREST syntax: select=universities(*) uses the foreign key relationship
                 // The relationship name matches the table name (lowercase plural)
-                var response = await _httpClient.GetAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&select=universities(*)");
+                var response = await _httpClient.GetAsync($"UserFavorites?UserId=eq.{Uri.EscapeDataString(userId)}&select=universities(*)");
                 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -616,7 +603,7 @@ namespace UniversityFinder.Services
             {
                 // Fallback: fetch university IDs first, then fetch each university
                 // PostgREST requires exact column name matching - try with * and parse all fields
-                var response = await _httpClient.GetAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&select=*");
+                var response = await _httpClient.GetAsync($"UserFavorites?UserId=eq.{Uri.EscapeDataString(userId)}&select=*");
                 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -697,7 +684,8 @@ namespace UniversityFinder.Services
         public async Task<List<UniversityProgram>> GetProgramsAsync(Guid? universityId = null)
         {
             // Changed UniversityProgram -> UniversityPrograms and Subject -> Subjects
-            var url = "UniversityPrograms?select=*,University:universities(Name),Subject:Subjects(Name)";
+            // Corrected Subject:Subjects(Name) -> Subject:Subjects(name) for join
+            var url = "UniversityPrograms?select=*,University:universities(Name),Subject:Subjects(name)";
             
             if (universityId.HasValue)
             {
@@ -723,13 +711,8 @@ namespace UniversityFinder.Services
             {
                 UniversityId = program.UniversityId,
                 SubjectId = program.SubjectId,
-                Name = program.Name,
                 DegreeType = program.DegreeType,
-                Duration = program.Duration,
-                Language = program.Language,
-                TuitionFee = program.TuitionFee,
-                description = program.Description,
-                IsInferred = program.IsInferred
+                TuitionFee = program.TuitionFee
             };
 
             var json = JsonSerializer.Serialize(dto, JsonPascalWriteOptions());
@@ -749,7 +732,7 @@ namespace UniversityFinder.Services
             return JsonSerializer.Deserialize<List<UniversityProgram>>(resultJson, JsonOptions())?.FirstOrDefault();
         }
 
-        public async Task<bool> DeleteUniversityProgramAsync(int id)
+        public async Task<bool> DeleteUniversityProgramAsync(Guid id)
         {
             var response = await _httpClient.DeleteAsync($"UniversityPrograms?Id=eq.{id}");
             return response.IsSuccessStatusCode;
@@ -761,9 +744,9 @@ namespace UniversityFinder.Services
         {
             var dto = new
             {
-                Name = subject.Name,
+                name = subject.Name,
                 CategoryId = subject.CategoryId,
-                description = subject.Description
+                Description = subject.Description
             };
 
             var json = JsonSerializer.Serialize(dto, JsonPascalWriteOptions());
@@ -792,7 +775,7 @@ namespace UniversityFinder.Services
             
             if (!string.IsNullOrWhiteSpace(name))
             {
-                url += $"&Name=eq.{Uri.EscapeDataString(name)}";
+                url += $"&name=eq.{Uri.EscapeDataString(name)}";
             }
 
             var response = await _httpClient.GetAsync(url);
