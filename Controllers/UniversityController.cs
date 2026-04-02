@@ -39,14 +39,15 @@ namespace UniversityFinder.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(
             string? search,
-            string? city)
+            string? city,
+            string? subject)
         {
             var filters = new List<string>();
 
             if (!string.IsNullOrWhiteSpace(search))
                 filters.Add($"Name=ilike.*{Uri.EscapeDataString(search)}*");
 
-            if (!string.IsNullOrWhiteSpace(city) && city != "All Cities")
+            if (!string.IsNullOrWhiteSpace(city) && city != "All Cities" && city != "Всички Градове")
                 filters.Add($"City=eq.{Uri.EscapeDataString(city)}");
 
             string filterQuery = string.Join("&", filters);
@@ -76,11 +77,30 @@ namespace UniversityFinder.Controllers
                 }
             }
 
+            // Filter by exact subject
+            if (!string.IsNullOrWhiteSpace(subject) && subject != "Всички Специалности")
+            {
+                var exactSubjectUnis = await _supabaseService.GetUniversitiesByExactSpecialtyAsync(subject);
+                
+                // If there were no other filters (universities has all records or filtered by search/city)
+                // We keep only the ones that exist in BOTH (intersection)
+                universities = universities.Where(u => exactSubjectUnis.Any(ex => ex.Id == u.Id)).ToList();
+            }
+
             // Get all cities from the database (not just from filtered universities)
             var allCities = await _supabaseService.GetCitiesAsync();
             var cities = allCities
                 .Select(c => c.Name)
                 .OrderBy(c => c)
+                .ToList();
+
+            // Get all subjects
+            var allSubjects = await _supabaseService.GetSubjectsAsync();
+            var subjectsList = allSubjects
+                .Select(s => s.Name)
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Distinct()
+                .OrderBy(s => s)
                 .ToList();
 
             var favoriteUniversityIds = new HashSet<Guid>();
@@ -105,11 +125,11 @@ namespace UniversityFinder.Controllers
             var vm = new UniversityIndexViewModel
             {
                 Universities = universities,
-                Countries = new List<string>(), // Keep for backward compatibility but empty
                 Cities = cities,
+                Subjects = subjectsList,
                 Search = search,
-                SelectedCountry = null,
                 SelectedCity = city,
+                SelectedSubject = subject,
                 RecentlyVisited = recentlyVisited
             };
 
@@ -163,8 +183,7 @@ namespace UniversityFinder.Controllers
                 .Select(u => new
                 {
                     name = u.Name,
-                    city = u.City,
-                    country = u.Country
+                    city = u.City
                 })
                 .ToList();
 

@@ -17,7 +17,7 @@
                     <div class="flex items-center gap-4 text-white/90">
                         <div class="flex items-center gap-2">
                             <i data-lucide="map-pin" class="w-5 h-5"></i>
-                            <span>@Model.City, @Model.Country</span>
+                            <span>@(Model.City ?? "Неизвестен град")</span>
                         </div>
                     </div>
                 </div>
@@ -43,14 +43,10 @@
 <!-- Floating Info Panel -->
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10 mb-12">
     <div class="glass dark:glass-dark rounded-3xl p-8 shadow-2xl">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="text-center">
                 <div class="text-3xl font-bold gradient-text mb-2">@Model.Programs.Count</div>
                 <div class="text-sm text-gray-600 dark:text-gray-400">Специалности</div>
-            </div>
-            <div class="text-center">
-                <div class="text-3xl font-bold gradient-text mb-2">@(Model.Country ?? "Неизвестна държава")</div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">Държава</div>
             </div>
             <div class="text-center">
                 <div class="text-3xl font-bold gradient-text mb-2">@(Model.City ?? "Неизвестен град")</div>
@@ -93,7 +89,7 @@
                     <div class="glass dark:glass-dark rounded-3xl p-8 mb-6">
                         <h2 class="text-3xl font-bold mb-6">Информация</h2>
                         <p class="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
-                            @Model.Name се намира в @Model.City, @Model.Country.
+                            @Model.Name се намира в @(Model.City ?? "непосочен град").
                         </p>
                         
                         <!-- Contact Information -->
@@ -227,10 +223,6 @@
                 <h3 class="text-xl font-bold mb-6">Бърза Информация</h3>
                 <div class="space-y-4">
                     <div>
-                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Държава</div>
-                        <div class="font-semibold">@(Model.Country ?? "Неизвестна държава")</div>
-                    </div>
-                    <div>
                         <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Град</div>
                         <div class="font-semibold">@(Model.City ?? "Неизвестен град")</div>
                     </div>
@@ -240,15 +232,15 @@
                     </div>
                 </div>
                 
-                @if (Model.Country != null)
+                @if (!string.IsNullOrWhiteSpace(Model.City) && !string.Equals(Model.City, "Unknown", StringComparison.OrdinalIgnoreCase))
                 {
                     <a 
                         asp-controller="University" 
-                        asp-action="Search" 
-                        asp-route-Query="@(Model.Country ?? "Bulgaria")" 
+                        asp-action="Index" 
+                        asp-route-city="@Model.City" 
                         class="block w-full mt-6 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-center rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
                     >
-                        Намери Още в @(Model.Country ?? "България")
+                        Още университети в @Model.City
                     </a>
                 }
             </div>

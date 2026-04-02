@@ -107,6 +107,28 @@ namespace UniversityFinder.Services
             return JsonSerializer.Deserialize<List<University>>(json, JsonOptions()) ?? new();
         }
 
+        public async Task<List<University>> GetUniversitiesByExactSpecialtyAsync(string subjectName)
+        {
+            if (string.IsNullOrWhiteSpace(subjectName))
+                return new List<University>();
+
+            var escapedSubject = Uri.EscapeDataString(subjectName);
+            // Deep inner join filtering
+            var url = $"universities?select=*,UniversityPrograms!inner(Subjects!inner(name))&UniversityPrograms.Subjects.name=eq.{escapedSubject}";
+
+            var response = await _httpClient.GetAsync(url);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogError("GetUniversitiesByExactSpecialtyAsync failed: {Status} - {Body}", response.StatusCode, body);
+                return new List<University>();
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<List<University>>(json, JsonOptions()) ?? new();
+        }
+
 
         public async Task<University?> GetUniversityByNameAsync(string name)
         {
@@ -703,6 +725,46 @@ namespace UniversityFinder.Services
 
             var json = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<List<UniversityProgram>>(json, JsonOptions()) ?? new();
+        }
+
+        /// <summary>
+        /// Distinct subject (specialty) names that appear in at least one university program on the site.
+        /// Paginates in case PostgREST max row cap (often 1000) is lower than total programs.
+        /// </summary>
+        public async Task<List<string>> GetSubjectNamesOfferedByUniversitiesAsync()
+        {
+            const int pageSize = 1000;
+            var allPrograms = new List<UniversityProgram>();
+            var offset = 0;
+
+            while (true)
+            {
+                var url = $"UniversityPrograms?select=SubjectId,Subject:Subjects(name)&limit={pageSize}&offset={offset}";
+                var response = await _httpClient.GetAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("GetSubjectNamesOfferedByUniversitiesAsync failed: {Status} - {Body}", response.StatusCode, body);
+                    return new List<string>();
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                var batch = JsonSerializer.Deserialize<List<UniversityProgram>>(json, JsonOptions()) ?? new();
+                allPrograms.AddRange(batch);
+
+                if (batch.Count < pageSize)
+                    break;
+
+                offset += pageSize;
+            }
+
+            return allPrograms
+                .Where(p => p.Subject != null && !string.IsNullOrWhiteSpace(p.Subject.Name))
+                .DistinctBy(p => p.SubjectId)
+                .Select(p => p.Subject!.Name.Trim())
+                .OrderBy(n => n, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
         }
 
         public async Task<UniversityProgram?> InsertProgramAsync(UniversityProgram program)

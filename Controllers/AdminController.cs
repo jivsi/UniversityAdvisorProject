@@ -440,6 +440,9 @@ namespace UniversityFinder.Controllers
                 return View(university);
             }
 
+            if (string.IsNullOrWhiteSpace(university.Country))
+                university.Country = "България";
+
             try
             {
                 var existing = await _supabaseService.GetUniversityByNameAsync(university.Name);
@@ -516,6 +519,9 @@ namespace UniversityFinder.Controllers
                         return View(university);
                     }
                 }
+
+                if (string.IsNullOrWhiteSpace(university.Country))
+                    university.Country = string.IsNullOrWhiteSpace(existing.Country) ? "България" : existing.Country;
 
                 // Update using Id (primary key)
                 var updated = await _supabaseService.UpdateUniversityAsync(id, university);

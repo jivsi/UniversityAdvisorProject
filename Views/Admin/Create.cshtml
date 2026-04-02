@@ -25,12 +25,6 @@
                 </div>
 
                 <div class="mb-6">
-                    <label asp-for="Country" class="block text-sm font-semibold mb-2">Държава *</label>
-                    <input asp-for="Country" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400" placeholder="Въведете държава" />
-                    <span asp-validation-for="Country" class="text-red-600 dark:text-red-400 text-sm"></span>
-                </div>
-
-                <div class="mb-6">
                     <label asp-for="City" class="block text-sm font-semibold mb-2">Град *</label>
                     <input asp-for="City" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400" placeholder="Въведете град" />
                     <span asp-validation-for="City" class="text-red-600 dark:text-red-400 text-sm"></span>
@@ -56,7 +50,7 @@
 
                 <div class="mb-6">
                     <label asp-for="Address" class="block text-sm font-semibold mb-2">Адрес</label>
-                    <textarea asp-for="Address" rows="3" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400" placeholder="Адрес, Град, Държава"></textarea>
+                    <textarea asp-for="Address" rows="3" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400" placeholder="Адрес, град"></textarea>
                     <span asp-validation-for="Address" class="text-red-600 dark:text-red-400 text-sm"></span>
                 </div>
 

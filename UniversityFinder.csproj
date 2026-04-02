@@ -6,7 +6,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>aspnet-UniversityFinder-a2cb5505-02bf-468d-b5db-daad959f800e</UserSecretsId>
     <DefaultItemExcludes>$(DefaultItemExcludes);TempExplore\**</DefaultItemExcludes>
+    <!-- CS0579: SDK/Roslyn can emit the same assembly metadata twice (generated .cs + compiler). See dotnet/sdk#49002 -->
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
+
+  <!-- User secrets still need the attribute when GenerateAssemblyInfo is false -->
+  <ItemGroup>
+    <AssemblyAttribute Include="Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute">
+      <_Parameter1>$(UserSecretsId)</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
