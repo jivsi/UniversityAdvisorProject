@@ -94,14 +94,8 @@ namespace UniversityFinder.Controllers
                 .OrderBy(c => c)
                 .ToList();
 
-            // Get all subjects
-            var allSubjects = await _supabaseService.GetSubjectsAsync();
-            var subjectsList = allSubjects
-                .Select(s => s.Name)
-                .Where(n => !string.IsNullOrWhiteSpace(n))
-                .Distinct()
-                .OrderBy(s => s)
-                .ToList();
+            // Get only subjects that are offered by universities
+            var subjectsList = await _supabaseService.GetSubjectNamesOfferedByUniversitiesAsync();
 
             var favoriteUniversityIds = new HashSet<Guid>();
             var recentlyVisited = new List<University>();
