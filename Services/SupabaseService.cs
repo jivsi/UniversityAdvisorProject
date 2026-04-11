@@ -767,6 +767,47 @@ namespace UniversityFinder.Services
                 .ToList();
         }
 
+        /// <summary>
+        /// Distinct <see cref="Subject"/> rows referenced by at least one university program.
+        /// Use for admin pickers so the list matches specialties actually used on the site (not the whole Subjects table).
+        /// </summary>
+        public async Task<List<Subject>> GetSubjectsOfferedViaProgramsAsync()
+        {
+            const int pageSize = 1000;
+            var allPrograms = new List<UniversityProgram>();
+            var offset = 0;
+
+            while (true)
+            {
+                var url =
+                    $"UniversityPrograms?select=SubjectId,Subject:Subjects(*,SubjectCategory:SubjectCategories(Name))&limit={pageSize}&offset={offset}";
+                var response = await _httpClient.GetAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("GetSubjectsOfferedViaProgramsAsync failed: {Status} - {Body}", response.StatusCode, body);
+                    return new List<Subject>();
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                var batch = JsonSerializer.Deserialize<List<UniversityProgram>>(json, JsonOptions()) ?? new();
+                allPrograms.AddRange(batch);
+
+                if (batch.Count < pageSize)
+                    break;
+
+                offset += pageSize;
+            }
+
+            return allPrograms
+                .Where(p => p.Subject != null && p.Subject.Id != Guid.Empty && !string.IsNullOrWhiteSpace(p.Subject.Name))
+                .DistinctBy(p => p.SubjectId)
+                .Select(p => p.Subject!)
+                .OrderBy(s => s.Name, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+        }
+
         public async Task<UniversityProgram?> InsertProgramAsync(UniversityProgram program)
         {
             var dto = new
@@ -830,18 +871,16 @@ namespace UniversityFinder.Services
 
         public async Task<List<Subject>> GetSubjectsAsync(string? name = null)
         {
-            // Changed Subject -> Subjects
-            // Including CategoryId and using SubjectCategories for name
-            // Ensure PascalCase for SubjectCategories columns
+            // Single request: PostgREST may cap rows (often 1000). Prefer raising max_rows in Supabase API settings if needed.
             var url = "Subjects?select=*,SubjectCategory:SubjectCategories(Name)";
-            
+
             if (!string.IsNullOrWhiteSpace(name))
             {
                 url += $"&name=eq.{Uri.EscapeDataString(name)}";
             }
 
             var response = await _httpClient.GetAsync(url);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync();

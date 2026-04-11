@@ -600,18 +600,34 @@ namespace UniversityFinder.Controllers
         // ===================== PROGRAM MANAGEMENT =====================
 
         [HttpGet]
-        public async Task<IActionResult> ManagePrograms(Guid id)
+        public async Task<IActionResult> ManagePrograms(Guid id, bool fullCatalog = false)
         {
             var university = await _supabaseService.GetUniversityByIdAsync(id);
             if (university == null) return NotFound();
 
             var programs = await _supabaseService.GetProgramsAsync(id);
             var categories = await _supabaseService.GetSubjectCategoriesAsync();
-            var subjects = await _supabaseService.GetSubjectsAsync();
+            List<Subject> subjects;
+            var pickerFallbackToFull = false;
+            if (fullCatalog)
+            {
+                subjects = await _supabaseService.GetSubjectsAsync();
+            }
+            else
+            {
+                subjects = await _supabaseService.GetSubjectsOfferedViaProgramsAsync();
+                if (subjects.Count == 0)
+                {
+                    subjects = await _supabaseService.GetSubjectsAsync();
+                    pickerFallbackToFull = true;
+                }
+            }
 
             ViewBag.University = university;
             ViewBag.Categories = categories;
             ViewBag.Subjects = subjects;
+            ViewBag.FullCatalog = fullCatalog;
+            ViewBag.PickerFallbackToFullCatalog = pickerFallbackToFull;
 
             return View(programs);
         }

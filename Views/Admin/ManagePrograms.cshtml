@@ -1,8 +1,27 @@
 @model List<UniversityFinder.Models.UniversityProgram>
+@using System.Text.Encodings.Web
+@using System.Text.Json
 @{
     var university = ViewBag.University as UniversityFinder.Models.University;
-    var categories = ViewBag.Categories as List<UniversityFinder.Models.SubjectCategory>;
-    var subjects = ViewBag.Subjects as List<UniversityFinder.Models.Subject>;
+    var categories = ViewBag.Categories as List<UniversityFinder.Models.SubjectCategory> ?? new();
+    var subjects = ViewBag.Subjects as List<UniversityFinder.Models.Subject> ?? new();
+    var fullCatalog = ViewBag.FullCatalog as bool? ?? false;
+    var pickerFallback = ViewBag.PickerFallbackToFullCatalog as bool? ?? false;
+    var subjectsJson = JsonSerializer.Serialize(
+        subjects.Select(s => new
+        {
+            id = s.Id.ToString("D"),
+            name = s.Name,
+            categoryId = s.CategoryId?.ToString("D"),
+            categoryName = s.SubjectCategory?.Name,
+            legacyCategory = s.Category
+        }),
+        new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            // Default escaping prevents </script> or < in subject names from breaking the page script.
+            Encoder = JavaScriptEncoder.Default
+        });
     ViewData["Title"] = $"Управление на специалности - {university?.Name}";
 }
 
@@ -39,16 +58,38 @@
                         <i data-lucide="plus-circle" class="w-5 h-5 text-green-500"></i>
                         Добави Специалност
                     </h2>
+                    @if (!fullCatalog)
+                    {
+                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                            @if (pickerFallback)
+                            {
+                                <span class="block mb-1 text-amber-800 dark:text-amber-200/90">Все още няма записи в UniversityPrograms — показва се целият каталог Subjects, докато добавите първите програми.</span>
+                            }
+                            else
+                            {
+                                <span>Списъкът показва специалности, които вече са вързани към поне един университет (реално ползвани в сайта).</span>
+                            }
+                            <a asp-action="ManagePrograms" asp-route-id="@university?.Id" asp-route-fullCatalog="true" class="text-green-600 dark:text-green-400 underline font-medium">Пълен каталог от таблица Subjects</a>
+                            — само ако трябва специалност, която още не фигурира в нито един университет.
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="text-xs text-amber-800 dark:text-amber-200/90 mb-3 leading-relaxed rounded-lg px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-800/50">
+                            Показвате всички записи от Subjects (може да са хиляди). За по-кратък списък:
+                            <a asp-action="ManagePrograms" asp-route-id="@university?.Id" class="underline font-medium">само ползвани специалности</a>.
+                        </p>
+                    }
                     
                     <form asp-action="AddProgram" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="universityId" value="@university?.Id" />
                         
                         <div class="mb-4">
-                            <label class="block text-sm font-semibold mb-2">Категория</label>
-                            <select id="categorySelect" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500">
-                                <option value="">Изберете категория...</option>
-                                @foreach (var cat in categories!)
+                            <label class="block text-sm font-semibold mb-2">Категория <span class="text-gray-500 dark:text-gray-400 font-normal">(по желание — филтър)</span></label>
+                            <select id="categorySelect" autocomplete="off" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">Всички от списъка</option>
+                                @foreach (var cat in categories)
                                 {
                                     <option value="@cat.Id">@cat.Name</option>
                                 }
@@ -57,8 +98,8 @@
 
                         <div class="mb-4">
                             <label class="block text-sm font-semibold mb-2">Специалност</label>
-                            <select id="subjectSelect" name="subjectId" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500" required disabled>
-                                <option value="">Първо изберете категория...</option>
+                            <select id="subjectSelect" name="subjectId" autocomplete="off" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                                <option value="">Изберете специалност...</option>
                             </select>
                         </div>
 
@@ -151,18 +192,30 @@
 </div>
 
 @section Scripts {
+    <script type="application/json" id="manage-programs-subjects">@Html.Raw(subjectsJson)</script>
     <script>
         lucide.createIcons();
 
-        // Serialized with explicit lowercase property names to match JS logic
-        const subjects = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(subjects.Select(s => new { 
-            id = s.Id, 
-            name = s.Name, 
-            categoryId = s.CategoryId 
-        })));
-        
+        let subjects = [];
+        try {
+            const el = document.getElementById('manage-programs-subjects');
+            subjects = el ? JSON.parse(el.textContent) : [];
+        } catch (e) {
+            console.error('manage-programs: invalid subjects JSON', e);
+        }
+        if (!Array.isArray(subjects)) subjects = [];
+
         const categorySelect = document.getElementById('categorySelect');
         const subjectSelect = document.getElementById('subjectSelect');
+
+        function normGuid(g) {
+            if (g == null || g === '') return '';
+            return String(g).replace(/[{}]/g, '').toLowerCase();
+        }
+
+        function normLabel(s) {
+            return (s == null ? '' : String(s)).trim().toLowerCase();
+        }
 
         // Add "Uncategorized" option if there are subjects without a category
         if (subjects.some(s => !s.categoryId)) {
@@ -172,33 +225,31 @@
             categorySelect.appendChild(uncatOption);
         }
 
-        categorySelect.addEventListener('change', function() {
-            const categoryId = this.value;
-            console.log('Category changed to:', categoryId);
-            
-            // Clear current options
-            subjectSelect.innerHTML = '<option value="">Изберете специалност...</option>';
-            
-            if (!categoryId) {
-                subjectSelect.disabled = true;
-                return;
-            }
+        function applyCategoryFilter() {
+            const categoryId = categorySelect.value;
+            const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+            const categoryLabel = selectedOption ? selectedOption.text.trim() : '';
+            const wantLabel = normLabel(categoryLabel);
 
-            // Filter subjects by category
+            subjectSelect.innerHTML = '<option value="">Изберете специалност...</option>';
+
             let filteredSubjects;
-            if (categoryId === "none") {
+            if (!categoryId) {
+                filteredSubjects = subjects.slice();
+            } else if (categoryId === "none") {
                 filteredSubjects = subjects.filter(s => !s.categoryId);
             } else {
-                // Use case-insensitive comparison for GUIDs
-                filteredSubjects = subjects.filter(s => s.categoryId && s.categoryId.toLowerCase() === categoryId.toLowerCase());
+                const want = normGuid(categoryId);
+                filteredSubjects = subjects.filter(s => {
+                    if (normGuid(s.categoryId) === want) return true;
+                    if (s.categoryName && normLabel(s.categoryName) === wantLabel) return true;
+                    if (s.legacyCategory && normLabel(s.legacyCategory) === wantLabel) return true;
+                    return false;
+                });
             }
-            
-            console.log('Filtered subjects count:', filteredSubjects.length);
 
             if (filteredSubjects.length > 0) {
-                // Sort by name
                 filteredSubjects.sort((a, b) => a.name.localeCompare(b.name));
-                
                 filteredSubjects.forEach(s => {
                     const option = document.createElement('option');
                     option.value = s.id;
@@ -209,10 +260,15 @@
             } else {
                 const option = document.createElement('option');
                 option.value = "";
-                option.textContent = "Няма специалности в тази категория";
+                option.textContent = categoryId && categoryId !== "none"
+                    ? "Няма в този списък за избраната категория — изберете „Всички от списъка“"
+                    : "Няма специалности в списъка";
                 subjectSelect.appendChild(option);
                 subjectSelect.disabled = true;
             }
-        });
+        }
+
+        categorySelect.addEventListener('change', applyCategoryFilter);
+        applyCategoryFilter();
     </script>
 }

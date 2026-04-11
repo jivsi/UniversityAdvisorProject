@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TempExplore")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cb1174a1e94eaa76984ba2f07d478ce9e98562ae")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+56db9923ad58b47a0ac00680d4d13cc4cada6239")]
 [assembly: System.Reflection.AssemblyProductAttribute("TempExplore")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TempExplore")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
