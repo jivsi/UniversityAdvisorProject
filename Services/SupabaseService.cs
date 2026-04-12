@@ -869,6 +869,20 @@ namespace UniversityFinder.Services
             return JsonSerializer.Deserialize<List<Subject>>(resultJson, JsonOptions())?.FirstOrDefault();
         }
 
+        public async Task<bool> PatchSubjectCategoryIdAsync(Guid subjectId, Guid? categoryId)
+        {
+            var dto = new { CategoryId = categoryId };
+            var json = JsonSerializer.Serialize(dto, JsonPascalWriteOptions());
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PatchAsync($"Subjects?Id=eq.{subjectId}", content);
+            if (response.IsSuccessStatusCode)
+                return true;
+
+            var body = await response.Content.ReadAsStringAsync();
+            _logger.LogError("Patch Subject CategoryId failed: {Status} - {Body}", response.StatusCode, body);
+            return false;
+        }
+
         public async Task<List<Subject>> GetSubjectsAsync(string? name = null)
         {
             // Single request: PostgREST may cap rows (often 1000). Prefer raising max_rows in Supabase API settings if needed.

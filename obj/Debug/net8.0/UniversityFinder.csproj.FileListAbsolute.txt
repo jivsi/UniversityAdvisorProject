@@ -4,7 +4,6 @@ c:\Users\defaultuser0\source\repos\UniversityAdvisorProject\bin\Debug\net8.0\sch
 c:\Users\defaultuser0\source\repos\UniversityAdvisorProject\bin\Debug\net8.0\temp_lots.json
 c:\Users\defaultuser0\source\repos\UniversityAdvisorProject\bin\Debug\net8.0\UniversityFinder.staticwebassets.runtime.json
 c:\Users\defaultuser0\source\repos\UniversityAdvisorProject\bin\Debug\net8.0\UniversityFinder.staticwebassets.endpoints.json
-c:\Users\defaultuser0\source\repos\UniversityAdvisorProject\bin\Debug\net8.0\UniversityFinder.exe
 c:\Users\defaultuser0\source\repos\UniversityAdvisorProject\bin\Debug\net8.0\UniversityFinder.deps.json
 c:\Users\defaultuser0\source\repos\UniversityAdvisorProject\bin\Debug\net8.0\UniversityFinder.runtimeconfig.json
 c:\Users\defaultuser0\source\repos\UniversityAdvisorProject\bin\Debug\net8.0\UniversityFinder.dll
@@ -51,4 +50,5 @@ c:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\ref
 c:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\UniversityFinder.pdb
 c:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\UniversityFinder.genruntimeconfig.cache
 c:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\ref\UniversityFinder.dll
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\bin\Debug\net8.0\UniversityFinder.exe
 C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

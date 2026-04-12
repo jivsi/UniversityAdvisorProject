@@ -76,6 +76,17 @@
                                 Генерирай 9-те Категории
                             </button>
                         </form>
+
+                        <form asp-action="ReconcileSubjectCategoriesFromNacid" method="post">
+                            @Html.AntiForgeryToken()
+                            <button
+                                type="submit"
+                                class="w-full px-6 py-3 border-2 border-amber-600 text-amber-800 dark:text-amber-300 rounded-xl font-semibold hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all flex items-center justify-center gap-2"
+                            >
+                                <i data-lucide="wand-2" class="w-5 h-5"></i>
+                                Подравни CategoryId за специалности (НАЦИД)
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -108,9 +119,12 @@
                             <span>Добави специалностите като "Предмети" (Subjects).</span>
                         </li>
                     </ul>
-                    <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800">
+                    <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800 space-y-2">
                         <p class="text-sm text-yellow-800 dark:text-yellow-200">
                             <strong>Забележка:</strong> Връзката между университети и специалности все още се проучва и не се импортира автоматично.
+                        </p>
+                        <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                            Ако в админ панела част от категориите нямат специалности в падащото меню, натиснете „Подравни CategoryId“ — това обновява колоната <code class="text-xs">CategoryId</code> в <code class="text-xs">Subjects</code> според кода на научната област от НАЦИД (вкл. кодове, започващи с 0, напр. <code class="text-xs">05.x</code>).
                         </p>
                     </div>
                 </div>

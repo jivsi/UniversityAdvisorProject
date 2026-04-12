@@ -106,6 +106,29 @@ namespace UniversityFinder.Controllers
             return RedirectToAction(nameof(Sync));
         }
 
+        /// <summary>
+        /// Fixes Subjects.CategoryId using NACID research-area codes (e.g. codes like "05.x" that the old importer skipped).
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReconcileSubjectCategoriesFromNacid()
+        {
+            try
+            {
+                var updated = await _nacidScraperService.ReconcileSubjectCategoriesFromNacidAsync();
+                TempData["SuccessMessage"] =
+                    $"✅ Подравнени са категориите за {updated} записа в Subjects според НАЦИД. Отворете отново „Специалности“ за университет.";
+                _logger.LogInformation("ReconcileSubjectCategoriesFromNacid: {Count} rows patched", updated);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Reconcile subject categories failed");
+                TempData["ErrorMessage"] = $"❌ Грешка при подравняване на категории: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Sync));
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SyncUniversities()

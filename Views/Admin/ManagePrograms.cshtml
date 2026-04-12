@@ -10,7 +10,9 @@
         {
             id = s.Id.ToString("D"),
             name = s.Name,
-            categoryId = s.CategoryId?.ToString("D")
+            categoryId = s.CategoryId?.ToString("D"),
+            categoryName = s.SubjectCategory?.Name,
+            legacyCategory = s.Category
         }),
         new JsonSerializerOptions
         {
@@ -186,6 +188,10 @@
             return String(g).replace(/[{}]/g, '').toLowerCase();
         }
 
+        function normLabel(s) {
+            return (s == null ? '' : String(s)).trim().toLowerCase();
+        }
+
         if (subjects.some(s => !s.categoryId)) {
             const uncatOption = document.createElement('option');
             uncatOption.value = "none";
@@ -209,7 +215,14 @@
                 filteredSubjects = subjects.filter(s => !s.categoryId);
             } else {
                 const want = normGuid(categoryId);
-                filteredSubjects = subjects.filter(s => s.categoryId && normGuid(s.categoryId) === want);
+                const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+                const wantLabel = normLabel(selectedOption ? selectedOption.text : '');
+                filteredSubjects = subjects.filter(s => {
+                    if (s.categoryId && normGuid(s.categoryId) === want) return true;
+                    if (wantLabel && (normLabel(s.categoryName) === wantLabel || normLabel(s.legacyCategory) === wantLabel))
+                        return true;
+                    return false;
+                });
             }
 
             if (filteredSubjects.length > 0) {
