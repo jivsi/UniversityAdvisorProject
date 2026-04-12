@@ -906,6 +906,39 @@ namespace UniversityFinder.Services
             return JsonSerializer.Deserialize<List<Subject>>(json, JsonOptions()) ?? new();
         }
 
+        /// <summary>
+        /// Loads all subjects with category join (paged). Use for admin reconcile; PostgREST caps single responses (~1k rows).
+        /// </summary>
+        public async Task<List<Subject>> GetAllSubjectsWithCategoryAsync()
+        {
+            const int pageSize = 1000;
+            var all = new List<Subject>();
+            var offset = 0;
+            while (true)
+            {
+                var url = $"Subjects?select=*,SubjectCategory:SubjectCategories(Name)&limit={pageSize}&offset={offset}";
+                var response = await _httpClient.GetAsync(url);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("GetAllSubjectsWithCategory failed: {Status} - {Body}", response.StatusCode, body);
+                    break;
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                var batch = JsonSerializer.Deserialize<List<Subject>>(json, JsonOptions()) ?? new();
+                if (batch.Count == 0)
+                    break;
+                all.AddRange(batch);
+                if (batch.Count < pageSize)
+                    break;
+                offset += pageSize;
+            }
+
+            _logger.LogInformation("GetAllSubjectsWithCategory: loaded {Count} rows", all.Count);
+            return all;
+        }
+
         public async Task<List<Subject>> GetSubjectsByCategoryIdAsync(Guid categoryId)
         {
             var url = $"Subjects?CategoryId=eq.{categoryId}&select=*";

@@ -41,13 +41,28 @@ namespace UniversityFinder.Services
 
         public async Task<List<NacidUniversity>> GetUniversitiesAsync()
         {
+            // API returns totalCount > batch size; default batch is 10 without skip/limit.
+            const int limit = 100;
+            var all = new List<NacidUniversity>();
             try
             {
-                var response = await _httpClient.GetAsync("api/RuPublic/Nomenclatures/Universities");
-                response.EnsureSuccessStatusCode();
-                var json = await response.Content.ReadAsStringAsync();
-                var data = JsonSerializer.Deserialize<NacidUniversityResponse>(json);
-                return data?.Result ?? new List<NacidUniversity>();
+                for (var skip = 0; skip < 10_000; skip += limit)
+                {
+                    var response = await _httpClient.GetAsync(
+                        $"api/RuPublic/Nomenclatures/Universities?skip={skip}&limit={limit}");
+                    response.EnsureSuccessStatusCode();
+                    var json = await response.Content.ReadAsStringAsync();
+                    var data = JsonSerializer.Deserialize<NacidUniversityResponse>(json);
+                    var batch = data?.Result ?? new List<NacidUniversity>();
+                    if (batch.Count == 0)
+                        break;
+                    all.AddRange(batch);
+                    if (batch.Count < limit)
+                        break;
+                }
+
+                _logger.LogInformation("NACID universities loaded: {Count}", all.Count);
+                return all;
             }
             catch (Exception ex)
             {
@@ -58,14 +73,28 @@ namespace UniversityFinder.Services
 
         public async Task<List<NacidDetailedSpecialty>> GetDetailedSpecialtiesAsync()
         {
+            // ProfessionalFields: totalCount is ~7k+ but default page size is 10.
+            const int limit = 500;
+            var all = new List<NacidDetailedSpecialty>();
             try
             {
-                // This endpoint provides specialties mapped to professional fields and research areas
-                var response = await _httpClient.GetAsync("api/RuPublic/Nomenclatures/Speciality/ProfessionalFields");
-                response.EnsureSuccessStatusCode();
-                var json = await response.Content.ReadAsStringAsync();
-                var data = JsonSerializer.Deserialize<NacidDetailedSpecialtyResponse>(json);
-                return data?.Result ?? new List<NacidDetailedSpecialty>();
+                for (var skip = 0; skip < 2_000_000; skip += limit)
+                {
+                    var response = await _httpClient.GetAsync(
+                        $"api/RuPublic/Nomenclatures/Speciality/ProfessionalFields?skip={skip}&limit={limit}");
+                    response.EnsureSuccessStatusCode();
+                    var json = await response.Content.ReadAsStringAsync();
+                    var data = JsonSerializer.Deserialize<NacidDetailedSpecialtyResponse>(json);
+                    var batch = data?.Result ?? new List<NacidDetailedSpecialty>();
+                    if (batch.Count == 0)
+                        break;
+                    all.AddRange(batch);
+                    if (batch.Count < limit)
+                        break;
+                }
+
+                _logger.LogInformation("NACID detailed specialties loaded: {Count}", all.Count);
+                return all;
             }
             catch (Exception ex)
             {
@@ -146,8 +175,21 @@ namespace UniversityFinder.Services
             var categories = await _supabaseService.GetSubjectCategoriesAsync();
             var categoryMap = BuildCategoryNameMap(categories);
             var nacidSpecialties = await GetDetailedSpecialtiesAsync();
-            var updated = 0;
+            var subjectsByName = new Dictionary<string, List<Subject>>(StringComparer.OrdinalIgnoreCase);
+            foreach (var s in await _supabaseService.GetAllSubjectsWithCategoryAsync())
+            {
+                var key = s.Name.Trim();
+                if (string.IsNullOrEmpty(key)) continue;
+                if (!subjectsByName.TryGetValue(key, out var list))
+                {
+                    list = new List<Subject>();
+                    subjectsByName[key] = list;
+                }
 
+                list.Add(s);
+            }
+
+            var updated = 0;
             foreach (var spec in nacidSpecialties)
             {
                 if (!spec.IsActive) continue;
@@ -156,7 +198,9 @@ namespace UniversityFinder.Services
                 if (targetId == null) continue;
 
                 var trimmedName = spec.Name.Trim();
-                var rows = await _supabaseService.GetSubjectsAsync(trimmedName);
+                if (!subjectsByName.TryGetValue(trimmedName, out var rows))
+                    continue;
+
                 foreach (var sub in rows)
                 {
                     if (sub.CategoryId == targetId) continue;
