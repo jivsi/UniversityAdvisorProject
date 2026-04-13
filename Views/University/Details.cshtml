@@ -27,7 +27,7 @@
                     <button 
                         id="favoriteBtn" 
                         class="px-6 py-3 rounded-2xl font-semibold transition-all transform hover:scale-105 @(isFavorited ? "bg-yellow-500 text-white" : "bg-white/20 backdrop-blur-sm text-white border-2 border-white/30")"
-                        data-university-name="@Model.Name"
+                        data-university-id="@Model.Id"
                     >
                         <div class="flex items-center gap-2">
                             <i data-lucide="@(isFavorited ? "star" : "star")" class="w-5 h-5 @(isFavorited ? "fill-current" : "")"></i>
@@ -284,28 +284,42 @@
             var btn = $(this);
             var text = $('#favoriteText');
             var icon = btn.find('i');
-            
-            $.ajax({
-                url: '@Url.Action("ToggleFavorite", "University")',
-                type: 'POST',
-                data: { universityId: universityId },
-                success: function(response) {
-                    if (response.favorited) {
-                        btn.removeClass('bg-white/20 border-white/30').addClass('bg-yellow-500');
-                        text.text('В Любими');
-                        icon.attr('data-lucide', 'star');
-                        icon.addClass('fill-current');
-                    } else {
-                        btn.removeClass('bg-yellow-500').addClass('bg-white/20 border-white/30');
-                        text.text('Добави в Любими');
-                        icon.attr('data-lucide', 'star');
-                        icon.removeClass('fill-current');
-                    }
-                    lucide.createIcons();
-                },
-                error: function() {
-                    alert('Възникна грешка. Моля, опитайте отново.');
+
+            if (!universityId) {
+                alert('Липсва ID на университета.');
+                return;
+            }
+
+            btn.prop('disabled', true);
+
+            fetch('@Url.Action("ToggleFavoriteByGuid", "University")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `universityId=${encodeURIComponent(universityId)}`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
                 }
+                return response.json();
+            })
+            .then(response => {
+                if (response.favorited) {
+                    btn.removeClass('bg-white/20 border-white/30').addClass('bg-yellow-500');
+                    text.text('В Любими');
+                    icon.addClass('fill-current');
+                } else {
+                    btn.removeClass('bg-yellow-500').addClass('bg-white/20 border-white/30');
+                    text.text('Добави в Любими');
+                    icon.removeClass('fill-current');
+                }
+                lucide.createIcons();
+            })
+            .catch(() => {
+                alert('Възникна грешка. Моля, опитайте отново.');
+            })
+            .finally(() => {
+                btn.prop('disabled', false);
             });
         });
     </script>

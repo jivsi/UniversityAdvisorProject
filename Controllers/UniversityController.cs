@@ -148,6 +148,7 @@ namespace UniversityFinder.Controllers
                 var userId = GetCurrentUserId();
                 if (!string.IsNullOrEmpty(userId))
                 {
+                    ViewBag.IsFavorited = await _supabaseService.IsFavoriteByGuidAsync(userId, university.Id.Value);
                     await _universityHistoryService.TrackVisitAsync(userId, university.Id.Value);
                 }
             }

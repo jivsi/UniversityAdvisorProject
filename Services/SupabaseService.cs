@@ -388,7 +388,7 @@ namespace UniversityFinder.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&UniversityId=eq.{universityId}&select=Id");
+                var response = await _httpClient.GetAsync($"UserFavorites?UserId=eq.{Uri.EscapeDataString(userId)}&UniversityId=eq.{universityId}&select=Id");
                 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -416,7 +416,7 @@ namespace UniversityFinder.Services
             try
             {
                 var guidString = universityId.ToString();
-                var response = await _httpClient.GetAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&UniversityId=eq.{guidString}&select=Id");
+                var response = await _httpClient.GetAsync($"UserFavorites?UserId=eq.{Uri.EscapeDataString(userId)}&UniversityId=eq.{guidString}&select=Id");
                 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -447,7 +447,7 @@ namespace UniversityFinder.Services
 
                 if (exists)
                 {
-                    var deleteResponse = await _httpClient.DeleteAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&UniversityId=eq.{universityId}");
+                    var deleteResponse = await _httpClient.DeleteAsync($"UserFavorites?UserId=eq.{Uri.EscapeDataString(userId)}&UniversityId=eq.{universityId}");
                     if (!deleteResponse.IsSuccessStatusCode)
                     {
                         var errorBody = await deleteResponse.Content.ReadAsStringAsync();
@@ -504,7 +504,7 @@ namespace UniversityFinder.Services
 
                 if (exists)
                 {
-                    var deleteResponse = await _httpClient.DeleteAsync($"UserFavorites?userId=eq.{Uri.EscapeDataString(userId)}&UniversityId=eq.{guidString}");
+                    var deleteResponse = await _httpClient.DeleteAsync($"UserFavorites?UserId=eq.{Uri.EscapeDataString(userId)}&UniversityId=eq.{guidString}");
                     if (!deleteResponse.IsSuccessStatusCode)
                     {
                         var errorBody = await deleteResponse.Content.ReadAsStringAsync();

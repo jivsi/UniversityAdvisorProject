@@ -122,7 +122,7 @@
                                 <div class="p-4 rounded-2xl bg-white/40 dark:bg-gray-800/40 border border-white/20 dark:border-white/10 hover:shadow-md transition-shadow">
                                     <div class="flex items-center justify-between">
                                         <div>
-                                            <h3 class="font-bold text-lg">@program.Name</h3>
+                                            <h3 class="font-bold text-lg">@(string.IsNullOrWhiteSpace(program.Name) ? (program.Subject?.Name ?? "Неизвестна специалност") : program.Name)</h3>
                                             <div class="flex items-center gap-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
                                                 @if (!string.IsNullOrEmpty(program.DegreeType))
                                                 {

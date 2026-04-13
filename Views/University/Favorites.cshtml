@@ -35,7 +35,7 @@
                             <!-- Remove Favorite Button -->
                             <button 
                                 class="absolute top-4 right-4 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-red-500/80 transition-all remove-favorite-btn"
-                                data-university-name="@university.Name"
+                                data-university-id="@university.Id"
                                 title="Премахни от любими"
                             >
                                 <i data-lucide="x" class="w-5 h-5 text-white"></i>
@@ -131,32 +131,38 @@
                 card.style.transform = 'scale(0.9)';
                 
                 setTimeout(() => {
-                    $.ajax({
-                        url: '@Url.Action("ToggleFavorite", "University")',
-                        type: 'POST',
-                        data: { universityId: universityId },
-                        success: function(response) {
-                            // Remove card from DOM
-                            card.remove();
-                            
-                            // Update count if needed
-                            const countElement = document.querySelector('span.font-bold');
-                            if (countElement) {
-                                const currentCount = parseInt(countElement.textContent);
-                                if (currentCount > 1) {
-                                    countElement.textContent = currentCount - 1;
-                                } else {
-                                    // Reload page if no favorites left
-                                    location.reload();
-                                }
-                            }
-                        },
-                        error: function() {
-                            // Restore card on error
-                            card.style.opacity = '1';
-                            card.style.transform = 'scale(1)';
-                            alert('Неуспешно премахване от любими. Моля, опитайте отново.');
+                    fetch('@Url.Action("ToggleFavoriteByGuid", "University")', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `universityId=${encodeURIComponent(universityId ?? '')}`
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}`);
                         }
+                        return response.json();
+                    })
+                    .then(() => {
+                        // Remove card from DOM
+                        card.remove();
+
+                        // Update count if needed
+                        const countElement = document.querySelector('span.font-bold');
+                        if (countElement) {
+                            const currentCount = parseInt(countElement.textContent);
+                            if (currentCount > 1) {
+                                countElement.textContent = currentCount - 1;
+                            } else {
+                                // Reload page if no favorites left
+                                location.reload();
+                            }
+                        }
+                    })
+                    .catch(() => {
+                        // Restore card on error
+                        card.style.opacity = '1';
+                        card.style.transform = 'scale(1)';
+                        alert('Неуспешно премахване от любими. Моля, опитайте отново.');
                     });
                 }, 300);
             });

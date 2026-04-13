@@ -307,12 +307,6 @@
                     return;
                 }
                 
-                const icon = btn.querySelector('i');
-                if (!icon) {
-                    console.error('Елементът икона не е намерен');
-                    return;
-                }
-                
                 // Disable button during request
                 btn.disabled = true;
                 
@@ -339,6 +333,12 @@
                 })
                 .then(data => {
                     if (data && typeof data.favorited !== 'undefined') {
+                        // Lucide replaces <i> with <svg>, so support both.
+                        const icon = btn.querySelector('svg, i');
+                        if (!icon) {
+                            throw new Error('Иконата на сърцето не е намерена');
+                        }
+
                         if (data.favorited) {
                             // Animate favorite add
                             btn.classList.add('favorite-added');
