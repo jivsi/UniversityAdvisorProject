@@ -678,5 +678,22 @@ namespace UniversityFinder.Controllers
             }
             return RedirectToAction(nameof(ManagePrograms), new { id = universityId });
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProgram(Guid id, Guid universityId, string? degreeType, int? duration, decimal? tuitionFee)
+        {
+            var success = await _supabaseService.UpdateUniversityProgramAsync(id, degreeType, duration, tuitionFee);
+            if (success)
+            {
+                TempData["SuccessMessage"] = "✅ Специалността беше обновена.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "❌ Грешка при обновяване на специалността.";
+            }
+
+            return RedirectToAction(nameof(ManagePrograms), new { id = universityId });
+        }
     }
 }

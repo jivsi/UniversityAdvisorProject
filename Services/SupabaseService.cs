@@ -841,6 +841,25 @@ namespace UniversityFinder.Services
             return response.IsSuccessStatusCode;
         }
 
+        public async Task<bool> UpdateUniversityProgramAsync(Guid id, string? degreeType, int? duration, decimal? tuitionFee)
+        {
+            var dto = new
+            {
+                DegreeType = string.IsNullOrWhiteSpace(degreeType) ? null : degreeType.Trim(),
+                TuitionFee = tuitionFee
+            };
+
+            var json = JsonSerializer.Serialize(dto, JsonPascalWriteOptions());
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PatchAsync($"UniversityPrograms?Id=eq.{id}", content);
+            if (response.IsSuccessStatusCode)
+                return true;
+
+            var body = await response.Content.ReadAsStringAsync();
+            _logger.LogError("Update UniversityProgram failed: {Status} - {Body}", response.StatusCode, body);
+            return false;
+        }
+
         // ================= SUBJECTS =================
 
         public async Task<Subject?> InsertSubjectAsync(Subject subject)
