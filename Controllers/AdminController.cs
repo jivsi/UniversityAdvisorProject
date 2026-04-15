@@ -630,7 +630,8 @@ namespace UniversityFinder.Controllers
 
             var programs = await _supabaseService.GetProgramsAsync(id);
             var categories = await _supabaseService.GetSubjectCategoriesAsync();
-            var subjects = await _supabaseService.GetSubjectsAsync();
+            // Load all subjects with paging (single-call endpoint may be capped by PostgREST max rows).
+            var subjects = await _supabaseService.GetAllSubjectsWithCategoryAsync();
 
             ViewBag.University = university;
             ViewBag.Categories = categories;
@@ -641,16 +642,54 @@ namespace UniversityFinder.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddProgram(Guid universityId, Guid subjectId, string? degreeType, int? duration, decimal? tuitionFee)
+        public async Task<IActionResult> AddProgram(Guid universityId, Guid? subjectId, string? subjectName, string? categoryId, string? degreeType, int? duration, decimal? tuitionFee)
         {
-            var subjects = await _supabaseService.GetSubjectsAsync();
-            var subject = subjects.FirstOrDefault(s => s.Id == subjectId);
-            if (subject == null) return BadRequest("Subject not found");
+            Subject? subject = null;
+
+            // Existing subject selected from UI suggestions.
+            if (subjectId.HasValue && subjectId.Value != Guid.Empty)
+            {
+                var subjects = await _supabaseService.GetAllSubjectsWithCategoryAsync();
+                subject = subjects.FirstOrDefault(s => s.Id == subjectId.Value);
+            }
+
+            // Manual input fallback: create subject if it does not exist yet.
+            if (subject == null)
+            {
+                var trimmedName = (subjectName ?? string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(trimmedName))
+                    return BadRequest("Subject not found");
+
+                var allSubjects = await _supabaseService.GetAllSubjectsWithCategoryAsync();
+                subject = allSubjects.FirstOrDefault(s =>
+                    !string.IsNullOrWhiteSpace(s.Name) &&
+                    string.Equals(s.Name.Trim(), trimmedName, StringComparison.CurrentCultureIgnoreCase));
+
+                if (subject == null)
+                {
+                    Guid? parsedCategoryId = null;
+                    if (!string.IsNullOrWhiteSpace(categoryId) &&
+                        !string.Equals(categoryId, "none", StringComparison.OrdinalIgnoreCase) &&
+                        Guid.TryParse(categoryId, out var catGuid))
+                    {
+                        parsedCategoryId = catGuid;
+                    }
+
+                    subject = await _supabaseService.InsertSubjectAsync(new Subject
+                    {
+                        Name = trimmedName,
+                        CategoryId = parsedCategoryId
+                    });
+                }
+            }
+
+            if (subject == null || subject.Id == Guid.Empty)
+                return BadRequest("Subject not found");
 
             var program = new UniversityProgram
             {
                 UniversityId = universityId,
-                SubjectId = subjectId,
+                SubjectId = subject.Id,
                 Name = subject.Name,
                 DegreeType = degreeType,
                 Duration = duration,

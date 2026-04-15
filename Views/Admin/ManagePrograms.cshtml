@@ -62,7 +62,7 @@
 
                         <div class="mb-4">
                             <label class="block text-sm font-semibold mb-2">Категория</label>
-                            <select id="categorySelect" autocomplete="off" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <select id="categorySelect" name="categoryId" autocomplete="off" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500">
                                 <option value="">Изберете категория...</option>
                                 @foreach (var cat in categories)
                                 {
@@ -73,9 +73,10 @@
 
                         <div class="mb-4">
                             <label class="block text-sm font-semibold mb-2">Специалност</label>
-                            <select id="subjectSelect" name="subjectId" autocomplete="off" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500" required disabled>
-                                <option value="">Първо изберете категория...</option>
-                            </select>
+                            <input type="hidden" id="subjectIdInput" name="subjectId" />
+                            <input id="subjectInput" name="subjectName" list="subjectOptions" autocomplete="off" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Започнете да пишете специалност..." required />
+                            <datalist id="subjectOptions"></datalist>
+                            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Можете да изберете от предложенията или да въведете нова специалност ръчно.</p>
                         </div>
 
                         <div class="mb-4">
@@ -230,7 +231,9 @@
         if (!Array.isArray(subjects)) subjects = [];
 
         const categorySelect = document.getElementById('categorySelect');
-        const subjectSelect = document.getElementById('subjectSelect');
+        const subjectInput = document.getElementById('subjectInput');
+        const subjectIdInput = document.getElementById('subjectIdInput');
+        const subjectOptions = document.getElementById('subjectOptions');
 
         function toggleEditForm(programId) {
             const form = document.getElementById(`edit-form-${programId}`);
@@ -249,6 +252,35 @@
             return (s == null ? '' : String(s)).trim().toLowerCase();
         }
 
+        function normName(s) {
+            return (s == null ? '' : String(s)).trim().toLowerCase();
+        }
+
+        function resolveSubjectIdFromInput() {
+            const typed = normName(subjectInput ? subjectInput.value : '');
+            if (!typed) {
+                subjectIdInput.value = '';
+                return;
+            }
+
+            const exact = subjects.find(s => normName(s.name) === typed);
+            subjectIdInput.value = exact ? exact.id : '';
+        }
+
+        function populateSubjectOptions(filteredSubjects) {
+            if (!subjectOptions) return;
+            subjectOptions.innerHTML = '';
+
+            filteredSubjects
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .forEach(s => {
+                    const option = document.createElement('option');
+                    option.value = s.name;
+                    option.dataset.subjectId = s.id;
+                    subjectOptions.appendChild(option);
+                });
+        }
+
         if (subjects.some(s => !s.categoryId)) {
             const uncatOption = document.createElement('option');
             uncatOption.value = "none";
@@ -259,11 +291,9 @@
         categorySelect.addEventListener('change', function () {
             const categoryId = this.value;
 
-            subjectSelect.innerHTML = '<option value="">Изберете специалност...</option>';
-
             if (!categoryId) {
-                subjectSelect.innerHTML = '<option value="">Първо изберете категория...</option>';
-                subjectSelect.disabled = true;
+                populateSubjectOptions([]);
+                subjectIdInput.value = '';
                 return;
             }
 
@@ -282,22 +312,13 @@
                 });
             }
 
-            if (filteredSubjects.length > 0) {
-                filteredSubjects.sort((a, b) => a.name.localeCompare(b.name));
-                filteredSubjects.forEach(s => {
-                    const option = document.createElement('option');
-                    option.value = s.id;
-                    option.textContent = s.name;
-                    subjectSelect.appendChild(option);
-                });
-                subjectSelect.disabled = false;
-            } else {
-                const option = document.createElement('option');
-                option.value = "";
-                option.textContent = "Няма специалности в тази категория";
-                subjectSelect.appendChild(option);
-                subjectSelect.disabled = true;
-            }
+            populateSubjectOptions(filteredSubjects);
+            resolveSubjectIdFromInput();
         });
+
+        if (subjectInput) {
+            subjectInput.addEventListener('input', resolveSubjectIdFromInput);
+            subjectInput.addEventListener('change', resolveSubjectIdFromInput);
+        }
     </script>
 }
