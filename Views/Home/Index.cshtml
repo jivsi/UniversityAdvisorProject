@@ -42,59 +42,6 @@
                     </div>
                 </div>
 
-                <!-- Cities Grid -->
-                <div class="mb-8">
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
-                        Намерете Университети в Топ Градове
-                    </h2>
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="citiesGrid">
-                        @if (ViewBag.Cities != null)
-                        {
-                            @foreach (var city in ViewBag.Cities as List<string>)
-                            {
-                                <a 
-                                    asp-controller="University" 
-                                    asp-action="Index" 
-                                    asp-route-city="@city"
-                                    class="city-card group relative bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-700 dark:to-gray-800 rounded-2xl p-4 border-2 border-green-200 dark:border-green-800 hover:border-green-500 dark:hover:border-green-500 hover:shadow-lg transition-all duration-300 transform hover:scale-105 cursor-pointer"
-                                    data-city="@city"
-                                >
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                                            <i data-lucide="map-pin" class="w-6 h-6 text-white"></i>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <h3 class="font-bold text-gray-900 dark:text-white text-sm md:text-base truncate">@city</h3>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Floating Action Buttons (shown on hover) -->
-                                    <div class="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <a 
-                                            asp-controller="University" 
-                                            asp-action="Index" 
-                                            asp-route-city="@city"
-                                            class="w-10 h-10 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center shadow-lg transform hover:scale-110 transition-all"
-                                            title="Виж Университетите"
-                                        >
-                                            <i data-lucide="building-2" class="w-5 h-5"></i>
-                                        </a>
-                                        <a 
-                                            asp-controller="University" 
-                                            asp-action="Search" 
-                                            asp-route-City="@city"
-                                            class="w-10 h-10 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg transform hover:scale-110 transition-all"
-                                            title="Търси в @city"
-                                        >
-                                            <i data-lucide="search" class="w-5 h-5"></i>
-                                        </a>
-                                    </div>
-                                </a>
-                            }
-                        }
-                    </div>
-                </div>
-
                 <!-- Next Button -->
                 <div class="text-center">
                     <a 
@@ -323,27 +270,9 @@
                 window.location.href = `@Url.Action("Index", "University")?city=${encodeURIComponent(selectedCity)}`;
             }
         });
-
-        // Add hover effects to city cards
-        document.querySelectorAll('.city-card').forEach(card => {
-            card.addEventListener('mouseenter', function() {
-                this.style.transform = 'scale(1.05)';
-            });
-            card.addEventListener('mouseleave', function() {
-                this.style.transform = 'scale(1)';
-            });
-        });
     </script>
     
     <style>
-        .city-card {
-            position: relative;
-        }
-        
-        .city-card:hover {
-            z-index: 10;
-        }
-        
         /* Custom scrollbar for autocomplete */
         #homeAutocompleteResults::-webkit-scrollbar {
             width: 8px;

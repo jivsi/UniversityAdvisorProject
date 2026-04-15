@@ -8,6 +8,22 @@ namespace UniversityFinder.Services
 {
     public class NacidScraperService
     {
+        internal static string NormalizeDegreeType(string? value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim().ToLowerInvariant();
+        }
+
+        internal static string NormalizeStudyForm(string? value)
+        {
+            var v = (value ?? string.Empty).Trim().ToLowerInvariant();
+            return v switch
+            {
+                "редовно" => "Редовно",
+                "задочно" => "Задочно",
+                _ => string.Empty
+            };
+        }
+
         /// <summary>
         /// NACID research-area main numbers 1–9 map to these SubjectCategory names (same order as admin seed).
         /// </summary>

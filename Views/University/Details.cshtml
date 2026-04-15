@@ -170,10 +170,41 @@
                         
                         @if (Model.Programs != null && Model.Programs.Any())
                         {
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="mb-6 flex flex-wrap gap-2" id="degreeFilters">
+                                <button type="button"
+                                        class="degree-filter-btn active px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-gradient-to-r from-green-600 to-emerald-600 text-white"
+                                        data-degree="all">
+                                    Всички
+                                </button>
+                                <button type="button"
+                                        class="degree-filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition-all text-gray-600 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-gray-800"
+                                        data-degree="бакалавър">
+                                    Бакалавър
+                                </button>
+                                <button type="button"
+                                        class="degree-filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition-all text-gray-600 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-gray-800"
+                                        data-degree="магистър">
+                                    Магистър
+                                </button>
+                                <button type="button"
+                                        class="degree-filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition-all text-gray-600 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-gray-800"
+                                        data-degree="доктор">
+                                    Доктор
+                                </button>
+                            </div>
+
+                            <div id="programsEmptyFiltered" class="hidden text-center py-8">
+                                <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i data-lucide="filter-x" class="w-8 h-8 text-gray-400"></i>
+                                </div>
+                                <p class="text-gray-500 dark:text-gray-400">Няма специалности за избраната степен.</p>
+                            </div>
+
+                            <div id="programsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 @foreach (var program in Model.Programs.OrderBy(p => p.Subject?.Name ?? p.Name))
                                 {
-                                    <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6 hover:shadow-lg transition-all border border-white/20 dark:border-white/10">
+                                    <div class="program-card bg-white/50 dark:bg-gray-800/50 rounded-2xl p-6 hover:shadow-lg transition-all border border-white/20 dark:border-white/10"
+                                         data-degree="@((program.DegreeType ?? string.Empty).Trim().ToLowerInvariant())">
                                         <div class="flex items-start justify-between mb-2">
                                             <h3 class="text-lg font-bold">@(string.IsNullOrEmpty(program.Name) ? program.Subject?.Name : program.Name)</h3>
                                             @if (!string.IsNullOrEmpty(program.DegreeType))
@@ -189,15 +220,61 @@
                                                 <i data-lucide="book-open" class="w-4 h-4"></i>
                                                 @(program.Subject?.Name ?? "Обща специалност")
                                             </span>
-                                            @if (program.TuitionFee > 0)
-                                            {
-                                                <span class="flex items-center gap-2">
-                                                    <i data-lucide="banknote" class="w-4 h-4"></i>
-                                                    @program.TuitionFee лв.
-                                                </span>
-                                            }
+                                            @* Такса: премахнато *@
+                                        </div>
+
+                                        <div class="mt-5 flex justify-end">
+                                            <button type="button"
+                                                    class="px-4 py-2 rounded-xl text-sm font-semibold bg-white/30 dark:bg-gray-700/30 hover:bg-white/40 dark:hover:bg-gray-700/40 transition-colors flex items-center gap-2"
+                                                    onclick="openProgramDialog('@program.Id')">
+                                                <i data-lucide="info" class="w-4 h-4"></i>
+                                                Детайли
+                                            </button>
                                         </div>
                                     </div>
+
+                                    <dialog id="program-dialog-@program.Id" class="program-dialog rounded-2xl p-0 w-[92vw] max-w-lg bg-transparent">
+                                        <div class="glass dark:glass-dark rounded-3xl p-6 border border-white/20 dark:border-white/10">
+                                            <div class="flex items-start justify-between gap-4">
+                                                <div class="min-w-0">
+                                                    <h3 class="text-xl font-bold break-words">@(string.IsNullOrEmpty(program.Name) ? program.Subject?.Name : program.Name)</h3>
+                                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 break-words">
+                                                        @(program.Subject?.Name ?? "Обща специалност")
+                                                    </p>
+                                                </div>
+                                                <button type="button"
+                                                        class="p-2 rounded-xl text-emerald-200 hover:text-white hover:bg-white/20 dark:hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/80"
+                                                        onclick="closeProgramDialog('@program.Id')"
+                                                        aria-label="Затвори">
+                                                    <i data-lucide="x" class="w-5 h-5"></i>
+                                                </button>
+                                            </div>
+
+                                            <div class="mt-6 space-y-3 text-sm">
+                                                <div class="flex items-center justify-between gap-4">
+                                                    <span class="text-gray-300">Степен</span>
+                                                    <span class="font-semibold text-white">@(!string.IsNullOrWhiteSpace(program.DegreeType) ? program.DegreeType : "—")</span>
+                                                </div>
+                                                <div class="flex items-center justify-between gap-4">
+                                                    <span class="text-gray-300">Вид обучение</span>
+                                                    <span class="font-semibold text-white">@(!string.IsNullOrWhiteSpace(program.StudyForm) ? program.StudyForm : "—")</span>
+                                                </div>
+                                                <div class="flex items-center justify-between gap-4">
+                                                    <span class="text-gray-300">Продължителност (години)</span>
+                                                    <span class="font-semibold text-white">@(program.Duration.HasValue ? program.Duration.Value.ToString() : "—")</span>
+                                                </div>
+                                                @* Такса: премахнато *@
+                                            </div>
+
+                                            <div class="mt-6 flex justify-end">
+                                                <button type="button"
+                                                        class="px-5 py-2 rounded-xl font-semibold bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-lg transition-all"
+                                                        onclick="closeProgramDialog('@program.Id')">
+                                                    Затвори
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </dialog>
                                 }
                             </div>
                         }
@@ -249,6 +326,13 @@
 </div>
 
 @section Scripts {
+    <style>
+        /* Keep selection and focus styles consistent in program dialogs */
+        dialog.program-dialog:focus { outline: none; }
+        dialog.program-dialog::selection { background: rgba(16, 185, 129, 0.35); color: #fff; }
+        dialog.program-dialog *::selection { background: rgba(16, 185, 129, 0.35); color: #fff; }
+        dialog.program-dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+    </style>
     <script>
         lucide.createIcons();
         
@@ -277,6 +361,74 @@
                 }
             });
         });
+
+        // Programs degree filters
+        const degreeFilterButtons = document.querySelectorAll('.degree-filter-btn');
+        const programCards = document.querySelectorAll('.program-card');
+        const programsEmptyFiltered = document.getElementById('programsEmptyFiltered');
+
+        function normalizeDegree(value) {
+            return (value || '').trim().toLowerCase();
+        }
+
+        function setActiveDegreeFilter(activeButton) {
+            degreeFilterButtons.forEach(btn => {
+                btn.classList.remove('active', 'bg-gradient-to-r', 'from-green-600', 'to-emerald-600', 'text-white');
+                btn.classList.add('text-gray-600', 'dark:text-gray-400');
+            });
+
+            activeButton.classList.add('active', 'bg-gradient-to-r', 'from-green-600', 'to-emerald-600', 'text-white');
+            activeButton.classList.remove('text-gray-600', 'dark:text-gray-400');
+        }
+
+        function applyDegreeFilter(degree) {
+            let visibleCount = 0;
+            const normalizedWanted = normalizeDegree(degree);
+
+            programCards.forEach(card => {
+                const programDegree = normalizeDegree(card.dataset.degree);
+                const matches = normalizedWanted === 'all' || programDegree === normalizedWanted;
+                card.classList.toggle('hidden', !matches);
+                if (matches) visibleCount++;
+            });
+
+            if (programsEmptyFiltered) {
+                programsEmptyFiltered.classList.toggle('hidden', visibleCount > 0);
+            }
+        }
+
+        degreeFilterButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const degree = this.dataset.degree || 'all';
+                setActiveDegreeFilter(this);
+                applyDegreeFilter(degree);
+            });
+        });
+
+        // Program details dialogs
+        function openProgramDialog(id) {
+            const dlg = document.getElementById(`program-dialog-${id}`);
+            if (!dlg) return;
+            if (typeof dlg.showModal === 'function') {
+                dlg.showModal();
+            } else {
+                dlg.setAttribute('open', 'open');
+            }
+            lucide.createIcons();
+        }
+
+        function closeProgramDialog(id) {
+            const dlg = document.getElementById(`program-dialog-${id}`);
+            if (!dlg) return;
+            if (typeof dlg.close === 'function') {
+                dlg.close();
+            } else {
+                dlg.removeAttribute('open');
+            }
+        }
+
+        window.openProgramDialog = openProgramDialog;
+        window.closeProgramDialog = closeProgramDialog;
         
         // Favorite toggle
         $('#favoriteBtn').click(function() {

@@ -642,7 +642,7 @@ namespace UniversityFinder.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddProgram(Guid universityId, Guid? subjectId, string? subjectName, string? categoryId, string? degreeType, int? duration, decimal? tuitionFee)
+        public async Task<IActionResult> AddProgram(Guid universityId, Guid? subjectId, string? subjectName, string? categoryId, string? degreeType, int? duration, string? studyForm)
         {
             Subject? subject = null;
 
@@ -693,7 +693,7 @@ namespace UniversityFinder.Controllers
                 Name = subject.Name,
                 DegreeType = degreeType,
                 Duration = duration,
-                TuitionFee = tuitionFee,
+                StudyForm = studyForm,
                 IsInferred = false
             };
 
@@ -720,9 +720,9 @@ namespace UniversityFinder.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateProgram(Guid id, Guid universityId, string? degreeType, int? duration, decimal? tuitionFee)
+        public async Task<IActionResult> UpdateProgram(Guid id, Guid universityId, string? degreeType, int? duration, string? studyForm)
         {
-            var success = await _supabaseService.UpdateUniversityProgramAsync(id, degreeType, duration, tuitionFee);
+            var success = await _supabaseService.UpdateUniversityProgramAsync(id, degreeType, duration, studyForm);
             if (success)
             {
                 TempData["SuccessMessage"] = "✅ Специалността беше обновена.";

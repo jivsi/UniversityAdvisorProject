@@ -707,7 +707,7 @@ namespace UniversityFinder.Services
         {
             // Changed UniversityProgram -> UniversityPrograms and Subject -> Subjects
             // Corrected Subject:Subjects(Name) -> Subject:Subjects(name) for join
-            var url = "UniversityPrograms?select=*,University:universities(Name),Subject:Subjects(name)";
+            var url = "UniversityPrograms?select=Id,UniversityId,SubjectId,DegreeType,StudyForm,Duration,University:universities(Name),Subject:Subjects(name)";
             
             if (universityId.HasValue)
             {
@@ -815,7 +815,8 @@ namespace UniversityFinder.Services
                 UniversityId = program.UniversityId,
                 SubjectId = program.SubjectId,
                 DegreeType = program.DegreeType,
-                TuitionFee = program.TuitionFee
+                StudyForm = string.IsNullOrWhiteSpace(program.StudyForm) ? null : program.StudyForm.Trim(),
+                Duration = program.Duration
             };
 
             var json = JsonSerializer.Serialize(dto, JsonPascalWriteOptions());
@@ -841,12 +842,13 @@ namespace UniversityFinder.Services
             return response.IsSuccessStatusCode;
         }
 
-        public async Task<bool> UpdateUniversityProgramAsync(Guid id, string? degreeType, int? duration, decimal? tuitionFee)
+        public async Task<bool> UpdateUniversityProgramAsync(Guid id, string? degreeType, int? duration, string? studyForm)
         {
             var dto = new
             {
                 DegreeType = string.IsNullOrWhiteSpace(degreeType) ? null : degreeType.Trim(),
-                TuitionFee = tuitionFee
+                Duration = duration,
+                StudyForm = string.IsNullOrWhiteSpace(studyForm) ? null : studyForm.Trim()
             };
 
             var json = JsonSerializer.Serialize(dto, JsonPascalWriteOptions());

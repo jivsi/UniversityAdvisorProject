@@ -23,4 +23,11 @@
     <PackageReference Include="Supabase" Version="1.1.1" />
   </ItemGroup>
 
+  <!-- Prevent the web app project from compiling test sources -->
+  <ItemGroup>
+    <Compile Remove="UniversityFinder.Tests\**\*.cs" />
+    <None Remove="UniversityFinder.Tests\**\*" />
+    <Content Remove="UniversityFinder.Tests\**\*" />
+  </ItemGroup>
+
 </Project>

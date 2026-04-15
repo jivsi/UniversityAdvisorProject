@@ -1,0 +1,8 @@
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\UniversityFinder.Tests\bin\Debug\net9.0\.msCoverageSourceRootsMapping_UniversityFinder.Tests
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\UniversityFinder.Tests\bin\Debug\net9.0\CoverletSourceRootsMapping_UniversityFinder.Tests
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\UniversityFinder.Tests\obj\Debug\net9.0\UniversityFinder.Tests.csproj.AssemblyReference.cache
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\UniversityFinder.Tests\obj\Debug\net9.0\UniversityFinder.Tests.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\UniversityFinder.Tests\obj\Debug\net9.0\UniversityFinder.Tests.AssemblyInfoInputs.cache
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\UniversityFinder.Tests\obj\Debug\net9.0\UniversityFinder.Tests.AssemblyInfo.cs
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\UniversityFinder.Tests\obj\Debug\net9.0\UniversityFinder.Tests.csproj.CoreCompileInputs.cache
+C:\Users\defaultuser0\source\repos\UniversityAdvisorProject\UniversityFinder.Tests\obj\Debug\net9.0\UniversityFinder.Tests.sourcelink.json

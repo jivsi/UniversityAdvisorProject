@@ -29,6 +29,10 @@ namespace UniversityFinder.Models
         public int? Duration { get; set; } // Duration in months
 
         [MaxLength(50)]
+        [JsonPropertyName("StudyForm")]
+        public string? StudyForm { get; set; } // "Редовно" / "Задочно"
+
+        [MaxLength(50)]
         [JsonPropertyName("Language")]
         public string? Language { get; set; }
 

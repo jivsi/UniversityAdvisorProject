@@ -90,14 +90,20 @@
                         </div>
 
                         <div class="mb-4">
+                            <label class="block text-sm font-semibold mb-2">Вид обучение</label>
+                            <select name="studyForm" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">Изберете вид...</option>
+                                <option value="Редовно">Редовно</option>
+                                <option value="Задочно">Задочно</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
                             <label class="block text-sm font-semibold mb-2">Продължителност (семестри/години)</label>
                             <input name="duration" type="number" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="напр. 8" />
                         </div>
 
-                        <div class="mb-6">
-                            <label class="block text-sm font-semibold mb-2">Такса</label>
-                            <input name="tuitionFee" type="number" step="0.01" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="0.00" />
-                        </div>
+                        <div class="mb-6"></div>
 
                         <button type="submit" class="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
                             <i data-lucide="plus" class="w-5 h-5"></i>
@@ -139,13 +145,7 @@
                                                         @program.Duration.Value месеца/год.
                                                     </span>
                                                 }
-                                                @if (program.TuitionFee.HasValue)
-                                                {
-                                                    <span class="flex items-center gap-1">
-                                                        <i data-lucide="banknote" class="w-4 h-4"></i>
-                                                        @program.TuitionFee.Value.ToString("F2") лв.
-                                                    </span>
-                                                }
+                                                @* Такса: премахнато *@
                                             </div>
                                         </div>
 
@@ -183,12 +183,16 @@
                                                 </select>
                                             </div>
                                             <div>
-                                                <label class="block text-xs font-semibold mb-1">Продължителност</label>
-                                                <input name="duration" type="number" value="@program.Duration" class="w-full px-3 py-2 rounded-lg bg-white/70 dark:bg-gray-800/70 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                                <label class="block text-xs font-semibold mb-1">Вид обучение</label>
+                                                <select name="studyForm" class="w-full px-3 py-2 rounded-lg bg-white/70 dark:bg-gray-800/70 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                    <option value="" selected="@(string.IsNullOrWhiteSpace(program.StudyForm))">Изберете вид...</option>
+                                                    <option value="Редовно" selected="@(program.StudyForm == "Редовно")">Редовно</option>
+                                                    <option value="Задочно" selected="@(program.StudyForm == "Задочно")">Задочно</option>
+                                                </select>
                                             </div>
                                             <div>
-                                                <label class="block text-xs font-semibold mb-1">Такса</label>
-                                                <input name="tuitionFee" type="number" step="0.01" value="@program.TuitionFee" class="w-full px-3 py-2 rounded-lg bg-white/70 dark:bg-gray-800/70 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                                <label class="block text-xs font-semibold mb-1">Продължителност</label>
+                                                <input name="duration" type="number" value="@program.Duration" class="w-full px-3 py-2 rounded-lg bg-white/70 dark:bg-gray-800/70 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                                             </div>
                                         </div>
 
