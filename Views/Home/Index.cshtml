@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Намерете Акредитирани Университети в България";
 }
 
@@ -22,93 +22,66 @@
                     </p>
                 </div>
 
-                <!-- City Selector -->
-                <div class="mb-8 max-w-md mx-auto">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Изберете Град...</label>
-                    <div class="relative">
-                        <select id="citySelector" class="w-full px-4 py-4 rounded-2xl bg-white dark:bg-gray-700 border-2 border-green-200 dark:border-green-800 text-gray-900 dark:text-white text-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all appearance-none cursor-pointer">
-                            <option value="">Изберете град...</option>
-                            @if (ViewBag.Cities != null)
-                            {
-                                @foreach (var city in ViewBag.Cities as List<string>)
-                                {
-                                    <option value="@city">@city</option>
-                                }
-                            }
-                        </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                            <i data-lucide="chevron-down" class="w-6 h-6 text-green-600 dark:text-green-400"></i>
+                <!-- Search Form -->
+                <form asp-controller="University" asp-action="Index" method="get" class="max-w-md mx-auto mb-8">
+                    <!-- Subject Search (moved up!) -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Търсене по Предмет</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                                <i data-lucide="search" class="w-5 h-5 text-gray-400"></i>
+                            </div>
+                            <input 
+                                type="text" 
+                                name="search" 
+                                id="homeSearchInput"
+                                class="w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-50 dark:bg-gray-700 border-2 border-green-200 dark:border-green-800 text-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                                placeholder="Напр. Право, Психология, Инженерство, Медицина..."
+                                autocomplete="off"
+                            />
+                            <div id="homeAutocompleteResults" class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-2xl p-2 max-h-60 overflow-y-auto hidden z-20 shadow-2xl border-2 border-green-200 dark:border-green-800"></div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Next Button -->
-                <div class="text-center">
-                    <a 
-                        asp-controller="University" 
-                        asp-action="Index" 
-                        class="inline-block px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2 mx-auto"
-                    >
-                        <span>Напред</span>
-                        <i data-lucide="arrow-right" class="w-5 h-5"></i>
-                    </a>
-                </div>
+                    <!-- City Selector -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Изберете Град...</label>
+                        <div class="relative">
+                            <select name="city" id="citySelector" class="w-full px-4 py-4 rounded-2xl bg-white dark:bg-gray-700 border-2 border-green-200 dark:border-green-800 text-gray-900 dark:text-white text-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all appearance-none cursor-pointer">
+                                <option value="">Всички Градове</option>
+                                @if (ViewBag.Cities != null)
+                                {
+                                    @foreach (var city in ViewBag.Cities as List<string>)
+                                    {
+                                        <option value="@city">@city</option>
+                                    }
+                                }
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                                <i data-lucide="chevron-down" class="w-6 h-6 text-green-600 dark:text-green-400"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center">
+                        <button 
+                            type="submit" 
+                            class="inline-block px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2 mx-auto w-full"
+                        >
+                            <span>Търсене</span>
+                            <i data-lucide="search" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 
-        <!-- Floating Action Buttons (Fixed Position) -->
-        <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-4">
-            <a 
-                asp-controller="University" 
-                asp-action="Index" 
-                class="w-14 h-14 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center shadow-2xl transform hover:scale-110 transition-all"
-                title="Всички Университети"
-            >
-                <i data-lucide="building-2" class="w-7 h-7"></i>
-            </a>
-            <a 
-                asp-controller="University" 
-                asp-action="Search" 
-                class="w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-2xl transform hover:scale-110 transition-all"
-                title="Търсене"
-            >
-                <i data-lucide="search" class="w-7 h-7"></i>
-            </a>
-        </div>
+
     </div>
 </section>
 
-<!-- Search Section -->
-<section class="py-20 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-900 dark:to-gray-800">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8">
-            <h2 class="text-3xl font-bold text-center mb-6 text-gray-900 dark:text-white">Търсене по Предмет</h2>
-            <form asp-controller="University" asp-action="Search" method="get" class="flex flex-col sm:flex-row gap-4 relative">
-                <div class="flex-1 relative">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                        <i data-lucide="search" class="w-5 h-5 text-gray-400"></i>
-                    </div>
-                    <input 
-                        type="text" 
-                        name="Query" 
-                        id="homeSearchInput"
-                        class="w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-50 dark:bg-gray-700 border-2 border-green-200 dark:border-green-800 text-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
-                        placeholder="Търсене по предмет (напр. Психология, Инженерство, Медицина)"
-                        autocomplete="off"
-                    />
-                    <div id="homeAutocompleteResults" class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-2xl p-2 max-h-60 overflow-y-auto hidden z-20 shadow-2xl border-2 border-green-200 dark:border-green-800"></div>
-                </div>
-                <button 
-                    type="submit" 
-                    class="px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
-                >
-                    <i data-lucide="search" class="w-5 h-5"></i>
-                    Търсене
-                </button>
-            </form>
-        </div>
-    </div>
-</section>
+
 
 <!-- Stats Section -->
 <section id="stats" class="py-20 bg-gradient-to-br from-green-50 to-emerald-50 dark:bg-gray-800/50">
@@ -191,13 +164,12 @@
     </div>
 </section>
 
-<partial name="_ChatBot" />
 
 @section Scripts {
     <script>
         lucide.createIcons();
         
-        // Autocomplete for home search
+        // Autocomplete for home search - searches BOTH subjects/specialties AND university names
         const homeSearchInput = document.getElementById('homeSearchInput');
         const homeAutocompleteResults = document.getElementById('homeAutocompleteResults');
         let homeAutocompleteTimeout;
@@ -214,20 +186,56 @@
             
             homeAutocompleteTimeout = setTimeout(async () => {
                 try {
-                    const response = await fetch(`@Url.Action("Autocomplete", "University")?query=${encodeURIComponent(query)}`);
-                    const suggestions = await response.json();
+                    // Fetch both subject and university suggestions in parallel
+                    const [subjectResponse, universityResponse] = await Promise.all([
+                        fetch(`@Url.Action("AutocompleteSubjects", "University")?query=${encodeURIComponent(query)}`),
+                        fetch(`@Url.Action("Autocomplete", "University")?query=${encodeURIComponent(query)}`)
+                    ]);
                     
-                    if (suggestions.length > 0) {
-                        homeAutocompleteResults.innerHTML = suggestions.slice(0, 5).map(s => `
-                            <div class="p-3 hover:bg-green-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer autocomplete-item transition-colors" data-name="${s.name}">
-                                <div class="font-medium text-gray-900 dark:text-white">${s.name}</div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">${s.city || ''}</div>
+                    const subjects = await subjectResponse.json();
+                    const universities = await universityResponse.json();
+                    
+                    let html = '';
+                    
+                    // Show subject matches first (these are specialties)
+                    if (subjects.length > 0) {
+                        html += '<div class="px-3 py-1 text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wider">Специалности</div>';
+                        html += subjects.slice(0, 5).map(s => `
+                            <div class="p-3 hover:bg-green-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer autocomplete-item transition-colors" data-name="${s.name}" data-type="subject">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="book-open" class="w-4 h-4 text-green-500"></i>
+                                    <div class="font-medium text-gray-900 dark:text-white">${s.name}</div>
+                                </div>
                             </div>
                         `).join('');
+                    }
+                    
+                    // Then show university name matches
+                    if (universities.length > 0) {
+                        if (subjects.length > 0) {
+                            html += '<div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>';
+                        }
+                        html += '<div class="px-3 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Университети</div>';
+                        html += universities.slice(0, 5).map(s => `
+                            <div class="p-3 hover:bg-green-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer autocomplete-item transition-colors" data-name="${s.name}" data-type="university">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="building-2" class="w-4 h-4 text-blue-500"></i>
+                                    <div>
+                                        <div class="font-medium text-gray-900 dark:text-white">${s.name}</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">${s.city || ''}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                    
+                    if (html) {
+                        homeAutocompleteResults.innerHTML = html;
                         homeAutocompleteResults.classList.remove('hidden');
+                        lucide.createIcons();
                         
                         // Add click handlers
-                        document.querySelectorAll('.autocomplete-item').forEach(item => {
+                        document.querySelectorAll('#homeAutocompleteResults .autocomplete-item').forEach(item => {
                             item.addEventListener('click', function() {
                                 homeSearchInput.value = this.dataset.name;
                                 homeAutocompleteResults.classList.add('hidden');
@@ -242,6 +250,13 @@
                     homeAutocompleteResults.classList.add('hidden');
                 }
             }, 300);
+        });
+        
+        // Submit form on Enter key press
+        homeSearchInput?.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                homeAutocompleteResults?.classList.add('hidden');
+            }
         });
         
         // Hide autocomplete when clicking outside
@@ -260,15 +275,6 @@
                     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
-        });
-
-        // City selector change handler
-        const citySelector = document.getElementById('citySelector');
-        citySelector?.addEventListener('change', function() {
-            const selectedCity = this.value;
-            if (selectedCity) {
-                window.location.href = `@Url.Action("Index", "University")?city=${encodeURIComponent(selectedCity)}`;
-            }
         });
     </script>
     

@@ -42,31 +42,31 @@ namespace UniversityFinder.Controllers
             string? city,
             string? subject)
         {
-            var filters = new List<string>();
+            var universities = new List<University>();
 
             if (!string.IsNullOrWhiteSpace(search))
-                filters.Add($"Name=ilike.*{Uri.EscapeDataString(search)}*");
-
-            if (!string.IsNullOrWhiteSpace(city) && city != "All Cities" && city != "Всички Градове")
-                filters.Add($"City=eq.{Uri.EscapeDataString(city)}");
-
-            string filterQuery = string.Join("&", filters);
-
-            _logger.LogInformation("[SMART FILTER QUERY] {Query}", filterQuery);
-
-            var universities = await _supabaseService.GetUniversitiesAsync(filterQuery);
-            _logger.LogInformation("✅ Fetched {Count} universities from Supabase", universities.Count);
-
-            if (universities.Count == 0)
             {
-                _logger.LogWarning("⚠️ No universities returned from Supabase for query: {Query}", filterQuery);
-            }
+                // 1. Search by university name
+                var nameFilter = $"Name=ilike.*{Uri.EscapeDataString(search)}*";
+                if (!string.IsNullOrWhiteSpace(city) && city != "All Cities" && city != "Всички Градове")
+                    nameFilter += $"&City=eq.{Uri.EscapeDataString(city)}";
 
-            // If a search term is provided, also search by specialty (Subject Name)
-            if (!string.IsNullOrWhiteSpace(search))
-            {
+                _logger.LogInformation("[NAME FILTER QUERY] {Query}", nameFilter);
+                var nameMatches = await _supabaseService.GetUniversitiesAsync(nameFilter);
+                universities.AddRange(nameMatches);
+
+                // 2. Search by specialty/subject name
                 var specialtyUniversities = await _supabaseService.GetUniversitiesBySpecialtyAsync(search);
-                
+                _logger.LogInformation("✅ Fetched {Count} universities by specialty for '{Search}'", specialtyUniversities.Count, search);
+
+                // Apply city filter to specialty results if needed
+                if (!string.IsNullOrWhiteSpace(city) && city != "All Cities" && city != "Всички Градове")
+                {
+                    specialtyUniversities = specialtyUniversities
+                        .Where(u => !string.IsNullOrWhiteSpace(u.City) && u.City.Equals(city, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                }
+
                 // Merge results, avoiding duplicates
                 foreach (var u in specialtyUniversities)
                 {
@@ -75,7 +75,22 @@ namespace UniversityFinder.Controllers
                         universities.Add(u);
                     }
                 }
+
+                _logger.LogInformation("✅ Total {Count} universities after merging name + specialty results", universities.Count);
             }
+            else
+            {
+                // No search term - just apply city filter if any
+                var filters = new List<string>();
+                if (!string.IsNullOrWhiteSpace(city) && city != "All Cities" && city != "Всички Градове")
+                    filters.Add($"City=eq.{Uri.EscapeDataString(city)}");
+
+                string filterQuery = string.Join("&", filters);
+                _logger.LogInformation("[FILTER QUERY] {Query}", filterQuery);
+                universities = await _supabaseService.GetUniversitiesAsync(filterQuery);
+            }
+
+            _logger.LogInformation("✅ Fetched {Count} universities total", universities.Count);
 
             // Filter by exact subject
             if (!string.IsNullOrWhiteSpace(subject) && subject != "Всички Специалности")
@@ -179,6 +194,30 @@ namespace UniversityFinder.Controllers
                 {
                     name = u.Name,
                     city = u.City
+                })
+                .ToList();
+
+            return Json(matches);
+        }
+
+        // ===================== AUTOCOMPLETE SUBJECTS =====================
+
+        [HttpGet]
+        public async Task<IActionResult> AutocompleteSubjects(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
+                return Json(new List<object>());
+
+            var subjectNames = await _supabaseService.GetSubjectNamesOfferedByUniversitiesAsync();
+
+            var matches = subjectNames
+                .Where(name =>
+                    !string.IsNullOrWhiteSpace(name) &&
+                    name.Contains(query, StringComparison.OrdinalIgnoreCase))
+                .Take(10)
+                .Select(name => new
+                {
+                    name = name
                 })
                 .ToList();
 
