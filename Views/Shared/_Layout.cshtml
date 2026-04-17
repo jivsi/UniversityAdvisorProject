@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="bg" class="h-full">
 <head>
     <meta charset="utf-8" />
@@ -124,7 +124,7 @@
 <body class="h-full bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100 transition-colors duration-300">
     <!-- Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-50 glass dark:glass-dark border-b border-white/20 dark:border-white/10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="w-full px-4 sm:px-8 lg:px-12">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center space-x-8">
                     <a asp-controller="Home" asp-action="Index" class="flex items-center space-x-2 group">
@@ -151,9 +151,9 @@
                 
                 <div class="flex items-center space-x-4">
                     <!-- Theme Toggle -->
-                    <button id="themeToggle" class="p-2 rounded-lg hover:bg-white/10 transition-colors">
-                        <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
-                        <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+                    <button id="themeToggle" class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all border border-gray-200 dark:border-gray-700 hover:shadow-md transform hover:scale-105" title="Смяна на темата">
+                        <i data-lucide="sun" class="w-5 h-5 hidden dark:block text-yellow-500"></i>
+                        <i data-lucide="moon" class="w-5 h-5 block dark:hidden text-indigo-600"></i>
                     </button>
                     
                     <!-- Mobile Menu Button -->
