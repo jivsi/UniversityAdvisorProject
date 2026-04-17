@@ -141,21 +141,7 @@
                                     <div class="absolute inset-0 flex items-center justify-center">
                                         <i data-lucide="building-2" class="w-20 h-20 text-white/30"></i>
                                     </div>
-                                    <!-- Favorite Button -->
-                                    @if (User.Identity?.IsAuthenticated == true && university.Id.HasValue)
-                                    {
-                                        var favoriteIds = ViewBag.FavoriteUniversityIds as HashSet<Guid> ?? new HashSet<Guid>();
-                                        var isFavorited = favoriteIds.Contains(university.Id.Value);
-                                        <button 
-                                            type="button"
-                                            class="favorite-btn absolute top-4 right-4 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all z-10 @(isFavorited ? "favorited" : "")"
-                                            data-university-id="@university.Id.Value"
-                                            title="@(isFavorited ? "Премахни от любими" : "Добави в любими")"
-                                            style="z-index: 10; cursor: pointer;"
-                                        >
-                                            <i data-lucide="heart" class="w-5 h-5 @(isFavorited ? "fill-current text-red-500" : "text-white")"></i>
-                                        </button>
-                                    }
+                                    <!-- Removed Absolute Favorite Button -->
                                 </div>
                                 
                                 <!-- Card Content -->
@@ -175,16 +161,23 @@
                                         <span class="text-sm">@(university.City ?? "Неизвестен град")</span>
                                     </div>
                                     
-                                    <!-- Rating Badge -->
-                                    <div class="flex items-center gap-2 mb-4">
-                                        <div class="flex items-center gap-1">
-                                            @for (int i = 0; i < 5; i++)
-                                            {
-                                                <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-current"></i>
-                                            }
+                                    <!-- Favorite Button -->
+                                    @if (User.Identity?.IsAuthenticated == true && university.Id.HasValue)
+                                    {
+                                        var favoriteIds = ViewBag.FavoriteUniversityIds as HashSet<Guid> ?? new HashSet<Guid>();
+                                        var isFavorited = favoriteIds.Contains(university.Id.Value);
+                                        <div class="flex items-center gap-2 mb-4">
+                                            <button 
+                                                type="button"
+                                                class="favorite-btn flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all border border-gray-200 dark:border-gray-700 @(isFavorited ? "favorited" : "")"
+                                                data-university-id="@university.Id.Value"
+                                                title="@(isFavorited ? "Премахни от любими" : "Добави в любими")"
+                                            >
+                                                <i data-lucide="heart" class="w-4 h-4 @(isFavorited ? "fill-current text-red-500" : "text-gray-500 dark:text-gray-400")"></i>
+                                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">@(isFavorited ? "В Любими" : "Добави в Любими")</span>
+                                            </button>
                                         </div>
-                                        <span class="text-sm font-medium">4.5</span>
-                                    </div>
+                                    }
                                     
                                     <!-- Programs Count -->
                                     <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
@@ -343,9 +336,12 @@
                             // Animate favorite add
                             btn.classList.add('favorite-added');
                             icon.classList.add('fill-current', 'text-red-500');
-                            icon.classList.remove('text-white');
+                            icon.classList.remove('text-white', 'text-gray-500', 'dark:text-gray-400');
                             btn.title = 'Премахни от любими';
                             btn.classList.add('favorited');
+                            
+                            const textSpan = btn.querySelector('span');
+                            if (textSpan) textSpan.textContent = 'В Любими';
                             
                             // Add sparkle effect
                             createSparkles(btn);
@@ -353,9 +349,12 @@
                             // Animate favorite remove
                             btn.classList.remove('favorite-added');
                             icon.classList.remove('fill-current', 'text-red-500');
-                            icon.classList.add('text-white');
+                            icon.classList.add('text-gray-500', 'dark:text-gray-400');
                             btn.title = 'Добави в любими';
                             btn.classList.remove('favorited');
+                            
+                            const textSpan = btn.querySelector('span');
+                            if (textSpan) textSpan.textContent = 'Добави в Любими';
                         }
                         lucide.createIcons();
                     } else {
