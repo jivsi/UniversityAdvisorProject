@@ -95,6 +95,7 @@
                                 <option value="">Изберете вид...</option>
                                 <option value="Редовно">Редовно</option>
                                 <option value="Задочно">Задочно</option>
+                                <option value="Редовно, Задочно">Редовно, Задочно</option>
                             </select>
                         </div>
 
@@ -123,9 +124,30 @@
 
                     @if (Model.Any())
                     {
-                        <div class="space-y-4">
-                            @foreach (var program in Model.OrderBy(p => p.Subject?.Name))
+                        var groupedPrograms = new List<(string Name, List<UniversityFinder.Models.UniversityProgram> Programs)>
+                        {
+                            ("Бакалавър", Model.Where(p => p.DegreeType == "Бакалавър").OrderBy(p => p.Subject?.Name).ToList()),
+                            ("Магистър", Model.Where(p => p.DegreeType == "Магистър").OrderBy(p => p.Subject?.Name).ToList()),
+                            ("Доктор", Model.Where(p => p.DegreeType == "Доктор").OrderBy(p => p.Subject?.Name).ToList()),
+                            ("Други", Model.Where(p => string.IsNullOrWhiteSpace(p.DegreeType) || (p.DegreeType != "Бакалавър" && p.DegreeType != "Магистър" && p.DegreeType != "Доктор")).OrderBy(p => p.Subject?.Name).ToList())
+                        };
+
+                        <div class="space-y-8">
+                            @foreach (var group in groupedPrograms)
                             {
+                                if (!group.Programs.Any()) continue;
+                                
+                                <div>
+                                    <h3 class="font-bold text-lg text-blue-600 dark:text-blue-400 mb-4 flex items-center gap-2 border-b border-blue-200 dark:border-blue-900 pb-2">
+                                        @if (group.Name == "Бакалавър") { <i data-lucide="book-open" class="w-5 h-5"></i> }
+                                        else if (group.Name == "Магистър") { <i data-lucide="award" class="w-5 h-5"></i> }
+                                        else if (group.Name == "Доктор") { <i data-lucide="microscope" class="w-5 h-5"></i> }
+                                        else { <i data-lucide="more-horizontal" class="w-5 h-5"></i> }
+                                        @group.Name
+                                    </h3>
+                                    <div class="space-y-4">
+                                        @foreach (var program in group.Programs)
+                                        {
                                 <div class="p-4 rounded-2xl bg-white/40 dark:bg-gray-800/40 border border-white/20 dark:border-white/10 hover:shadow-md transition-shadow">
                                     <div class="flex items-center justify-between">
                                         <div>
@@ -188,6 +210,7 @@
                                                     <option value="" selected="@(string.IsNullOrWhiteSpace(program.StudyForm))">Изберете вид...</option>
                                                     <option value="Редовно" selected="@(program.StudyForm == "Редовно")">Редовно</option>
                                                     <option value="Задочно" selected="@(program.StudyForm == "Задочно")">Задочно</option>
+                                                    <option value="Редовно, Задочно" selected="@(program.StudyForm == "Редовно, Задочно")">Редовно, Задочно</option>
                                                 </select>
                                             </div>
                                             <div>
@@ -203,6 +226,9 @@
                                             </button>
                                         </div>
                                     </form>
+                                </div>
+                                        }
+                                    </div>
                                 </div>
                             }
                         </div>
