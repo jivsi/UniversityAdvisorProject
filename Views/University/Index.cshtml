@@ -123,21 +123,21 @@
                             Показване на <span class="font-semibold text-gray-900 dark:text-white">@Model.Universities.Count</span> университета
                         </p>
                         <div class="flex items-center gap-2">
-                            <button class="p-2 rounded-lg hover:bg-white/10">
+                            <button id="btnViewGrid" class="p-2 rounded-lg bg-green-100 dark:bg-gray-700 text-green-600 dark:text-green-400 transition-colors">
                                 <i data-lucide="grid" class="w-5 h-5"></i>
                             </button>
-                            <button class="p-2 rounded-lg hover:bg-white/10">
+                            <button id="btnViewList" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                                 <i data-lucide="list" class="w-5 h-5"></i>
                             </button>
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <div id="universitiesContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 transition-all duration-300">
                         @foreach (var university in Model.Universities)
                         {
-                            <div class="glass dark:glass-dark rounded-3xl overflow-hidden card-hover group">
+                            <div class="university-card glass dark:glass-dark rounded-3xl overflow-hidden card-hover group flex flex-col transition-all duration-300">
                                 <!-- University Image/Logo Placeholder -->
-                                <div class="h-48 bg-gradient-to-br from-green-500 via-emerald-500 to-green-400 relative overflow-hidden">
+                                <div class="university-image h-48 w-full bg-gradient-to-br from-green-500 via-emerald-500 to-green-400 relative overflow-hidden flex-shrink-0 transition-all duration-300">
                                     <div class="absolute inset-0 flex items-center justify-center">
                                         <i data-lucide="building-2" class="w-20 h-20 text-white/30"></i>
                                     </div>
@@ -145,7 +145,7 @@
                                 </div>
                                 
                                 <!-- Card Content -->
-                                <div class="p-6">
+                                <div class="university-content p-6 flex flex-col flex-grow">
                                     <div class="flex items-start justify-between mb-3">
                                         <div class="flex-1">
                                             <h3 class="text-xl font-bold mb-1 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
@@ -185,14 +185,16 @@
                                         <span>@university.Programs.Count програми</span>
                                     </div>
                                     
-                                    <!-- Action Button -->
-                                    <a 
-                                        asp-action="Details" 
-                                        asp-route-name="@university.Name" 
-                                        class="block w-full px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-center rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
-                                    >
-                                        Виж Детайли
-                                    </a>
+                                    <div class="mt-auto">
+                                        <!-- Action Button -->
+                                        <a 
+                                            asp-action="Details" 
+                                            asp-route-name="@university.Name" 
+                                            class="block w-full px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-center rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
+                                        >
+                                            Виж Детайли
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         }
@@ -279,6 +281,62 @@
                 autocompleteResults?.classList.add('hidden');
             }
         });
+        
+        // Grid/List View Toggle
+        const btnViewGrid = document.getElementById('btnViewGrid');
+        const btnViewList = document.getElementById('btnViewList');
+        const container = document.getElementById('universitiesContainer');
+        const cards = document.querySelectorAll('.university-card');
+        const images = document.querySelectorAll('.university-image');
+        
+        if (btnViewGrid && btnViewList && container) {
+            // Load preference from localStorage
+            const savedView = localStorage.getItem('universityListViewPreference') || 'grid';
+            
+            function setGridView() {
+                // Update buttons
+                btnViewGrid.className = 'p-2 rounded-lg bg-green-100 dark:bg-gray-700 text-green-600 dark:text-green-400 transition-colors';
+                btnViewList.className = 'p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors';
+                
+                // Update container
+                container.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 transition-all duration-300';
+                
+                // Update cards
+                cards.forEach(card => card.className = 'university-card glass dark:glass-dark rounded-3xl overflow-hidden card-hover group flex flex-col transition-all duration-300');
+                
+                // Update images
+                images.forEach(img => img.className = 'university-image h-48 w-full bg-gradient-to-br from-green-500 via-emerald-500 to-green-400 relative overflow-hidden flex-shrink-0 transition-all duration-300');
+                
+                localStorage.setItem('universityListViewPreference', 'grid');
+            }
+            
+            function setListView() {
+                // Update buttons
+                btnViewList.className = 'p-2 rounded-lg bg-green-100 dark:bg-gray-700 text-green-600 dark:text-green-400 transition-colors';
+                btnViewGrid.className = 'p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors';
+                
+                // Update container
+                container.className = 'flex flex-col gap-6 transition-all duration-300';
+                
+                // Update cards
+                cards.forEach(card => card.className = 'university-card glass dark:glass-dark rounded-3xl overflow-hidden card-hover group flex flex-col md:flex-row items-stretch transition-all duration-300');
+                
+                // Update images
+                images.forEach(img => img.className = 'university-image h-48 md:h-auto md:w-64 bg-gradient-to-br from-green-500 via-emerald-500 to-green-400 relative overflow-hidden flex-shrink-0 transition-all duration-300');
+                
+                localStorage.setItem('universityListViewPreference', 'list');
+            }
+            
+            btnViewGrid.addEventListener('click', setGridView);
+            btnViewList.addEventListener('click', setListView);
+            
+            // Apply saved preference unconditionally
+            if (savedView === 'list') {
+                setListView();
+            } else {
+                setGridView();
+            }
+        }
         
         // LEGACY: AJAX city loader removed - cities are now text-based filters
         // Cities are populated from Model.Cities which is extracted from universities
