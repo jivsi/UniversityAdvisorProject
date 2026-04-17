@@ -12,30 +12,8 @@
         </div>
     </div>
     
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        @if (Model.RecentlyVisited.Any())
-        {
-            <div class="mb-12">
-                <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
-                    <i data-lucide="history" class="w-6 h-6 text-green-600"></i>
-                    Последно разгледани
-                </h2>
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    @foreach (var uni in Model.RecentlyVisited)
-                    {
-                        <a asp-action="Details" asp-route-name="@uni.Name" class="glass dark:glass-dark rounded-2xl p-4 card-hover block group">
-                            <div class="w-full aspect-square rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-3">
-                                <i data-lucide="building-2" class="w-8 h-8 text-white/50"></i>
-                            </div>
-                            <div class="text-sm font-bold truncate group-hover:text-green-600 dark:group-hover:text-green-400">@uni.Name</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 capitalize">@uni.City</div>
-                        </a>
-                    }
-                </div>
-            </div>
-        }
-
-        <div class="flex flex-col lg:flex-row gap-8">
+    <div class="w-full px-4 sm:px-8 lg:px-12 py-12">
+        <div class="flex flex-col lg:flex-row gap-8 items-start">
             <!-- Filters Sidebar -->
             <aside class="lg:w-80 flex-shrink-0">
                 <div class="glass dark:glass-dark rounded-3xl p-6 sticky top-24">
@@ -132,7 +110,7 @@
                         </div>
                     </div>
                     
-                    <div id="universitiesContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 transition-all duration-300">
+                    <div id="universitiesContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 transition-all duration-300">
                         @foreach (var university in Model.Universities)
                         {
                             <div class="university-card glass dark:glass-dark rounded-3xl overflow-hidden card-hover group flex flex-col transition-all duration-300">
@@ -220,6 +198,33 @@
                     </div>
                 }
             </div>
+            
+            <!-- Recently Visited Sidebar (Right) -->
+            @if (Model.RecentlyVisited.Any())
+            {
+                <aside class="lg:w-72 flex-shrink-0">
+                    <div class="glass dark:glass-dark rounded-3xl p-6 sticky top-24">
+                        <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                            <i data-lucide="history" class="w-5 h-5 text-green-600"></i>
+                            Последно
+                        </h2>
+                        <div class="flex flex-col gap-3">
+                            @foreach (var uni in Model.RecentlyVisited)
+                            {
+                                <a asp-action="Details" asp-route-name="@uni.Name" class="glass dark:glass-dark rounded-2xl p-3 card-hover flex items-center gap-4 group">
+                                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
+                                        <i data-lucide="building-2" class="w-6 h-6 text-white/50"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-sm font-bold truncate group-hover:text-green-600 dark:group-hover:text-green-400">@uni.Name</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400 capitalize truncate">@uni.City</div>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </aside>
+            }
         </div>
     </div>
 </div>
@@ -299,7 +304,7 @@
                 btnViewList.className = 'p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors';
                 
                 // Update container
-                container.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 transition-all duration-300';
+                container.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 transition-all duration-300';
                 
                 // Update cards
                 cards.forEach(card => card.className = 'university-card glass dark:glass-dark rounded-3xl overflow-hidden card-hover group flex flex-col transition-all duration-300');
