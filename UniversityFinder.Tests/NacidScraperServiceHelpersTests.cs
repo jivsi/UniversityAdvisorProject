@@ -22,6 +22,8 @@ public class NacidScraperServiceHelpersTests
     [InlineData("редовно", "Редовно")]
     [InlineData("  Задочно ", "Задочно")]
     [InlineData("задочно", "Задочно")]
+    [InlineData("дистанционно", "Дистанционно")]
+    [InlineData("ДИСТАНЦИОННО", "Дистанционно")]
     [InlineData(null, "")]
     [InlineData("", "")]
     [InlineData("вечерно", "")]

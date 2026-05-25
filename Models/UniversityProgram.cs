@@ -30,7 +30,7 @@ namespace UniversityFinder.Models
 
         [MaxLength(50)]
         [JsonPropertyName("StudyForm")]
-        public string? StudyForm { get; set; } // "Редовно" / "Задочно"
+        public string? StudyForm { get; set; } // "Редовно" / "Задочно" / "Дистанционно" / "Редовно, Задочно"
 
         [MaxLength(50)]
         [JsonPropertyName("Language")]

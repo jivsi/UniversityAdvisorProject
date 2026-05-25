@@ -658,7 +658,10 @@ namespace UniversityFinder.Controllers
             {
                 var trimmedName = (subjectName ?? string.Empty).Trim();
                 if (string.IsNullOrWhiteSpace(trimmedName))
-                    return BadRequest("Subject not found");
+                {
+                    TempData["ErrorMessage"] = "❌ Моля, въведете име на специалност.";
+                    return RedirectToAction(nameof(ManagePrograms), new { id = universityId });
+                }
 
                 var allSubjects = await _supabaseService.GetAllSubjectsWithCategoryAsync();
                 subject = allSubjects.FirstOrDefault(s =>
@@ -675,16 +678,35 @@ namespace UniversityFinder.Controllers
                         parsedCategoryId = catGuid;
                     }
 
-                    subject = await _supabaseService.InsertSubjectAsync(new Subject
+                    try
                     {
-                        Name = trimmedName,
-                        CategoryId = parsedCategoryId
-                    });
+                        subject = await _supabaseService.InsertSubjectAsync(new Subject
+                        {
+                            Name = trimmedName,
+                            CategoryId = parsedCategoryId
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to create subject {Name}", trimmedName);
+                        TempData["ErrorMessage"] = $"❌ Грешка при създаване на специалност: {ex.Message}";
+                        return RedirectToAction(nameof(ManagePrograms), new { id = universityId });
+                    }
                 }
             }
 
             if (subject == null || subject.Id == Guid.Empty)
-                return BadRequest("Subject not found");
+            {
+                TempData["ErrorMessage"] = "❌ Специалността не беше намерена или създадена.";
+                return RedirectToAction(nameof(ManagePrograms), new { id = universityId });
+            }
+
+            if (!string.IsNullOrWhiteSpace(studyForm) &&
+                !StudyFormOptions.All.Contains(studyForm.Trim(), StringComparer.Ordinal))
+            {
+                TempData["ErrorMessage"] = "❌ Невалиден вид обучение.";
+                return RedirectToAction(nameof(ManagePrograms), new { id = universityId });
+            }
 
             var program = new UniversityProgram
             {
@@ -697,7 +719,29 @@ namespace UniversityFinder.Controllers
                 IsInferred = false
             };
 
-            await _supabaseService.InsertProgramAsync(program);
+            try
+            {
+                await _supabaseService.InsertProgramAsync(program);
+            }
+            catch (HttpRequestException ex) when (ex.Message.Contains("studyform_chk", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["ErrorMessage"] =
+                    "❌ „Дистанционно“ още не е разрешено в Supabase. Отворете supabase.com → вашият проект → SQL Editor → New query → копирайте и пуснете скрипта от файла Scripts/supabase-add-distance-studyform.sql → Run. После опитайте отново. Дотогава използвайте Редовно или Задочно.";
+                return RedirectToAction(nameof(ManagePrograms), new { id = universityId });
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Insert program failed for university {UniversityId}", universityId);
+                TempData["ErrorMessage"] = $"❌ Грешка при запис в базата: {ex.Message}";
+                return RedirectToAction(nameof(ManagePrograms), new { id = universityId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "AddProgram failed for university {UniversityId}", universityId);
+                TempData["ErrorMessage"] = $"❌ Грешка при добавяне: {ex.Message}";
+                return RedirectToAction(nameof(ManagePrograms), new { id = universityId });
+            }
+
             TempData["SuccessMessage"] = $"✅ Предметът '{subject.Name}' беше добавен към университета.";
             return RedirectToAction(nameof(ManagePrograms), new { id = universityId });
         }

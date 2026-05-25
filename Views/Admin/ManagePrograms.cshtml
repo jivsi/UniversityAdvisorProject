@@ -47,6 +47,16 @@
             </div>
         }
 
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="mb-6 glass dark:glass-dark rounded-2xl p-4 border-l-4 border-red-500 bg-red-50/50 dark:bg-red-900/20">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="alert-circle" class="w-6 h-6 text-red-500"></i>
+                    <p class="text-red-800 dark:text-red-200">@TempData["ErrorMessage"]</p>
+                </div>
+            </div>
+        }
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Left Column: Add New Specialty -->
             <div class="lg:col-span-1">
@@ -56,9 +66,10 @@
                         Добави Специалност
                     </h2>
 
-                    <form asp-action="AddProgram" method="post">
+                    <form id="addProgramForm" asp-action="AddProgram" method="post" novalidate>
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="universityId" value="@university?.Id" />
+                        <div id="addProgramClientError" class="hidden mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 text-sm"></div>
 
                         <div class="mb-4">
                             <label class="block text-sm font-semibold mb-2">Категория</label>
@@ -74,7 +85,7 @@
                         <div class="mb-4">
                             <label class="block text-sm font-semibold mb-2">Специалност</label>
                             <input type="hidden" id="subjectIdInput" name="subjectId" />
-                            <input id="subjectInput" name="subjectName" list="subjectOptions" autocomplete="off" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Започнете да пишете специалност..." required />
+                            <input id="subjectInput" name="subjectName" list="subjectOptions" autocomplete="off" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Започнете да пишете специалност..." />
                             <datalist id="subjectOptions"></datalist>
                             <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Можете да изберете от предложенията или да въведете нова специалност ръчно.</p>
                         </div>
@@ -93,9 +104,10 @@
                             <label class="block text-sm font-semibold mb-2">Вид обучение</label>
                             <select name="studyForm" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500">
                                 <option value="">Изберете вид...</option>
-                                <option value="Редовно">Редовно</option>
-                                <option value="Задочно">Задочно</option>
-                                <option value="Редовно, Задочно">Редовно, Задочно</option>
+                                @foreach (var form in UniversityFinder.Models.StudyFormOptions.All)
+                                {
+                                    <option value="@form">@form</option>
+                                }
                             </select>
                         </div>
 
@@ -208,9 +220,10 @@
                                                 <label class="block text-xs font-semibold mb-1">Вид обучение</label>
                                                 <select name="studyForm" class="w-full px-3 py-2 rounded-lg bg-white/70 dark:bg-gray-800/70 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                                     <option value="" selected="@(string.IsNullOrWhiteSpace(program.StudyForm))">Изберете вид...</option>
-                                                    <option value="Редовно" selected="@(program.StudyForm == "Редовно")">Редовно</option>
-                                                    <option value="Задочно" selected="@(program.StudyForm == "Задочно")">Задочно</option>
-                                                    <option value="Редовно, Задочно" selected="@(program.StudyForm == "Редовно, Задочно")">Редовно, Задочно</option>
+                                                    @foreach (var form in UniversityFinder.Models.StudyFormOptions.All)
+                                                    {
+                                                        <option value="@form" selected="@(program.StudyForm == form)">@form</option>
+                                                    }
                                                 </select>
                                             </div>
                                             <div>
@@ -349,6 +362,40 @@
         if (subjectInput) {
             subjectInput.addEventListener('input', resolveSubjectIdFromInput);
             subjectInput.addEventListener('change', resolveSubjectIdFromInput);
+        }
+
+        const addProgramForm = document.getElementById('addProgramForm');
+        const addProgramClientError = document.getElementById('addProgramClientError');
+
+        function showAddProgramError(message) {
+            if (!addProgramClientError) return;
+            addProgramClientError.textContent = message;
+            addProgramClientError.classList.remove('hidden');
+        }
+
+        if (addProgramForm) {
+            addProgramForm.addEventListener('submit', function (e) {
+                if (addProgramClientError) {
+                    addProgramClientError.classList.add('hidden');
+                    addProgramClientError.textContent = '';
+                }
+
+                resolveSubjectIdFromInput();
+
+                const name = (subjectInput?.value || '').trim();
+                if (!name) {
+                    e.preventDefault();
+                    showAddProgramError('Моля, въведете име на специалност (или изберете от списъка).');
+                    subjectInput?.focus();
+                    return;
+                }
+
+                const uniId = addProgramForm.querySelector('input[name="universityId"]')?.value;
+                if (!uniId) {
+                    e.preventDefault();
+                    showAddProgramError('Липсва идентификатор на университет. Отворете страницата отново от админ менюто.');
+                }
+            });
         }
     </script>
 }

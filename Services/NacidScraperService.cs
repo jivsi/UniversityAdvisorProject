@@ -18,8 +18,9 @@ namespace UniversityFinder.Services
             var v = (value ?? string.Empty).Trim().ToLowerInvariant();
             return v switch
             {
-                "редовно" => "Редовно",
-                "задочно" => "Задочно",
+                "редовно" => StudyFormOptions.Regular,
+                "задочно" => StudyFormOptions.PartTime,
+                "дистанционно" => StudyFormOptions.Distance,
                 _ => string.Empty
             };
         }
