@@ -229,7 +229,7 @@ namespace UniversityFinder.Services
             return updated;
         }
 
-        private static Dictionary<string, Guid> BuildCategoryNameMap(IReadOnlyList<SubjectCategory> categories)
+        internal static Dictionary<string, Guid> BuildCategoryNameMap(IReadOnlyList<SubjectCategory> categories)
         {
             var map = new Dictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
             foreach (var c in categories)
@@ -259,7 +259,7 @@ namespace UniversityFinder.Services
             return int.TryParse(span[..len], NumberStyles.None, CultureInfo.InvariantCulture, out mainNumber);
         }
 
-        private static Guid? ResolveCategoryIdFromResearchAreaCode(string? areaCode, Dictionary<string, Guid> categoryMap)
+        internal static Guid? ResolveCategoryIdFromResearchAreaCode(string? areaCode, Dictionary<string, Guid> categoryMap)
         {
             if (!TryParseResearchAreaMainNumber(areaCode, out var n) || n < 1 || n > MainScientificAreaNames.Length)
                 return null;

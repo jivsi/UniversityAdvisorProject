@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Hotspots>
+  <Hotspot>
+    <Assembly>UniversityFinder</Assembly>
+    <Class>UniversityFinder.Controllers.UniversityController</Class>
+    <MethodName>MoveNext()</MethodName>
+    <ShortName />
+    <Line>44</Line>
+    <FileIndex>0</FileIndex>
+    <Metrics>
+      <Metric>
+        <Name>Cyclomatic complexity</Name>
+        <Exceeded>true</Exceeded>
+        <Value>44</Value>
+      </Metric>
+    </Metrics>
+  </Hotspot>
+</Hotspots>
